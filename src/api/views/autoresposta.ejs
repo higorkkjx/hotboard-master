@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autoresposta</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+  <div class="bg-white p-8 rounded shadow-md text-center">
+    <img src="https://media1.tenor.com/m/arlZrN0YovkAAAAC/robot-smile.gif" alt="GIF Animado" class="w-32 h-32 mx-auto mb-4"> 
+    <h1 class="text-2xl font-bold mb-4">Você deseja <%= autorespostaAtivada ? 'desativar' : 'ativar' %> a autoresposta?</h1>
+    <button id="toggleAutoresponder" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+      <%= autorespostaAtivada ? 'Desativar Autoresposta' : 'Ativar Autoresposta' %>
+    </button>
+
+    <div class="mt-4">
+      <label for="funilSelect" class="block text-gray-700 text-sm font-bold mb-2">Selecione o funil:</label>
+      <select id="funilSelect" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        <option value="">Selecione...</option>
+        <% funis.forEach(funil => { %>
+          <option value="<%= funil.funilName %>"><%= funil.funilName %></option>
+        <% }); %>
+      </select>
+    </div>
+    <button id="salvarFunil" class="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+      Salvar Funil
+    </button>
+  </div>
+
+  <script>
+    const toggleButton = document.getElementById('toggleAutoresponder');
+    const salvarFunilButton = document.getElementById('salvarFunil');
+    const funilSelect = document.getElementById('funilSelect');
+    const key = "<%= key %>"; 
+
+    toggleButton.addEventListener('click', async () => {
+      try {
+        const response = await fetch(`/api/autoresposta/${key}`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+        if (data.success) {
+          toggleButton.textContent = toggleButton.textContent === 'Ativar Autoresposta' ? 'Desativar Autoresposta' : 'Ativar Autoresposta';
+          Swal.fire({ 
+            icon: 'success',
+            title: 'Sucesso!',
+            text: `Autoresposta ${toggleButton.textContent === 'Desativar Autoresposta' ? 'desativada' : 'ativada'} com sucesso!` 
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Erro ao alternar a autoresposta. Por favor, tente novamente.'
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao alternar a autoresposta:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Erro ao alternar a autoresposta. Por favor, tente novamente.'
+        });
+      }
+    });
+
+    salvarFunilButton.addEventListener('click', async () => {
+      const funilSelecionado = funilSelect.value;
+
+      try {
+        const response = await fetch(`/api/salvar-funil/${key}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ funil: funilSelecionado })
+        });
+        const data = await response.json();
+        if (data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Sucesso!',
+            text: 'Funil salvo com sucesso!'
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Erro ao salvar o funil. Por favor, tente novamente.'
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao salvar o funil:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Erro ao salvar o funil. Por favor, tente novamente.'
+        });
+      }
+    });
+  </script>
+</body>
+</html>

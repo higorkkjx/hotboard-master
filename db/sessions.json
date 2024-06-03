@@ -1,0 +1,262 @@
+[
+  {
+    "key": "higor2",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "admin_dark_barby",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "higorchefe",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "vinyvital123",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "Willianhanz1@@",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "LordGrim1006",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "artville666",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "eterna87",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "senhajhon123",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "renanpremium",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "nocyam08",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "gustavosenha123",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "Magnata011",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "luqitasenha",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "pedropecini",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "ZrowlSway9",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "fredoliveira",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "israelreis",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "tigasprado",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  },
+  {
+    "key": "junior$",
+    "ignoreGroups": false,
+    "webhook": false,
+    "base64": true,
+    "webhookUrl": false,
+    "mongourl": false,
+    "browser": "Ubuntu",
+    "webhookEvents": [
+      "messages.upsert"
+    ],
+    "messagesRead": false
+  }
+]

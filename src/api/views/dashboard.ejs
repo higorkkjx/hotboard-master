@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+    <title>PAINEL ADMIN</title>
+    <style>
+        .submenu {
+        display: none;
+      }
+      .main-option {
+        background-color: #374151; /* Cor de fundo para as opções principais */
+      }
+      .main-option:hover {
+        background-color: #4b5563; /* Cor de fundo ao passar o mouse */
+      }
+      .submenu-option {
+        background-color: #001029; /* Cor de fundo para as subopções */
+      }
+      .submenu-option:hover {
+        background-color: #6098b3; /* Cor de fundo ao passar o mouse */
+      }
+    </style>
+  </head>
+  <body class="font-sans bg-gray-100">
+    <div class="grid grid-cols-1 md:grid-cols-4 min-h-screen">
+      <!-- Sidebar -->
+      <aside class="bg-gray-800 text-white p-4 md:w-64">
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center">
+            <img id="perfil-image" src="https://i.pinimg.com/564x/2d/c6/82/2dc6822cb7045a17261d1042b95abbf2.jpg" alt="logo" class="w-12 h-12 rounded-full" />
+            <h1 class="ml-4 text-2xl font-bold">HotBoard</h1>
+          </div>
+          <i class="fa fa-times text-white md:hidden" onclick="toggleSidebar()"></i>
+        </div>
+        <nav class="space-y-2">
+          <a href="/" class="main-option block py-2.5 px-4 rounded transition duration-200"><i class="mdi mdi-view-dashboard mr-2"></i>Dashboard</a>
+          <div class="space-y-1">
+            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200" onclick="toggleSubMenu('dadosSubMenu')"><i class="mdi mdi-account mr-2"></i>Dados</a>
+            <div id="dadosSubMenu" class="submenu ml-4 space-y-1">
+              <a href="/info/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200">Seus dados</a>  
+            </div>
+          <div class="space-y-1">
+            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200" onclick="toggleSubMenu('configSubMenu')"><i class="mdi mdi-settings mr-2"></i>Configurações</a>
+            <div id="configSubMenu" class="submenu ml-4 space-y-1">
+              <a href="/editar?key=<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200">Editar Configurações</a>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200" onclick="toggleSubMenu('whatsappSubMenu')"><i class="mdi mdi-whatsapp mr-2"></i>WhatsApp</a>
+            <div id="whatsappSubMenu" class="submenu ml-4 space-y-1">
+              <a href="/whats/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200">Whatsapp Web</a>
+              <a href="/conectar?chave=<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200">Conectar Número</a>
+              <a href="/gerargp/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200">Gerar Grupos</a>
+              <a href="/clearchats/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200">Limpar Conversas</a>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200" onclick="toggleSubMenu('automatizacao')"><i class="mdi mdi-whatsapp mr-2"></i>Automatização</a>
+            <div id="automatizacao" class="submenu ml-4 space-y-1">
+              <a href="/autoresposta/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200">Auto Resposta</a>
+            </div>
+          </div>
+         
+          </div>
+          <div class="space-y-1">
+            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200" onclick="toggleSubMenu('typebotSubMenu')"><i class="mdi mdi-fire mr-2"></i>Typebot</a>
+            <div id="typebotSubMenu" class="submenu ml-4 space-y-1">
+              <a href="/funil/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200">Importar Funil</a>
+              <a href="/funis/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200">Ver Funis</a>
+              <a href="/hospedar" class="submenu-option block py-2.5 px-4 transition duration-200">Hospedar Video</a>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200" onclick="toggleSubMenu('bancoSubMenu')"><i class="mdi mdi-currency-usd mr-2"></i>Conta bancaria</a>
+            <div id="bancoSubMenu" class="submenu ml-4 space-y-1">
+              <a href="/banco" class="submenu-option block py-2.5 px-4 transition duration-200">Transferências</a>
+            </div>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main content -->
+      <div class="col-span-3 bg-gray-100 p-4">
+        <!-- Navbar -->
+        <nav class="bg-white shadow p-4 flex justify-between items-center mb-8">
+          <div class="flex items-center space-x-4">
+            <i class="fa fa-bars text-gray-600 md:hidden" onclick="toggleSidebar()"></i>
+            <h1 class="text-xl font-bold">PAINEL ADMIN</h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <a class="text-gray-600"><i class="fa fa-search"></i></a>
+            <a class="text-gray-600"><i class="fa fa-clock"></i></a>
+            <a><img width="30" src="<%= profileImageUrl %>" alt="Profile Image" class="rounded-full"></a>
+          </div>
+        </nav>
+
+        <!-- Main container -->
+        <div>
+          <!-- Notification -->
+          <div class="p-4 rounded mb-4 <%= error || !instance_data.phone_connected ? 'bg-red-500' : 'bg-green-500' %> text-white flex items-center">
+            <i class="mdi mdi-whatsapp mr-2"></i><%= whatsappStatus %>
+          </div>
+
+          <!-- Greeting -->
+          <div class="flex items-center mb-8">
+            <img src="<%= profileImageUrl %>" alt="Hello" class="w-24 h-24 mr-4">
+            <div>
+              <h1 class="text-2xl font-bold text-gray-800">Olá, <%= dadoAssinatura.nome %></h1>
+              <div class="flex items-center text-red-500">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <p class="text-lg">Sua assinatura vence em: <%= dadoAssinatura.data %></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded shadow flex items-center">
+              <i class="fa fa-bullhorn fa-2x text-green-500"></i>
+              <div class="ml-4">
+                <p class="text-blue-600 font-semibold">Contatos no Whats</p>
+                <span class="text-gray-700 font-bold text-xl"><%= totalChats %></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-4 rounded shadow">
+              <div class="flex justify-between items-center mb-4">
+                <div>
+                  <h2 class="text-xl font-bold text-gray-800">Gastos</h2>
+                  <p class="text-gray-600">Total de gastos</p>
+                </div>
+                <i class="fa fa-usd text-gray-600"></i>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bg-blue-100 text-blue-700 p-4 rounded">
+                  <h3 class="font-bold">ADS</h3>
+                  <p>R$0</p>
+                </div>
+                <!-- Outros cards podem ser adicionados aqui -->
+              </div>
+            </div>
+            <div class="bg-white p-4 rounded shadow">
+              <div class="flex justify-between items-center mb-4">
+                <div>
+                  <h2 class="text-xl font-bold text-gray-800">Dados</h2>
+                  <p class="text-gray-600">(Função em breve)</p>
+                </div>
+                <i class="fa fa-chart-bar text-gray-600"></i>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bg-yellow-100 text-yellow-700 p-4 rounded">
+                  <h3 class="font-bold">Chats Salvos</h3>
+                  <p>000</p>
+                </div>
+                <!-- Outros cards podem ser adicionados aqui -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function toggleSidebar() {
+        const sidebar = document.querySelector('aside');
+        sidebar.classList.toggle('hidden');
+      }
+
+      function toggleSubMenu(menuId) {
+        const submenu = document.getElementById(menuId);
+        submenu.style.display = submenu.style.display === 'none' ? 'block' : 'none';
+      }
+    </script>
+  </body>
+</html>
