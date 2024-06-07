@@ -660,7 +660,7 @@ setHandler() {
               
               const checkAndAddChat = async (sender, pushname, body, fromme) => {
                 try {
-                  const chatCollection = db.collection(`conversas_${this.key}`);
+                  const chatCollection = db.collection(`conversas2_${this.key}`);
                   const chatDoc = await chatCollection.doc(sender).get();
               
                   if (chatDoc.exists) {
@@ -687,13 +687,33 @@ setHandler() {
                     stringname = sender.replace("@s.whatsapp.net", "").replace("@g.us", "");
                   }
               
+                  let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
+                  const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${this.key}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const profileData = await profileResponse.json();
+                if (profileData.error === false) {
+                    profileImageUrl = profileData.data;
+                }
+
+                let imagemselecionada;
+                if (sender.includes("@g.us", "")) {
+                    let ppUrl = await this.instance.sock?.profilePictureUrl(sender, 'image');
+                    console.log(ppUrl)
+                    imagemselecionada = ppUrl
+                } else {
+                    imagemselecionada = profileImageUrl
+                }
+
                   const newChatData = {
                     chat: sender,
                     nome: stringname,
                     mensagens: [`${getCurrentDateTime()} - ${pushname}: ${body}`],
                     estagio: 0,
                     nomePix: 'fulano',
-                    imagem: 'https://cdn-icons-png.flaticon.com/512/711/711769.png',
+                    imagem: imagemselecionada,
                     enviando: "nao",
                     aguardando: {
                       status: "nao",
@@ -745,7 +765,7 @@ setHandler() {
             
                     
             const gpmetadata = await this.instance.sock?.groupMetadata(m.messages[0].key.remoteJid)
-            
+           // console.log(gpmetadata)
             
                var dadomsggp = {
                     "type": "group",
@@ -756,7 +776,7 @@ setHandler() {
                     donogp: gpmetadata.subjectOwner,
                     desc: gpmetadata.desc,
                     }
-                console.log(dadomsggp)
+                console.log(`[${this.key}] ${gpmetadata.subject}: ${mensagem.text}`)
                 let conteudomsg;
             
             if(dadomsggp.message.text) {
@@ -1985,13 +2005,13 @@ async updateProfilePicture(to, url, type) {
 }
 
 async updateUser(sender, updates) {
-    const chatCollection = db.collection(`conversas_${this.key}`);
+    const chatCollection = db.collection(`conversas2_${this.key}`);
     const userRef = chatCollection.doc(sender);
     await userRef.set(updates, { merge: true });
   }
   
   async getUser(sender) {
-    const chatCollection = db.collection(`conversas_${this.key}`);
+    const chatCollection = db.collection(`conversas2_${this.key}`);
     const userRef = chatCollection.doc(sender);
     const userSnap = await userRef.get();
     if (userSnap.exists) {
@@ -2621,7 +2641,7 @@ async sendfunil(key, funilName, chat, visuunica) {
 
     async fetchInstanceMessagesAndChats(key = this.key) {
         try {
-            const chatCollection = db.collection(`conversas_${key}`);
+            const chatCollection = db.collection(`conversas2_${key}`);
     const snapshot = await chatCollection.get();
 
     if (snapshot.empty) {

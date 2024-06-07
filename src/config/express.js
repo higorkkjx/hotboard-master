@@ -35,6 +35,15 @@ const myInstanceKey = 'barbara';
 
 const { WhatsAppInstance } = require("../api/class/instance")
 
+function generateRandomString(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
 
 app.get('/whats2/:chave', async (req, res) => {
     const chave = req.params.chave;
@@ -58,15 +67,7 @@ app.get('/whats/:chave', async (req, res, next) => {
             }
             const configuracoes = JSON.parse(data);
 
-            function generateRandomString(length) {
-                const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                let result = '';
-                const charactersLength = characters.length;
-                for (let i = 0; i < length; i++) {
-                  result += characters.charAt(Math.floor(Math.random() * charactersLength));
-                }
-                return result;
-              }
+           
 
               
             const instanceInfoUrl = `http://localhost:3000/instance/info?key=` + chave;
@@ -108,7 +109,17 @@ app.get('/whats/:chave', async (req, res, next) => {
             profileImageUrl = 'https://cdn-icons-png.flaticon.com/512/711/711769.png'
           }
             console.log("Numero id"+ numeroid)
-            res.render("whats2", {
+
+            chatsdata.sort((a, b) => {
+              const aMessages = a.data.mensagens;
+              const bMessages = b.data.mensagens;
+              const aLastMessageTime = new Date(aMessages[aMessages.length - 1].split(' - ')[0]);
+              const bLastMessageTime = new Date(bMessages[bMessages.length - 1].split(' - ')[0]);
+              return bLastMessageTime - aLastMessageTime; // Ordena do mais recente para o mais antigo
+          });
+
+          
+            res.render("whats3", {
                 chats: chatsdata,
                 nomezap,
                 numeroid,
@@ -122,6 +133,123 @@ app.get('/whats/:chave', async (req, res, next) => {
         console.error('Erro ao processar a requisição:', error);
         return next(error); // Passa o erro para o middleware de tratamento de erros
     }
+});
+
+
+app.get('/chat', async (req, res, next) => {
+  try {
+      const chatNum = req.query.num;
+      const chave = req.query.key;  // Assumindo que você está passando a chave como um query parameter
+      let numeroid;
+
+      fs.readFile('./tons-eleven.json', async (err, data) => {
+        if (err) {
+            console.error('Erro ao ler o arquivo JSON:', err);
+            return next(err); // Passa o erro para o middleware de tratamento de erros
+        }
+        const configuracoes = JSON.parse(data);
+
+
+      // Buscando os dados do chat específico
+      const chatResponse = await fetch(`http://localhost:3000/instance/gchats?key=${chave}`);
+      if (!chatResponse.ok) {
+          throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
+      }
+      const chatsData = await chatResponse.json();
+console.log(chatsData)
+      const chat = chatsData.find(chat => chat.id === chatNum);
+
+      if (!chat) {
+          return res.status(404).send('Chat não encontrado');
+      }
+
+      // Obter informações do usuário
+      const instanceInfoUrl = `http://localhost:3000/instance/info?key=` + chave;
+      const bearerToken = "Bearer " + generateRandomString(20); // Substitua 'getRandomString()' pela função que gera a string aleatória
+      const config = {
+          headers: {
+              Authorization: bearerToken
+          }
+      };
+
+      let nomezap;
+      try {
+          const apiResponse = await axios.get(instanceInfoUrl, {}, config);
+          console.log(apiResponse.data);
+          nomezap = apiResponse.data.instance_data.user.name;
+          numeroid = apiResponse.data.instance_data.user.id.split(":")[0];
+      } catch(e) {
+          console.log(e)
+          nomezap = "Você";
+          numeroid = 0
+      }
+
+      console.log(chatsData)
+
+      chatsData.sort((a, b) => {
+        const aMessages = a.data.mensagens;
+        const bMessages = b.data.mensagens;
+        const aLastMessageTime = new Date(aMessages[aMessages.length - 1].split(' - ')[0]);
+        const bLastMessageTime = new Date(bMessages[bMessages.length - 1].split(' - ')[0]);
+        return bLastMessageTime - aLastMessageTime; // Ordena do mais recente para o mais antigo
+    });
+
+
+    const funisResponse = await fetch(`http://localhost:3000/instance/displayallfunis?key=${chave}`);
+    if (!funisResponse.ok) {
+        throw new Error(`Erro na resposta da API: ${funisResponse.statusText}`);
+    }
+    const funisData = await funisResponse.json();
+
+    function getImageLinks(data) {
+      const imageLinks = [];
+  
+      data.forEach(item => {
+          if (item.funil && Array.isArray(item.funil)) {
+              item.funil.forEach(funilItem => {
+                  if (funilItem.tipoMensagem === 'image') {
+                      imageLinks.push(funilItem.conteudo);
+                  }
+              });
+          }
+      });
+  
+      return imageLinks;
+  }
+  
+  const imageLinks = getImageLinks(funisData);
+  console.log(imageLinks);
+
+  let profileImageUrl;
+  try {
+  const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${chave}`, {
+    method: 'POST',
+    body: JSON.stringify({ id: numeroid }),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  const profileData = await profileResponse.json();
+  if (profileData.error === false) {
+    profileImageUrl = profileData.data;
+  }
+} catch(e) {
+  profileImageUrl = 'https://cdn-icons-png.flaticon.com/512/711/711769.png'
+}
+
+      res.render("chat", {
+          chat: chat.data,
+          chatfull: chatsData,
+          nomezap,
+          chave,
+          configuracoes,
+          imageLinks,
+          funisData,
+          profileImageUrl
+      });
+    })
+  } catch (error) {
+      console.error('Erro ao processar a requisição:', error);
+      return res.status(500).json({ error: true, message: error.message });
+  }
 });
 
 
