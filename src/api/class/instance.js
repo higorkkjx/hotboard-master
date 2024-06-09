@@ -788,15 +788,8 @@ setHandler() {
 
             console.log(typeof conteudomsg); // "string"
             
-            function truncateString(conteudomsg, maxLength = 100) {
-                if (conteudomsg.length <= maxLength) {
-                    return conteudomsg;
-                }
-                return conteudomsg.slice(0, maxLength) + '...';
-            }
-            const truncatedMessage = await truncateString(conteudomsg);
-          
-                await checkAndAddChat(dadomsggp.chatId, dadomsggp.nomegp, truncatedMessage, false)
+    
+                await checkAndAddChat(dadomsggp.chatId, dadomsggp.nomegp, conteudomsg, false)
             }
             
         this.instance.messages.unshift(...m.messages);

@@ -112,7 +112,7 @@ app.get('/whats/:chave', async (req, res, next) => {
             profileImageUrl = 'https://cdn-icons-png.flaticon.com/512/711/711769.png'
           }
             console.log("Numero id"+ numeroid)
-
+console.log(chatsdata)
             chatsdata.sort((a, b) => {
               const aMessages = a.data.mensagens;
               const bMessages = b.data.mensagens;
