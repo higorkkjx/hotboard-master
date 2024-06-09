@@ -174,11 +174,11 @@
     <script>
         document.addEventListener('DOMContentLoaded', async() => {
 
-            const contactsResponse = await fetch(`http://18.231.254.61:3000/misc/contacts?key=` + '<%= chave %>');
+            const contactsResponse = await fetch(`http://18.231.254.61:80/misc/contacts?key=` + '<%= chave %>');
     const contactsData = await contactsResponse.json();
 
 
-    const contactsResponse1 = await fetch(`http://18.231.254.61:3000/mensagens`);
+    const contactsResponse1 = await fetch(`http://18.231.254.61:80/mensagens`);
     const contactsData1 = await contactsResponse1.json();
 
     let contacts = contactsData1.chatIds
@@ -209,7 +209,7 @@ console.log(contacts)
         const numerorefatorado = contactId.split("@")[0];
 
         try {
-            const profileResponse = await fetch('http://18.231.254.61:3000/misc/downProfile?key=' + '<%= chave %>', {
+            const profileResponse = await fetch('http://18.231.254.61:80/misc/downProfile?key=' + '<%= chave %>', {
                 method: 'POST',
                 body: JSON.stringify({ id: numerorefatorado }),
                 headers: { 'Content-Type': 'application/json' }

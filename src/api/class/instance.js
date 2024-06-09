@@ -18,6 +18,7 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
+db.settings({ ignoreUndefinedProperties: true });
 
 let intervalStore = [];
 
@@ -688,7 +689,7 @@ setHandler() {
                   }
               
                   let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-                  const profileResponse = await fetch(`http://18.231.254.61:3000/misc/downProfile?key=${this.key}`, {
+                  const profileResponse = await fetch(`http://18.231.254.61:80/misc/downProfile?key=${this.key}`, {
                     method: 'POST',
                     body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
                     headers: { 'Content-Type': 'application/json' }
@@ -770,21 +771,32 @@ setHandler() {
                var dadomsggp = {
                     "type": "group",
                     "chatId": m.messages[0].key.remoteJid,
-                    "message": mensagem,
+                    "message": m.messages[0].message.conversation,
                     "sender": m.messages[0].key.participant,
                     nomegp: gpmetadata.subject,
                     donogp: gpmetadata.subjectOwner,
                     desc: gpmetadata.desc,
                     }
-                console.log(`[${this.key}] ${gpmetadata.subject}: ${mensagem.text}`)
+                console.log(m.messages[0].message.conversation)
                 let conteudomsg;
             
-            if(dadomsggp.message.text) {
-                conteudomsg = dadomsggp.message.text
-            } else if(dadomsggp.message.img) {
-                conteudomsg = "[IMAGEM]"
+            if(dadomsggp.message) {
+                conteudomsg = dadomsggp.message
+            } else if(!dadomsggp.message) {
+                conteudomsg = "[MEDIA]"
             }
-                await checkAndAddChat(dadomsggp.chatId, dadomsggp.nomegp, conteudomsg, false)
+
+            console.log(typeof conteudomsg); // "string"
+            
+            function truncateString(conteudomsg, maxLength = 100) {
+                if (conteudomsg.length <= maxLength) {
+                    return conteudomsg;
+                }
+                return conteudomsg.slice(0, maxLength) + '...';
+            }
+            const truncatedMessage = await truncateString(conteudomsg);
+          
+                await checkAndAddChat(dadomsggp.chatId, dadomsggp.nomegp, truncatedMessage, false)
             }
             
         this.instance.messages.unshift(...m.messages);
@@ -819,6 +831,8 @@ setHandler() {
                 console.log(dadomsg)
 
                 await checkAndAddChat(dadomsg.chat, dadomsg.pushname, dadomsg.budy, dadomsg.fromMe)
+              
+        
                 webhookData['text'] = m;
             }
 
@@ -919,187 +933,195 @@ setHandler() {
 
            
 
-              //AUTORESPOSTA 
-         try {
-            const autoresp_config = await axios.get(`http://18.231.254.61:3000/autoresposta/dados/${this.key}`)
-          
-                const autoresp = autoresp_config.data.autoresposta
-                const funilselecionado = autoresp_config.data.funil
-                const mensagemuser = m.messages[0].message.conversation
-                const numeroUser = m.messages[0].key.remoteJid
-
-                if(autoresp == true) {
-                    if (m.messages[0].key.remoteJid.includes("@g.us")) return //IGNORANDO GRUPOS
-                    console.log(`Chave: ${this.key} (AUTORESPOSTA ATIVO)`)
-                  console.log(`FUNIL SELECIONADO => ${funilselecionado}`)
-            
-                   
-                      
-                      const repleceado = m.messages[0].key.remoteJid
-                      console.log(repleceado)
-                      const configUser = await this.getUser(repleceado);
-                      console.log(configUser)
-                      
-                      const typebotfunil = await this.findFunilByName(this.key, funilselecionado)
-                      
-                      let contagemFunil = 0;
-                      console.log(configUser.aguardando);
-                      if (configUser.aguardando.status === "sim") {
-                        for (const inps of typebotfunil.inputs_respostas) {
-                          if (configUser.aguardando.id === inps.input_id) {
-                            console.log("salvando resposta no input");
-                            inps.resposta = mensagemuser;
-                            configUser.aguardando.resposta = mensagemuser;
-                            configUser.aguardando.inputs_enviados.push(inps.input_id);
-                            configUser.aguardando.status = "nao";
-                          }
-                        }
-                        await this.updateUser(repleceado, configUser);
-                        console.log(configUser.aguardando);
-                      }
-                      
-                      for (const funil of typebotfunil.funil) {
-                        contagemFunil++;
-                      
-                        configUser.estagio = contagemFunil;
-                        await this.updateUser(repleceado, configUser);
-                      
-                        console.log(configUser.enviando);
-                        if (configUser.enviando == "sim") {
-                          console.log("funil ja em execução");
-                          return;
-                        }
-                      
-                        if (funil.tipoMensagem === "wait") {
-                          if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
-                          if (configUser.enviando == "sim") return;
-                          configUser.enviando = "sim";
-                          configUser.aguardando.inputs_enviados.push(funil.idInput);
-                          await this.updateUser(repleceado, configUser);
-                          await sleep(funil.conteudo * 1000);
-                          configUser.enviando = "nao";
-                          await this.updateUser(repleceado, configUser);
-                        }
-                      
-                        if (funil.tipoMensagem === "image") {
-                          if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
-                          if (configUser.enviando == "sim") return;
-                          configUser.aguardando.inputs_enviados.push(funil.idInput);
-                          configUser.enviando = "sim";
-                          await this.updateUser(repleceado, configUser);
-                          await this.instance.sock?.sendMessage(numeroUser, {  image: { url: funil.conteudo }})  
-                          configUser.enviando = "nao";
-                          await this.updateUser(repleceado, configUser);
-                        }
-                      
-                        if (funil.tipoMensagem === "audio") {
-                          if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
-                          if (configUser.enviando == "sim") return;
-                          configUser.aguardando.inputs_enviados.push(funil.idInput);
-                          configUser.enviando = "sim";
-                          await this.updateUser(repleceado, configUser);         
-                          await this.enviarAudio(this.key, funil.conteudo, numeroUser, "usr", 0)
-                          configUser.enviando = "nao";
-                          await this.updateUser(repleceado, configUser);
-                        }
-                      
-                        if (funil.tipoMensagem === "video") {
-                          if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
-                          if (configUser.enviando == "sim") return;
-                          configUser.aguardando.inputs_enviados.push(funil.idInput);
-                          configUser.enviando = "sim";
-                          await this.updateUser(repleceado, configUser);
-                          await this.instance.sock?.sendMessage(numeroUser, { video: { url: funil.conteudo } });
-                          configUser.enviando = "nao";
-                          await this.updateUser(repleceado, configUser);
-                        }
-                      
-                        if (funil.tipoMensagem === "input") {
-                          if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
-                          if (configUser.enviando == "sim") return;
-                          configUser.enviando = "sim";
-                          await this.updateUser(repleceado, configUser);
-                          await this.instance.sock?.sendMessage(numeroUser, { text: funil.conteudo });
-                          configUser.aguardando.status = "sim";
-                          configUser.aguardando.id = funil.idInput;
-                          configUser.enviando = "nao";
-                          await this.updateUser(repleceado, configUser);
-                          return;
-                        }
-                      
-                        if (funil.tipoMensagem === "text") {
-                          if (configUser.aguardando.inputs_enviados.includes(funil.conteudo)) continue;
-                          if (configUser.enviando == "sim") return;
-                      
-                          if (funil.conteudo.includes("%var=")) {
-                            const varRegex = /%var=(.*?)%/;
-                            const varMatch = funil.conteudo.match(varRegex);
-                            console.log(varMatch);
-                            let varValue = '';
-                            if (varMatch && varMatch.length > 1) {
-                              varValue = varMatch[1];
-                            }
-                      
-                            const msgRegex = /^(.*?)%/;
-                            const msgMatch = funil.conteudo.match(msgRegex);
-                      
-                            let message = '';
-                            if (msgMatch && msgMatch.length > 1) {
-                              message = msgMatch[1].trim();
-                            }
-                      
-                            console.log('Valor de var:', varValue);
-                            console.log('Mensagem:', message);
-                      
+             //autoresposta
+             try {
+                const autoresp_config = await axios.get(`http://18.231.254.61:80/autoresposta/dados/${this.key}`)
+              
+                    const autoresp = autoresp_config.data.autoresposta
+                    const funilselecionado = autoresp_config.data.funil
+                    const mensagemuser = m.messages[0].message.conversation
+                    const numeroUser = m.messages[0].key.remoteJid
+    
+                    if(autoresp == true) {
+                        if (m.messages[0].key.remoteJid.includes("@g.us")) return //IGNORANDO GRUPOS
+                        console.log(`Chave: ${this.key} (AUTORESPOSTA ATIVO)`)
+                      console.log(`FUNIL SELECIONADO => ${funilselecionado}`)
+                
+                       
+                          
+                          const repleceado = m.messages[0].key.remoteJid
+                          console.log(repleceado)
+                          const configUser = await this.getUser(repleceado);
+                          console.log(configUser)
+                          
+                          const typebotfunil = await this.findFunilByName(this.key, funilselecionado)
+                          
+                          let contagemFunil = 0;
+                          console.log(configUser.aguardando);
+                          if (configUser.aguardando.status === "sim") {
                             for (const inps of typebotfunil.inputs_respostas) {
-                              if (varValue === inps.input_id) {
-                                console.log("ENVIANDO MENSAGEMMMMMMMMM");
+                              if (configUser.aguardando.id === inps.input_id) {
+                                console.log("salvando resposta no input");
+                                inps.resposta = mensagemuser;
+                                configUser.aguardando.resposta = mensagemuser;
+                                configUser.aguardando.inputs_enviados.push(inps.input_id);
+                                configUser.aguardando.status = "nao";
+                              }
+                            }
+                            await this.updateUser(repleceado, configUser);
+                            console.log(configUser.aguardando);
+                          }
+                          
+                          for (const funil of typebotfunil.funil) {
+                            console.log(funil)
+                            contagemFunil++;
+                          
+                            configUser.estagio = contagemFunil;
+                            await this.updateUser(repleceado, configUser);
+                          
+                            console.log(configUser.enviando);
+                            if (configUser.enviando == "sim") {
+                              console.log("funil ja em execução");
+                              return;
+                            }
+                          
+                            if (funil.tipoMensagem === "wait") {
+                              if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
+                              if (configUser.enviando == "sim") return;
+                              configUser.enviando = "sim";
+                              configUser.aguardando.inputs_enviados.push(funil.idInput);
+                              await this.updateUser(repleceado, configUser);
+                              await sleep(funil.conteudo * 1000);
+                              configUser.enviando = "nao";
+                              await this.updateUser(repleceado, configUser);
+                            }
+                          
+                            if (funil.tipoMensagem === "image") {
+                              if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
+                              if (configUser.enviando == "sim") return;
+                              configUser.aguardando.inputs_enviados.push(funil.idInput);
+                              configUser.enviando = "sim";
+                              await this.updateUser(repleceado, configUser);
+                              await this.instance.sock?.sendMessage(numeroUser, {  image: { url: funil.conteudo }})  
+                              configUser.enviando = "nao";
+                              await this.updateUser(repleceado, configUser);
+                            }
+                          
+                            if (funil.tipoMensagem === "audio") {
+                                console.log("audio")
+                                console.log(funil.idInput)
+                              if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
+                              console.log("audio2")
+                              if (configUser.enviando == "sim") return;
+                              console.log("audio3")
+                              configUser.aguardando.inputs_enviados.push(funil.idInput);
+                              configUser.enviando = "sim";
+                              await this.updateUser(repleceado, configUser);     
+                              console.log("audio4")    
+                              await this.enviarAudio(this.key, funil.conteudo, numeroUser, "usr", 0)
+                              console.log("audio5")
+                              configUser.enviando = "nao";
+                              await this.updateUser(repleceado, configUser);
+                            }
+                          
+                            if (funil.tipoMensagem === "video") {
+                              if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
+                              if (configUser.enviando == "sim") return;
+                              configUser.aguardando.inputs_enviados.push(funil.idInput);
+                              configUser.enviando = "sim";
+                              await this.updateUser(repleceado, configUser);
+                              await this.instance.sock?.sendMessage(numeroUser, { video: { url: funil.conteudo } });
+                              configUser.enviando = "nao";
+                              await this.updateUser(repleceado, configUser);
+                            }
+                          
+                            if (funil.tipoMensagem === "input") {
+                              if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
+                              if (configUser.enviando == "sim") return;
+                              configUser.enviando = "sim";
+                              await this.updateUser(repleceado, configUser);
+                              await this.instance.sock?.sendMessage(numeroUser, { text: funil.conteudo });
+                              configUser.aguardando.status = "sim";
+                              configUser.aguardando.id = funil.idInput;
+                              configUser.enviando = "nao";
+                              await this.updateUser(repleceado, configUser);
+                              return;
+                            }
+                          
+                            if (funil.tipoMensagem === "text") {
+                              if (configUser.aguardando.inputs_enviados.includes(funil.conteudo)) continue;
+                              if (configUser.enviando == "sim") return;
+                          
+                              if (funil.conteudo.includes("%var=")) {
+                                const varRegex = /%var=(.*?)%/;
+                                const varMatch = funil.conteudo.match(varRegex);
+                                console.log(varMatch);
+                                let varValue = '';
+                                if (varMatch && varMatch.length > 1) {
+                                  varValue = varMatch[1];
+                                }
+                          
+                                const msgRegex = /^(.*?)%/;
+                                const msgMatch = funil.conteudo.match(msgRegex);
+                          
+                                let message = '';
+                                if (msgMatch && msgMatch.length > 1) {
+                                  message = msgMatch[1].trim();
+                                }
+                          
+                                console.log('Valor de var:', varValue);
+                                console.log('Mensagem:', message);
+                          
+                                for (const inps of typebotfunil.inputs_respostas) {
+                                  if (varValue === inps.input_id) {
+                                    console.log("ENVIANDO MENSAGEMMMMMMMMM");
+                                    configUser.enviando = "sim";
+                                    await this.updateUser(repleceado, configUser);
+                                    var mensagemformatadaresp = funil.conteudo.replace('%var=' + varValue + "%", configUser.aguardando.resposta);
+                                    console.log(mensagemformatadaresp);
+    
+                                    await this.instance.sock?.sendMessage(numeroUser, { text: `${mensagemformatadaresp}` });
+    
+                             
+                                    configUser.aguardando.inputs_enviados.push(funil.conteudo);
+                                    configUser.enviando = "nao";
+                                    await this.updateUser(repleceado, configUser);
+                                  }
+                                }
+                              } else {
                                 configUser.enviando = "sim";
                                 await this.updateUser(repleceado, configUser);
-                                var mensagemformatadaresp = funil.conteudo.replace('%var=' + varValue + "%", configUser.aguardando.resposta);
-                                console.log(mensagemformatadaresp);
-
-                                await this.instance.sock?.sendMessage(numeroUser, { text: `${mensagemformatadaresp}` });
-
-                         
-                                configUser.aguardando.inputs_enviados.push(funil.conteudo);
+                                await this.instance.sock?.sendMessage(numeroUser, { text: `${funil.conteudo}` });
+                                configUser.aguardando.inputs_enviados.push(`${funil.conteudo}`);
                                 configUser.enviando = "nao";
                                 await this.updateUser(repleceado, configUser);
                               }
                             }
-                          } else {
-                            configUser.enviando = "sim";
-                            await this.updateUser(repleceado, configUser);
-                            await this.instance.sock?.sendMessage(numeroUser, { text: `${funil.conteudo}` });
-                            configUser.aguardando.inputs_enviados.push(`${funil.conteudo}`);
-                            configUser.enviando = "nao";
-                            await this.updateUser(repleceado, configUser);
                           }
-                        }
-                      }
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-                    //fim da função autoresposta ativo
-                }
-          
-            
-            
-                    } catch(e) {
-                        
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                        //fim da função autoresposta ativo
                     }
+              
+                
+                
+                        } catch(e) {
+                          console.log(e)  
+                        }
+                   
             
                     // ---------//
 
@@ -2004,7 +2026,19 @@ async updateProfilePicture(to, url, type) {
 	
 }
 
+
+async removeUndefined(obj) {
+    return JSON.parse(JSON.stringify(obj, (key, value) => {
+        return value === undefined ? null : value;
+    }));
+}
+
+// Atualizar o usuário no Firestore
+
+
+
 async updateUser(sender, updates) {
+    const cleanedData = await this.removeUndefined(updates);
     const chatCollection = db.collection(`conversas2_${this.key}`);
     const userRef = chatCollection.doc(sender);
     await userRef.set(updates, { merge: true });
@@ -2469,7 +2503,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
         formData.append('userType', typeusr);
         formData.append('delay', parseInt(delay));
 
-        const result = await axios.post(`http://18.231.254.61:3000/message/audiofile?key=` + key, formData);
+        const result = await axios.post(`http://18.231.254.61:80/message/audiofile?key=` + key, formData);
 
         console.log(result.data);
         if (result.data.error) {
