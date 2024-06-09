@@ -12,7 +12,7 @@ const { Session } = require('./api/class/session')
 let server
 
 
-server = app.listen(config.port, async () => {
+server = app.listen(config.port, '0.0.0.0', async () => {
     logger.info(`Listening on port ${config.port}`)
    
     if (config.restoreSessionsOnStartup) {

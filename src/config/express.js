@@ -31,9 +31,9 @@ if (protectRoutes) {
 app.use('/', routes)
 
 const myInstanceKey = 'barbara'; 
+const { WhatsAppInstance } = require('../api/class/instance')
 
 
-const { WhatsAppInstance } = require("../api/class/instance")
 
 function generateRandomString(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -46,9 +46,12 @@ function generateRandomString(length) {
 }
 
 app.get('/whats2/:chave', async (req, res) => {
-    const chave = req.params.chave;
+  const chave = req.params.chave;
   
-    const contactsResponse = await fetch(`http://147.78.130.214:3000/misc/contacts?key=${chave}`);
+
+  
+  
+    const contactsResponse = await fetch(`http://18.231.254.61:3000/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
   
     res.render('whats', {chats: contactsData.data.contacts, chave})
@@ -57,7 +60,7 @@ app.get('/whats2/:chave', async (req, res) => {
 app.get('/whats/:chave', async (req, res, next) => {
     try {
         const chave = req.params.chave;
-        const chatsMsgs = await fetch(`http://147.78.130.214:3000/instance/gchats?key=${chave}`);
+        const chatsMsgs = await fetch(`http://18.231.254.61:3000/instance/gchats?key=${chave}`);
         const chatsdata = await chatsMsgs.json();
 
         fs.readFile('./tons-eleven.json', async (err, data) => {
@@ -70,7 +73,7 @@ app.get('/whats/:chave', async (req, res, next) => {
            
 
               
-            const instanceInfoUrl = `http://147.78.130.214:3000/instance/info?key=` + chave;
+            const instanceInfoUrl = `http://18.231.254.61:3000/instance/info?key=` + chave;
             const bearerToken = "Bearer " + generateRandomString(20); // Substitua 'getRandomString()' pela função que gera a string aleatória
             const config = {
               headers: {
@@ -96,7 +99,7 @@ app.get('/whats/:chave', async (req, res, next) => {
 
             let profileImageUrl;
             try {
-            const profileResponse = await fetch(`http://147.78.130.214:3000/misc/downProfile?key=${chave}`, {
+            const profileResponse = await fetch(`http://18.231.254.61:3000/misc/downProfile?key=${chave}`, {
               method: 'POST',
               body: JSON.stringify({ id: numeroid }),
               headers: { 'Content-Type': 'application/json' }
@@ -151,7 +154,7 @@ app.get('/chat', async (req, res, next) => {
 
 
       // Buscando os dados do chat específico
-      const chatResponse = await fetch(`http://147.78.130.214:3000/instance/gchats?key=${chave}`);
+      const chatResponse = await fetch(`http://18.231.254.61:3000/instance/gchats?key=${chave}`);
       if (!chatResponse.ok) {
           throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
       }
@@ -164,7 +167,7 @@ console.log(chatsData)
       }
 
       // Obter informações do usuário
-      const instanceInfoUrl = `http://147.78.130.214:3000/instance/info?key=` + chave;
+      const instanceInfoUrl = `http://18.231.254.61:3000/instance/info?key=` + chave;
       const bearerToken = "Bearer " + generateRandomString(20); // Substitua 'getRandomString()' pela função que gera a string aleatória
       const config = {
           headers: {
@@ -195,7 +198,7 @@ console.log(chatsData)
     });
 
 
-    const funisResponse = await fetch(`http://147.78.130.214:3000/instance/displayallfunis?key=${chave}`);
+    const funisResponse = await fetch(`http://18.231.254.61:3000/instance/displayallfunis?key=${chave}`);
     if (!funisResponse.ok) {
         throw new Error(`Erro na resposta da API: ${funisResponse.statusText}`);
     }
@@ -222,7 +225,7 @@ console.log(chatsData)
 
   let profileImageUrl;
   try {
-  const profileResponse = await fetch(`http://147.78.130.214:3000/misc/downProfile?key=${chave}`, {
+  const profileResponse = await fetch(`http://18.231.254.61:3000/misc/downProfile?key=${chave}`, {
     method: 'POST',
     body: JSON.stringify({ id: numeroid }),
     headers: { 'Content-Type': 'application/json' }
@@ -323,7 +326,7 @@ app.post('/gerar-audio', async (req, res) => {
   });
   
   async function getConfigFromAPI(key) {
-    const response = await axios.get(`http://147.78.130.214:3000/instance/gconfig?key=${key}`);
+    const response = await axios.get(`http://18.231.254.61:3000/instance/gconfig?key=${key}`);
     return response.data;
   }
   
@@ -422,7 +425,7 @@ app.post('/gerar-audio', async (req, res) => {
                 event.preventDefault();
                 const key = document.getElementById('key').value;
                 try {
-                    const response = await fetch('http://147.78.130.214:3000/instance/delete?key=' + key);
+                    const response = await fetch('http://18.231.254.61:3000/instance/delete?key=' + key);
                     if (response.ok) {
                         alert('Acesso deletado com sucesso!');
                     } else {
@@ -481,7 +484,7 @@ app.post('/gerar-audio', async (req, res) => {
                     messagesRead: false
                 };
                 try {
-                    const response = await axios.post('http://147.78.130.214:3000/instance/init', requestData);
+                    const response = await axios.post('http://18.231.254.61:3000/instance/init', requestData);
                     alert('Acesso criado com sucesso!');
                 } catch (error) {
                     alert('Erro ao criar acesso. Por favor, tente novamente.');

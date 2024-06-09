@@ -688,7 +688,7 @@ setHandler() {
                   }
               
                   let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-                  const profileResponse = await fetch(`http://147.78.130.214:3000/misc/downProfile?key=${this.key}`, {
+                  const profileResponse = await fetch(`http://18.231.254.61:3000/misc/downProfile?key=${this.key}`, {
                     method: 'POST',
                     body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
                     headers: { 'Content-Type': 'application/json' }
@@ -921,7 +921,7 @@ setHandler() {
 
               //AUTORESPOSTA 
          try {
-            const autoresp_config = await axios.get(`http://147.78.130.214:3000/autoresposta/dados/${this.key}`)
+            const autoresp_config = await axios.get(`http://18.231.254.61:3000/autoresposta/dados/${this.key}`)
           
                 const autoresp = autoresp_config.data.autoresposta
                 const funilselecionado = autoresp_config.data.funil
@@ -2469,7 +2469,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
         formData.append('userType', typeusr);
         formData.append('delay', parseInt(delay));
 
-        const result = await axios.post(`http://147.78.130.214:3000/message/audiofile?key=` + key, formData);
+        const result = await axios.post(`http://18.231.254.61:3000/message/audiofile?key=` + key, formData);
 
         console.log(result.data);
         if (result.data.error) {
