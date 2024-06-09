@@ -21,7 +21,7 @@
       <div class="card bg-white border border-gray-300 shadow-sm rounded-lg p-4 text-center relative" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" ondrop="drop(event, '<%= index %>')" data-name="<%= funil.funilName %>">
         <h2 class="text-lg font-semibold mb-2"><%= funil.funilName %></h2>
         <img src="https://media.giphy.com/media/WtOkaikiwaR87ZvAFH/giphy.gif" alt="gif animado" class="w-16 h-16 mx-auto mb-2">
-        <button class="absolute top-2 right-2 bg-red-100 text-red-500 rounded-full p-1 hover:bg-red-200" data-name="<%= funil.funilName %>">
+        <button class="delete-btn absolute top-2 right-2 bg-red-100 text-red-500 rounded-full p-1 hover:bg-red-200" data-name="<%= funil.funilName %>">
           &#128465;
         </button>
       </div>
@@ -30,18 +30,20 @@
 
   <!-- Script para exclusão de Funil -->
   <script>
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const funilName = e.target.dataset.name;
-        try {
-          const response = await fetch(`http://18.231.254.61:80/instance/deletefunil?key=<%= key %>&nome=${funilName}`);
-          if (!response.ok) {
-            throw new Error('Erro na requisição: ' + response.statusText);
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const funilName = e.target.dataset.name;
+          try {
+            const response = await fetch(`http://18.231.254.61:80/instance/deletefunil?key=<%= key %>&nome=${funilName}`);
+            if (!response.ok) {
+              throw new Error('Erro na requisição: ' + response.statusText);
+            }
+            location.reload();
+          } catch (error) {
+            console.error('Erro durante a execução:', error.message);
           }
-          location.reload();
-        } catch (error) {
-          console.error('Erro durante a execução:', error.message);
-        }
+        });
       });
     });
   </script>
