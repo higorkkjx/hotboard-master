@@ -416,28 +416,10 @@ async SendWebhook(type, hook, body, key) {
 }
 
 async instanceFind(key) {
-    const filePath = path.join('db/sessions.json');
+    const sessionsRef = db.collection('sessions');
+    const sessionSnapshot = await sessionsRef.where('key', '==', key).get();
 
-    const data = await fs.readFile(filePath, 'utf-8');
-    if (data) {
-        const sessions = JSON.parse(data);
-        const existingSession = sessions.find((session) => session.key === this.key);
-        if (!existingSession) {
-            const data = {
-                "key": false,
-                "browser": false,
-                "webhook": false,
-                "base64": false,
-                "webhookUrl": false,
-                "mongourl": false,
-                "webhookEvents": false,
-                "messagesRead": false,
-            };
-            return data;
-        } else {
-            return existingSession;
-        }
-    } else {
+    if (sessionSnapshot.empty) {
         const data = {
             "key": false,
             "browser": false,
@@ -449,23 +431,22 @@ async instanceFind(key) {
             "messagesRead": false,
         };
         return data;
+    } else {
+        const existingSession = sessionSnapshot.docs[0].data();
+        return existingSession;
     }
 }
 
 async init() {
     const ver = await fetchLatestBaileysVersion();
-    const filePath = path.join('db/sessions.json');
 
-    const data = await fs.readFile(filePath, 'utf-8');
-    if (!data) {
+    const sessionsRef = db.collection('sessions');
+    const sessionSnapshot = await sessionsRef.where('key', '==', this.key).get();
+
+    if (sessionSnapshot.empty) {
         return;
     }
-    const sessions = JSON.parse(data);
-
-    const existingSession = sessions.find((session) => session.key === this.key);
-    if (!existingSession) {
-        return;
-    }
+    const existingSession = sessionSnapshot.docs[0].data();
 
     const { state, saveCreds, keys } = await this.dataBase();
     this.authState = {
@@ -689,7 +670,7 @@ setHandler() {
                   }
               
                   let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-                  const profileResponse = await fetch(`http://18.231.254.61:80/misc/downProfile?key=${this.key}`, {
+                  const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${this.key}`, {
                     method: 'POST',
                     body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
                     headers: { 'Content-Type': 'application/json' }
@@ -928,7 +909,7 @@ setHandler() {
 
              //autoresposta
              try {
-                const autoresp_config = await axios.get(`http://18.231.254.61:80/autoresposta/dados/${this.key}`)
+                const autoresp_config = await axios.get(`https://evolucaohot.online/autoresposta/dados/${this.key}`)
               
                     const autoresp = autoresp_config.data.autoresposta
                     const funilselecionado = autoresp_config.data.funil
@@ -995,6 +976,7 @@ setHandler() {
                               configUser.aguardando.inputs_enviados.push(funil.idInput);
                               configUser.enviando = "sim";
                               await this.updateUser(repleceado, configUser);
+                              console.log(funil.conteudo)
                               await this.instance.sock?.sendMessage(numeroUser, {  image: { url: funil.conteudo }})  
                               configUser.enviando = "nao";
                               await this.updateUser(repleceado, configUser);
@@ -1191,31 +1173,32 @@ setHandler() {
 }
 
 async deleteInstance(key) {
-    const filePath = path.join('db/sessions.json');
+    const sessionsRef = db.collection('sessions');
+    const sessionSnapshot = await sessionsRef.where('key', '==', key).get();
 
-    let data = await fs.readFile(filePath, 'utf-8');
-    let sessions = JSON.parse(data);
-    let existingSession = sessions.find(session => session.key === key);
+    if (sessionSnapshot.empty) {
+        return {
+            error: true,
+            message: 'Sessão não localizada',
+        };
+    }
 
-    if (existingSession) {
-        let updatedSessions = sessions.filter(session => session.key !== key);
+    const sessionDoc = sessionSnapshot.docs[0];
 
-        try {
-            let salvar = await fs.writeFile(filePath, JSON.stringify(updatedSessions, null, 2), 'utf-8');
-        } catch (error) {
-            console.log('erro ao salvar');
-        }
+    try {
+        await sessionDoc.ref.delete();
 
-        if (this.instance.online == true) {
+        if (this.instance.online === true) {
             this.instance.deleted = true;
             await this.instance.sock?.logout();
         } else {
             await this.deleteFolder('db/' + this.key);
         }
-    } else {
+    } catch (error) {
+        console.log('Erro ao excluir a sessão:', error);
         return {
             error: true,
-            message: 'Sessão não localizada',
+            message: 'Erro ao excluir a sessão',
         };
     }
 }
@@ -2496,7 +2479,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
         formData.append('userType', typeusr);
         formData.append('delay', parseInt(delay));
 
-        const result = await axios.post(`http://18.231.254.61:80/message/audiofile?key=` + key, formData);
+        const result = await axios.post(`https://evolucaohot.online/message/audiofile?key=` + key, formData);
 
         console.log(result.data);
         if (result.data.error) {

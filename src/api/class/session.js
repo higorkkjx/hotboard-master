@@ -1,5 +1,6 @@
 /* eslint-disable no-unsafe-optional-chaining */
-const { WhatsAppInstance } = require('../class/instance')
+const { WhatsAppInstance, db } = require('../class/instance')
+
 const logger = require('pino')()
 const config = require('../../config/config')
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
@@ -8,38 +9,27 @@ const fs = require('fs').promises;
 
 class Session {
     async restoreSessions() {
-        let restoredSessions = new Array();
+        let restoredSessions = [];
         let allSessions = [];
 
         try {
-        const filePath = 'db/sessions.json'; 
+            const sessionsRef = db.collection('sessions');
+            const sessionsSnapshot = await sessionsRef.get();
 
-            
-            const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
-
-            if (fileExists) {
-               
-                const data = await fs.readFile(filePath, 'utf-8');
-                allSessions = JSON.parse(data);
-            } else {
-               
-                await fs.writeFile(filePath, '[]', 'utf-8');
+            if (!sessionsSnapshot.empty) {
+                sessionsSnapshot.forEach(doc => {
+                    allSessions.push(doc.data());
+                });
             }
-            const data = await fs.readFile('db/sessions.json', 'utf-8');
-            allSessions = JSON.parse(data);
-			
-			
 
-            
-            allSessions.forEach(async (sessionData) => {
-				
+            for (const sessionData of allSessions) {
                 const { key, webhook, webhookUrl } = sessionData;
                 const instance = new WhatsAppInstance(key, webhook, webhookUrl);
                 await instance.init();
                 WhatsAppInstances[key] = instance;
                 restoredSessions.push(key);
-				await sleep(150);
-            });
+                await sleep(150);
+            }
         } catch (e) {
             logger.error('Error restoring sessions');
             logger.error(e);

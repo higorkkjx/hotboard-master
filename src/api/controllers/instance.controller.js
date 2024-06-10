@@ -1,4 +1,4 @@
-const { WhatsAppInstance } = require('../class/instance');
+const { WhatsAppInstance, db } = require('../class/instance');
 const fs = require('fs').promises;
 const path = require('path');
 const config = require('../../config/config');
@@ -16,15 +16,11 @@ exports.init = async (req, res) => {
     let base64 = req.body.base64 || false;
 
     const key = req.body.key;
-    const filePath = path.join('db/sessions.json');
 
-    const data = await fs.readFile(filePath, 'utf-8');
-    const sessions = JSON.parse(data);
+    const sessionsRef = db.collection('sessions');
+    const sessionSnapshot = await sessionsRef.where('key', '==', key).get();
 
-    const valida = sessions.find(session => session.key === key);
-    console.log(key)
-console.log(valida)
-    if (valida) {
+    if (!sessionSnapshot.empty) {
         return res.json({
             error: true,
             message: 'Sessão já foi iniciada.'
@@ -32,17 +28,24 @@ console.log(valida)
     } else {
         const appUrl = config.appUrl || req.protocol + '://' + req.headers.host;
 
-        const filePath = path.join('db/sessions.json');
-        const dataSession = await fs.readFile(filePath, 'utf-8');
-        const sessions = JSON.parse(dataSession);
+        const sessionData = {
+            key: key,
+            ignoreGroups: ignoreGroups,
+            webhook: webhook,
+            base64: base64,
+            webhookUrl: webhookUrl,
+            mongourl: mongourl,
+            browser: browser,
+            webhookEvents: webhookEvents,
+            messagesRead: messagesRead
+        };
 
-        sessions.push({ key: key, ignoreGroups: ignoreGroups, webhook: webhook, base64: base64, webhookUrl: webhookUrl,mongourl: mongourl, browser: browser, webhookEvents: webhookEvents, messagesRead: messagesRead });
-
-        await fs.writeFile(filePath, JSON.stringify(sessions, null, 2), 'utf-8');
+        await sessionsRef.add(sessionData);
 
         const instance = new WhatsAppInstance(key, webhook, webhookUrl);
         const data = await instance.init();
         WhatsAppInstances[data.key] = instance;
+
         res.json({
             error: false,
             message: 'Instancia iniciada',
@@ -73,17 +76,29 @@ exports.editar = async (req, res) => {
     let base64 = req.body.base64 || false;
 
     const key = req.body.key;
-    const filePath = path.join('db/sessions.json');
-    const data = await fs.readFile(filePath, 'utf-8');
-    const sessions = JSON.parse(data);
-    const index = sessions.findIndex(session => session.key === key);
 
-    if (index !== -1) {
-        sessions[index] = { key, ignoreGroups, webhook, base64, webhookUrl,mongourl, browser, webhookEvents, messagesRead, ignoreGroups };
-        await fs.writeFile(filePath, JSON.stringify(sessions, null, 2), 'utf-8');
+    const sessionsRef = db.collection('sessions');
+    const sessionSnapshot = await sessionsRef.where('key', '==', key).get();
+
+    if (!sessionSnapshot.empty) {
+        const sessionDoc = sessionSnapshot.docs[0];
+        const sessionData = {
+            key: key,
+            ignoreGroups: ignoreGroups,
+            webhook: webhook,
+            base64: base64,
+            webhookUrl: webhookUrl,
+            mongourl: mongourl,
+            browser: browser,
+            webhookEvents: webhookEvents,
+            messagesRead: messagesRead
+        };
+
+        await sessionDoc.ref.update(sessionData);
 
         const instance = WhatsAppInstances[key];
         const data = await instance.init();
+
         res.json({
             error: false,
             message: 'Instancia editada',
@@ -113,8 +128,10 @@ exports.getcode = async (req, res) => {
                 message: 'Numero de telefone inválido'
             });
         } else {
+            console.log(req.query.key)
+    console.log(req.body.key)
             const instance = WhatsAppInstances[req.query.key];
-            data = await instance.getInstanceDetail(req.body.key);
+            data = await instance.getInstanceDetail(req.query.key);
 
             if (data.phone_connected === true) {
                 return res.json({
@@ -131,6 +148,7 @@ exports.getcode = async (req, res) => {
             }
         }
     } catch (e) {
+        console.log(e)
         return res.json({
             error: true,
             message: 'instância não localizada'

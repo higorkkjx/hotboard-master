@@ -13,7 +13,7 @@ const urlapi = process.env.urlapi
 const { v4: uuidv4 } = require("uuid");
 
 async function checkWhatsApp(chave) {
-  const instanceResponse = await fetch(`http://18.231.254.61:80/instance/info?key=${chave}`);
+  const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
   const instanceData = await instanceResponse.json();
 
   let whatsappStatus = '';
@@ -26,7 +26,7 @@ async function checkWhatsApp(chave) {
       whatsappIcon = 'fa-whatsapp';
 
       // Requisição para baixar o perfil
-      const profileResponse = await fetch(`http://18.231.254.61:80/misc/downProfile?key=${chave}`, {
+      const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
           method: 'POST',
           body: JSON.stringify({ id: instanceData.instance_data.user.id.replace(":5@s.whatsapp.net", "") }),
           headers: { 'Content-Type': 'application/json' }
@@ -42,7 +42,7 @@ async function checkWhatsApp(chave) {
 
   // Se não estiver conectado, solicitar código de verificação
   if (!instanceData.instance_data.phone_connected) {
-      const getCodeResponse = await fetch(`http://18.231.254.61:80/instance/getcode?key=${chave}&number=${NUMEROINPUT}`, {
+      const getCodeResponse = await fetch(`https://evolucaohot.online/instance/getcode?key=${chave}&number=${NUMEROINPUT}`, {
           method: 'POST'
       });
       const getCodeData = await getCodeResponse.json();
@@ -285,7 +285,7 @@ router.post("/adicionar-email", async (req, res) => {
 
   try {
     // Fazendo a solicitação para o URL fornecido
-    const response = await fetch(`http://18.231.254.61:80/instance/addmail?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`);
+    const response = await fetch(`https://evolucaohot.online/instance/addmail?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`);
     const data = await response.json();
     
     // Verificando a resposta da solicitação
@@ -373,7 +373,7 @@ router.get('/info/:chave', async (req, res) => {
   const chave = req.params.chave;
   let userEmail;
   try {
-    const responseEmail = await fetch(`http://18.231.254.61:80/instance/getmail?key=${encodeURIComponent(chave)}`);
+    const responseEmail = await fetch(`https://evolucaohot.online/instance/getmail?key=${encodeURIComponent(chave)}`);
     const dataEmail = await responseEmail.json();
   
     if (dataEmail.email) {
@@ -401,7 +401,7 @@ res.redirect('/email-invalido')
   let totalChats = 0
   try {
     // Requisição para obter os contatos
-    const contactsResponse = await fetch(`http://18.231.254.61:80/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
      totalChats = contactsData.data.contacts.length;
   } catch(e) {
@@ -454,7 +454,7 @@ router.get('/home/:chave', async (req, res) => {
   const chave = req.params.chave;
  let userEmail;
   try {
-    const responseEmail = await fetch(`http://18.231.254.61:80/instance/getmail?key=${encodeURIComponent(chave)}`);
+    const responseEmail = await fetch(`https://evolucaohot.online/instance/getmail?key=${encodeURIComponent(chave)}`);
     const dataEmail = await responseEmail.json();
   
     if (dataEmail.email) {
@@ -485,14 +485,14 @@ res.redirect('/email-invalido')
   // Requisição para obter informações da instância
   try {
 
-    await fetch(`http://18.231.254.61:80/instance/list`)
+    await fetch(`https://evolucaohot.online/instance/list`)
     .then(response => response.json())
     .then(async data => {
       var instanceFound = data.data.find(instance => instance.instance_key === chave);
       if (instanceFound) {
 
 
-    const instanceResponse = await fetch(`http://18.231.254.61:80/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
     // Verifica se o telefone está conectado
@@ -513,7 +513,7 @@ res.redirect('/email-invalido')
       try {
       let numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
 
-      const profileResponse = await fetch(`http://18.231.254.61:80/misc/downProfile?key=${chave}`, {
+      const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
         method: 'POST',
         body: JSON.stringify({ id: numerorefatorado }),
         headers: { 'Content-Type': 'application/json' }
@@ -530,7 +530,7 @@ res.redirect('/email-invalido')
     let totalChats = 0
     try {
       // Requisição para obter os contatos
-      const contactsResponse = await fetch(`http://18.231.254.61:80/misc/contacts?key=${chave}`);
+      const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
       const contactsData = await contactsResponse.json();
        totalChats = contactsData.data.contacts.length;
     } catch(e) {
@@ -564,7 +564,7 @@ router.get('/conectar', async (req, res) => {
   const chave = req.query.chave; // Supondo que a chave esteja presente na query da URL
   let userEmail;
   try {
-    const responseEmail = await fetch(`http://18.231.254.61:80/instance/getmail?key=${encodeURIComponent(chave)}`);
+    const responseEmail = await fetch(`https://evolucaohot.online/instance/getmail?key=${encodeURIComponent(chave)}`);
     const dataEmail = await responseEmail.json();
   
     if (dataEmail.email) {
@@ -590,14 +590,14 @@ res.redirect('/email-invalido')
 
 
   try {
-    const instanceResponse = await fetch(`http://18.231.254.61:80/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
     if (instanceData.error === false && instanceData.instance_data.phone_connected) {
         // WhatsApp conectado, retornar HTML com imagem de perfil e status
         let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
         let numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-        const profileResponse = await fetch(`http://18.231.254.61:80/misc/downProfile?key=${chave}`, {
+        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
             method: 'POST',
             body: JSON.stringify({ id: numerorefatorado}),
             headers: { 'Content-Type': 'application/json' }
@@ -699,13 +699,13 @@ router.post('/conectar', async (req, res) => {
 try {
     const numeroInput = req.body.numero;
     const chave = req.query.chave;
-    const getCodeResponse = await fetch(`http://18.231.254.61:80/instance/getcode?key=${chave}`, {
+    const getCodeResponse = await fetch(`https://evolucaohot.online/instance/getcode?key=${chave}`, {
         method: 'POST',
         body: JSON.stringify({ number: numeroInput }),
         headers: { 'Content-Type': 'application/json' }
     });
     const getCodeData = await getCodeResponse.json();
-
+console.log(getCodeData)
     if (getCodeData.error === false) {
         const code = getCodeData.code;
         const html = `<h1>Digite esse código de verificação no seu WhatsApp: ${code}</h1>`;
@@ -723,7 +723,7 @@ router.get('/listchat/:chave', async (req, res) => {
   const chave = req.params.chave;
   try {
     // Requisição para obter os contatos
-    const contactsResponse = await fetch(`http://18.231.254.61:80/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
      res.json(contactsData)
   } catch(e) {
@@ -738,7 +738,7 @@ router.get('/listchat/:chave', async (req, res) => {
 router.get('/editar', async (req, res) => {
   try {
     const key = req.query.key;
-    const response = await axios.get(`http://18.231.254.61:80/instance/gconfig?key=${key}`);
+    const response = await axios.get(`https://evolucaohot.online/instance/gconfig?key=${key}`);
     const dados = response.data;
 
     res.render('editar', { dados, key });
@@ -751,6 +751,21 @@ router.get('/editar', async (req, res) => {
 
 // --------- ROTAS E FUNÇÕES TYPEBOT FUNIS ----------------------//
 
+function formatarTexto(richTextArray) {
+  let result = richTextArray.reduce((accumulator, current, index, array) => {
+    if (current.type === "a" && current.url) {
+      return accumulator + current.children[0].text.trim() + " (" + current.url + ")\n";
+    } else if (current.children && current.children[0] && current.children[0].text) {
+      return accumulator + current.children[0].text.trim() + "\n";
+    } else {
+      // Adiciona quebra de linha se não for o último elemento ou se não for vazio
+      return accumulator + (index !== array.length - 1 ? "\n" : "");
+    }
+  }, "");
+  return result.trimEnd();
+}
+
+// Função para formatar para funil
 function formatarParaFunil(json) {
   const funilName = json[0].result.data.json.typebot.name;
   const funilGroups = json[0].result.data.json.typebot.groups;
@@ -771,32 +786,18 @@ function formatarParaFunil(json) {
       switch (block.type) {
         case "text":
           tipoMensagem = "text";
-          // Concatenando todos os textos dentro do bloco richText
-          conteudo = block.content.richText.reduce((accumulator, current) => {
-            if (current.children && current.children[0] && current.children[0].text) {
-              return accumulator + current.children[0].text.trim() + "\n"; // Adicionando quebra de linha
-            } else {
-              return accumulator + "\n"; // Substituindo texto vazio por quebra de linha
-            }
-          }, "");
+          conteudo = formatarTexto(block.content.richText);
           break;
         case "Wait":
           tipoMensagem = "wait";
           conteudo = parseInt(block.options.secondsToWaitFor);
           break;
         case "image":
-          tipoMensagem = "image";
-          conteudo = block.content.url;
-          break;
         case "video":
-          tipoMensagem = "video";
-          conteudo = block.content.url;
-          break;
         case "audio":
-          tipoMensagem = "audio";
+          tipoMensagem = block.type;
           conteudo = block.content.url;
           break;
-        // Adicione outros tipos de bloco conforme necessário
         default:
           tipoMensagem = "unknown";
           conteudo = null;
@@ -813,19 +814,17 @@ function formatarParaFunil(json) {
   return funilFormatado;
 }
 
-
-
-
+// Função para formatar para funil avançado
 function formatarParaFunilAvancado(json) {
   const funilName = json[0].result.data.json.typebot.name;
   const funilGroups = json[0].result.data.json.typebot.groups;
-  let input_total = 0; // Variável para contar o total de inputs
+  let input_total = 0;
 
   const funilFormatado = {
     funilName: "dinamico_" + funilName,
     funil: [],
     input_total: input_total,
-    inputs_respostas: [], // Novo array para as respostas dos inputs
+    inputs_respostas: [],
   };
 
   let sequencia = 0;
@@ -836,67 +835,38 @@ function formatarParaFunilAvancado(json) {
 
       switch (block.type) {
         case "text input":
-          sequencia++; // Incrementa a sequência apenas para inputs
+          sequencia++;
           tipoMensagem = "input";
           conteudo = block.options.labels.placeholder;
           idInput = block.id;
-          input_total++; // Incrementa o total de inputs
+          input_total++;
           inputidatual = block.id;
-          // Adiciona o objeto do input ao array de inputs_respostas
           funilFormatado.inputs_respostas.push({
             input_id: idInput,
             resposta: null,
           });
           break;
-          case "text":
-            // Mantém a sequência contínua para mensagens de texto
-            tipoMensagem = "text";
-            idInput = block.id;
-          
-            // Processamento de texto
-            conteudo = block.content.richText.reduce((accumulator, current) => {
-              if (current.children && current.children[0] && current.children[0].text) {
-                return accumulator + current.children[0].text.trim() + "\n"; // Adicionando quebra de linha
-              } else {
-                return accumulator + "\n"; // Substituindo texto vazio por quebra de linha
-              }
-            }, "");
-          
-            // Substituição de variáveis
-            conteudo = conteudo.replace(
-              /{{([^}]+)}}/g,
-              (_, match) => {
-                const variable = json[0].result.data.json.typebot.variables.find(
-                  (v) => v.name === match.trim(),
-                );
-                return `%var=${inputidatual}%`;
-              },
-            );
-            break;
-          
+        case "text":
+          tipoMensagem = "text";
+          idInput = block.id;
+          conteudo = formatarTexto(block.content.richText);
+          conteudo = conteudo.replace(/{{([^}]+)}}/g, (_, match) => {
+            const variable = json[0].result.data.json.typebot.variables.find(v => v.name === match.trim());
+            return `%var=${inputidatual}%`;
+          });
+          break;
         case "Wait":
           idInput = block.id;
           tipoMensagem = "wait";
           conteudo = parseInt(block.options.secondsToWaitFor);
           break;
         case "image":
-          idInput = block.id;
-          // Mantém a sequência contínua para imagem
-          tipoMensagem = "image";
-          conteudo = block.content.url;
-          break;
         case "video":
-          // Mantém a sequência contínua para video
-          tipoMensagem = "video";
-          conteudo = block.content.url;
-          break;
         case "audio":
           idInput = block.id;
-          // Mantém a sequência contínua para audio
-          tipoMensagem = "audio";
+          tipoMensagem = block.type;
           conteudo = block.content.url;
           break;
-        // Adicione outros tipos de bloco conforme necessário
         default:
           tipoMensagem = "unknown";
           conteudo = null;
@@ -906,13 +876,12 @@ function formatarParaFunilAvancado(json) {
         sequencia: sequencia,
         tipoMensagem: tipoMensagem,
         conteudo: conteudo,
-        idInput: idInput, // Adiciona o ID do input, pode ser null se não for um input
+        idInput: idInput,
       });
     });
   });
 
-  funilFormatado.input_total = input_total; // Atualiza o total de inputs
-  console.log(funilFormatado);
+  funilFormatado.input_total = input_total;
   return funilFormatado;
 }
 
@@ -955,7 +924,7 @@ async function obterDadosTypebot(key, url, dinamico) {
       }
 
       try {
-        const response = await axios.post(`http://18.231.254.61:80/instance/addtofirestore?key=` + key, resultadoFormatado, {
+        const response = await axios.post(`https://evolucaohot.online/instance/addtofirestore?key=` + key, resultadoFormatado, {
           headers: {
             'Content-Type': 'application/json'
           }
@@ -996,7 +965,7 @@ router.get("/funil/:chave", (req, res) => {
 router.get("/funis/:chave", async (req, res) => {
   const key = req.params.chave;
   try {
-    const url = `http://18.231.254.61:80/instance/displayallfunis?key=${key}`;
+    const url = `https://evolucaohot.online/instance/displayallfunis?key=${key}`;
     const response = await axios.get(url);
     res.render("funis", { funis: response.data, key, urlapi });
   } catch (error) {
@@ -1085,7 +1054,7 @@ router.post("/hospedar", uploadxs.single("videoFile"), async (req, res) => {
     const rawUrl = await uploadToGitHub(
       buffer,
       filename + ".mp4",
-      "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",
+      "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",
       "higorkkjx",
       "uploads2",
     );
@@ -1238,7 +1207,7 @@ router.get('/gerargp/:chave', async (req, res) => {
     <script>
       document.getElementById('gerarGrupo').addEventListener('click', async () => {
         try {
-          const response = await fetch('http://18.231.254.61:80/instance/gerargp?key=${key}');
+          const response = await fetch('https://evolucaohot.online/instance/gerargp?key=${key}');
           const data = await response.json();
           if (data.linkgp && data.resp) {
             document.getElementById('grupoDesc').textContent = data.resp.desc;
@@ -1279,7 +1248,7 @@ router.get('/autoresposta/:key', async (req, res) => {
     const docRef = db.collection('config').doc(`autoresp_${key}`);
     const doc = await docRef.get();
     const autorespostaAtivada = doc.exists && doc.data().autoresposta; // Verifica se o documento existe e se autoresposta é true
-    const response = await fetch(`http://18.231.254.61:80/instance/displayallfunis?key=${key}`); 
+    const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`); 
     const funis = await response.json();
     res.render('autoresposta', { autorespostaAtivada, key, funis }); 
   } catch (error) {
