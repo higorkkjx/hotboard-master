@@ -1,4 +1,4 @@
-const { WhatsAppInstance, db } = require('../class/instance');
+const { WhatsAppInstance, db, client } = require('../class/instance');
 const fs = require('fs').promises;
 const path = require('path');
 const config = require('../../config/config');
@@ -17,50 +17,71 @@ exports.init = async (req, res) => {
 
     const key = req.body.key;
 
-    const sessionsRef = db.collection('sessions');
-    const sessionSnapshot = await sessionsRef.where('key', '==', key).get();
+    try {
+        await client.connect()
+        const database = client.db('conexao');
+        const sessions = database.collection('sessions');
 
-    if (!sessionSnapshot.empty) {
-        return res.json({
-            error: true,
-            message: 'Sessão já foi iniciada.'
-        });
-    } else {
-        const appUrl = config.appUrl || req.protocol + '://' + req.headers.host;
+        const sessionSnapshot = await sessions.findOne({ key: key });
+        console.log('Session snapshot:', sessionSnapshot);
 
-        const sessionData = {
-            key: key,
-            ignoreGroups: ignoreGroups,
-            webhook: webhook,
-            base64: base64,
-            webhookUrl: webhookUrl,
-            mongourl: mongourl,
-            browser: browser,
-            webhookEvents: webhookEvents,
-            messagesRead: messagesRead
-        };
+        if (sessionSnapshot) {
+            return res.json({
+                error: true,
+                message: 'Sessão já foi iniciada!',
+                cod: sessionSnapshot
+            });
+        } else {
+            const appUrl = config.appUrl || req.protocol + '://' + req.headers.host;
 
-        await sessionsRef.add(sessionData);
-
-        const instance = new WhatsAppInstance(key, webhook, webhookUrl);
-        const data = await instance.init();
-        WhatsAppInstances[data.key] = instance;
-
-        res.json({
-            error: false,
-            message: 'Instancia iniciada',
-            key: data.key,
-            webhook: {
-                enabled: webhook,
+            const sessionData = {
+                key: key,
+                ignoreGroups: ignoreGroups,
+                webhook: webhook,
+                base64: base64,
                 webhookUrl: webhookUrl,
-                webhookEvents: webhookEvents
-            },
-            qrcode: {
-                url: appUrl + '/instance/qr?key=' + data.key,
-            },
-            browser: browser,
-            messagesRead: messagesRead,
-            ignoreGroups: ignoreGroups,
+                mongourl: mongourl,
+                browser: browser,
+                webhookEvents: webhookEvents,
+                messagesRead: messagesRead
+            };
+
+            const updateResult = await sessions.updateOne(
+                { key: key },
+                { $set: sessionData },
+                { upsert: true }
+            );
+            console.log('Update result:', updateResult);
+
+            if (!updateResult.upsertedCount && !updateResult.modifiedCount) {
+                throw new Error('Failed to insert session data');
+            }
+            const instance = new WhatsAppInstance(key, webhook, webhookUrl);
+            const data = await instance.init();
+            WhatsAppInstances[data.key] = instance;
+
+            res.json({
+                error: false,
+                message: 'Instancia iniciada',
+                key: data.key,
+                webhook: {
+                    enabled: webhook,
+                    webhookUrl: webhookUrl,
+                    webhookEvents: webhookEvents
+                },
+                qrcode: {
+                    url: appUrl + '/instance/qr?key=' + data.key,
+                },
+                browser: browser,
+                messagesRead: messagesRead,
+                ignoreGroups: ignoreGroups,
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao iniciar a instância:', error);
+        res.status(500).json({
+            error: true,
+            message: `Erro ao iniciar a instância: ${error.message}`
         });
     }
 };
@@ -77,45 +98,55 @@ exports.editar = async (req, res) => {
 
     const key = req.body.key;
 
-    const sessionsRef = db.collection('sessions');
-    const sessionSnapshot = await sessionsRef.where('key', '==', key).get();
+    try {
+       await client.connect();
+        const database = client.db('conexao');
+        const sessions = database.collection('sessions');
 
-    if (!sessionSnapshot.empty) {
-        const sessionDoc = sessionSnapshot.docs[0];
-        const sessionData = {
-            key: key,
-            ignoreGroups: ignoreGroups,
-            webhook: webhook,
-            base64: base64,
-            webhookUrl: webhookUrl,
-            mongourl: mongourl,
-            browser: browser,
-            webhookEvents: webhookEvents,
-            messagesRead: messagesRead
-        };
+        const sessionSnapshot = await sessions.findOne({ key: key });
 
-        await sessionDoc.ref.update(sessionData);
-
-        const instance = WhatsAppInstances[key];
-        const data = await instance.init();
-
-        res.json({
-            error: false,
-            message: 'Instancia editada',
-            key: key,
-            webhook: {
-                enabled: webhook,
+        if (sessionSnapshot) {
+            const sessionData = {
+                key: key,
+                ignoreGroups: ignoreGroups,
+                webhook: webhook,
+                base64: base64,
                 webhookUrl: webhookUrl,
-                webhookEvents: webhookEvents
-            },
-            browser: browser,
-            messagesRead: messagesRead,
-            ignoreGroups: ignoreGroups,
-        });
-    } else {
-        return res.json({
+                mongourl: mongourl,
+                browser: browser,
+                webhookEvents: webhookEvents,
+                messagesRead: messagesRead
+            };
+
+            await sessions.updateOne({ key: key }, { $set: sessionData });
+
+            const instance = WhatsAppInstances[key];
+            const data = await instance.init();
+
+            res.json({
+                error: false,
+                message: 'Instancia editada',
+                key: key,
+                webhook: {
+                    enabled: webhook,
+                    webhookUrl: webhookUrl,
+                    webhookEvents: webhookEvents
+                },
+                browser: browser,
+                messagesRead: messagesRead,
+                ignoreGroups: ignoreGroups,
+            });
+        } else {
+            return res.json({
+                error: true,
+                message: 'Sessão não localizada.'
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao editar a instância:', error);
+        res.status(500).json({
             error: true,
-            message: 'Sessão não localizada.'
+            message: 'Erro ao editar a instância'
         });
     }
 };
@@ -381,7 +412,7 @@ exports.addtofirestore = async (req, res) => {
         let data;
         try {
             const resultadoFormatado = req.body;
-            data = await instance.addToFirestore(req.query.key, resultadoFormatado);
+            data = await instance.addToDatabase(req.query.key, resultadoFormatado);
             console.log(data)
         } catch (error) {
             data = {};

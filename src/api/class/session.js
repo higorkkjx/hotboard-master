@@ -1,5 +1,5 @@
 /* eslint-disable no-unsafe-optional-chaining */
-const { WhatsAppInstance, db } = require('../class/instance')
+const { WhatsAppInstance, db, client } = require('../class/instance')
 
 const logger = require('pino')()
 const config = require('../../config/config')
@@ -13,12 +13,15 @@ class Session {
         let allSessions = [];
 
         try {
-            const sessionsRef = db.collection('sessions');
-            const sessionsSnapshot = await sessionsRef.get();
+            await client.connect();
+            const database = client.db('conexao');
+            const sessions = database.collection('sessions');
 
-            if (!sessionsSnapshot.empty) {
+            const sessionsSnapshot = await sessions.find().toArray();
+console.log(sessionsSnapshot)
+            if (sessionsSnapshot.length > 0) {
                 sessionsSnapshot.forEach(doc => {
-                    allSessions.push(doc.data());
+                    allSessions.push(doc);
                 });
             }
 

@@ -3,7 +3,7 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios")
-const { WhatsAppInstance, db } = require('../api/class/instance');
+const { WhatsAppInstance, db, client } = require('../api/class/instance');
 const moment = require("moment-timezone");
 const multer = require("multer");
 const fs = require("fs")
@@ -66,133 +66,147 @@ router.get("/admin/dark/adduser", async (req, res) => {
 
 router.post("/criar-assinatura", async (req, res) => {
   const { email, nome, dias } = req.body;
-  const validade = moment().add(parseInt(dias), "days").toDate(); // Convertendo para objeto Date
+  const validade = moment().add(parseInt(dias), "days").toDate();
 
   try {
-    await db.collection("assinaturas").add({ email, nome, validade, ativo: true }); // Usando add() para adicionar um novo documento
-    res.redirect("/admin/dark/assinaturas-ativas");
+     await client.connect()
+      const database = client.db('hotboard');
+      const assinaturas = database.collection('assinaturas');
+
+      await assinaturas.insertOne({ email, nome, validade, ativo: true });
+      res.redirect("/admin/dark/assinaturas-ativas");
   } catch (err) {
-    res.send(err.message);
+      res.send(err.message);
   }
 });
 
 router.get("/admin/dark/assinaturas-ativas", async (req, res) => {
   try {
-    const snapshot = await db.collection("assinaturas").where("ativo", "==", true).get(); // Usando where() para filtrar documentos
-    const assinaturas = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      validade: doc.data().validade.toDate() // Convertendo para objeto Date
-    }));
+     await client.connect()
+      const database = client.db('hotboard');
+      const assinaturas = database.collection('assinaturas');
 
-    // Ordenando as assinaturas por data de validade (mais recente primeiro)
-    assinaturas.sort((a, b) => b.validade - a.validade);
+      const snapshot = await assinaturas.find({ ativo: true }).toArray();
+      const assinaturasList = snapshot.map(doc => ({
+          id: doc._id,
+          ...doc,
+          validade: doc.validade // Não precisa de .toDate() porque já é um objeto Date
+      }));
 
-    res.render("assinaturas-ativas", { assinaturas });
+      // Ordenando as assinaturas por data de validade (mais recente primeiro)
+      assinaturasList.sort((a, b) => b.validade - a.validade);
+
+      res.render("assinaturas-ativas", { assinaturas: assinaturasList });
   } catch (err) {
-    res.send(err.message);
+      res.send(err.message);
   }
 });
 
 router.post("/pausar-assinatura", async (req, res) => {
   const { email } = req.body;
   try {
-    const snapshot = await db.collection("assinaturas").where("email", "==", email).where("ativo", "==", true).get();
-    if (!snapshot.empty) {
-      snapshot.forEach(doc => {
-        db.collection("assinaturas").doc(doc.id).update({ ativo: false }); // Usando update() para atualizar um documento existente
-      });
-    }
+     await client.connect()
+      const database = client.db('hotboard');
+      const assinaturas = database.collection('assinaturas');
 
-    res.redirect("/admin/dark/assinaturas-ativas");
+      const snapshot = await assinaturas.find({ email, ativo: true }).toArray();
+      if (snapshot.length > 0) {
+          await assinaturas.updateMany({ email, ativo: true }, { $set: { ativo: false } });
+      }
+
+      res.redirect("/admin/dark/assinaturas-ativas");
   } catch (err) {
-    res.send(err.message);
+      res.send(err.message);
   }
 });
 
 router.post("/ativar-assinatura", async (req, res) => {
   const { email } = req.body;
   try {
-    const snapshot = await db.collection("assinaturas").where("email", "==", email).where("ativo", "==", false).get();
-    if (!snapshot.empty) {
-      snapshot.forEach(doc => {
-        db.collection("assinaturas").doc(doc.id).update({ ativo: true });
-      });
-    }
+     await client.connect()
+      const database = client.db('hotboard');
+      const assinaturas = database.collection('assinaturas');
 
-    res.redirect("/admin/dark/assinaturas-ativas");
+      const snapshot = await assinaturas.find({ email, ativo: false }).toArray();
+      if (snapshot.length > 0) {
+          await assinaturas.updateMany({ email, ativo: false }, { $set: { ativo: true } });
+      }
+
+      res.redirect("/admin/dark/assinaturas-ativas");
   } catch (err) {
-    res.send(err.message);
+      res.send(err.message);
   }
 });
 
 router.post("/excluir-assinatura", async (req, res) => {
   const { email } = req.body;
   try {
-    const snapshot = await db.collection("assinaturas").where("email", "==", email).get();
-    if (!snapshot.empty) {
-      snapshot.forEach(doc => {
-        db.collection("assinaturas").doc(doc.id).delete(); // Usando delete() para excluir um documento
-      });
-    }
+     await client.connect()
+      const database = client.db('hotboard');
+      const assinaturas = database.collection('assinaturas');
 
-    res.redirect("/admin/dark/assinaturas-ativas");
+      await assinaturas.deleteMany({ email });
+
+      res.redirect("/admin/dark/assinaturas-ativas");
   } catch (err) {
-    res.send(err.message);
+      res.send(err.message);
   }
 });
-
 
 // Função para obter e-mails ativos
 async function getEmailsAtivos() {
   try {
-    const snapshot = await db.collection("assinaturas").where("ativo", "==", true).get();
-    const emailsAtivos = [];
+     await client.connect()
+      const database = client.db('hotboard');
+      const assinaturas = database.collection('assinaturas');
 
-    const dataAtualSP = moment().tz("America/Sao_Paulo");
+      const snapshot = await assinaturas.find({ ativo: true }).toArray();
+      const emailsAtivos = [];
 
-    snapshot.forEach(doc => {
-      const assinatura = doc.data();
-      if (moment(assinatura.validade.toDate()).isBefore(dataAtualSP)) {
-        // Se a validade expirou, marcar a assinatura como inativa no banco de dados
-        db.collection("assinaturas").doc(doc.id).update({ ativo: false });
-      } else {
-        emailsAtivos.push(assinatura.email);
+      const dataAtualSP = moment().tz("America/Sao_Paulo");
+
+      for (const doc of snapshot) {
+          if (moment(doc.validade).isBefore(dataAtualSP)) {
+              await assinaturas.updateOne({ _id: doc._id }, { $set: { ativo: false } });
+          } else {
+              emailsAtivos.push(doc.email);
+          }
       }
-    });
 
-    return emailsAtivos;
+      return emailsAtivos;
   } catch (err) {
-    console.error(err);
-    return [];
+      console.error(err);
+      return [];
   }
 }
 
+// Função para consultar validade
 async function consultarValidade(email) {
   try {
-    const snapshot = await db.collection("assinaturas").where("email", "==", email).get();
+     await client.connect()
+      const database = client.db('hotboard');
+      const assinaturas = database.collection('assinaturas');
 
-    if (!snapshot.empty) {
-      const assinaturaInfo = snapshot.docs[0].data();
-      const dataVencimento = assinaturaInfo.validade.toDate();
-      const dia = dataVencimento.getDate();
-      const mes = dataVencimento.getMonth() + 1;
+      const snapshot = await assinaturas.findOne({ email });
 
-      // Buscar o nome de usuário correspondente ao email
-      const snapshotUsuario = await db.collection("assinaturas").where("email", "==", email).get();
-      const usuario = snapshotUsuario.docs[0].data();
-      const nomeUsuario = usuario.nome || "Usuário"; // Se não encontrar o nome, usa "Usuário" como padrão
+      if (snapshot) {
+          const dataVencimento = snapshot.validade;
+          const dia = dataVencimento.getDate();
+          const mes = dataVencimento.getMonth() + 1;
 
-      return {
-        nome: nomeUsuario,
-        data: `${dia}/${mes}`,
-      };
-    } else {
-      return null; // Retorna null se não houver assinatura para o email fornecido
-    }
+          // Buscar o nome de usuário correspondente ao email
+          const nomeUsuario = snapshot.nome || "Usuário"; // Se não encontrar o nome, usa "Usuário" como padrão
+
+          return {
+              nome: nomeUsuario,
+              data: `${dia}/${mes}`,
+          };
+      } else {
+          return null; // Retorna null se não houver assinatura para o email fornecido
+      }
   } catch (err) {
-    console.error(err);
-    return null;
+      console.error(err);
+      return null;
   }
 }
 
@@ -309,6 +323,7 @@ router.get('/', (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@1.14.1/dist/full.css" rel="stylesheet">
     <style>
       body {
         font-family: 'Arial', sans-serif;
@@ -316,23 +331,28 @@ router.get('/', (req, res) => {
       }
     </style>
   </head>
-  <body class="flex justify-center items-center h-screen relative">
-    <div class="container mx-auto max-w-xs relative">
+  <body class="flex justify-center items-center h-screen bg-gray-200">
+    <div class="container mx-auto max-w-md p-6 bg-white shadow-lg rounded-lg relative">
       <!-- Adicionando uma imagem animada de usuário -->
-      <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-20 rounded-full overflow-hidden -mt-10">
+      <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-20 w-32 h-32 rounded-full overflow-hidden border-4 border-white">
         <img src="https://media.giphy.com/media/3o7TKMt1VVNkHV2PaE/giphy.gif" alt="Usuário" class="w-full h-full object-cover">
       </div>
   
-      <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      <h1 class="text-xl font-bold mb-6">HOTBOARD MASTER</h1>
-        <h1 class="text-xl font-bold mb-6">Informe sua chave de acesso:</h1>
+      <div class="mt-16">
+        <h1 class="text-2xl font-bold mb-4 text-center">HOTBOARD MASTER</h1>
+        <h2 class="text-lg font-semibold mb-6 text-center">Informe sua chave de acesso:</h2>
         <div class="mb-4">
-          <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="chaveInput" type="text" placeholder="Digite sua chave">
+          <input class="input input-bordered w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="chaveInput" type="text" placeholder="Digite sua chave">
         </div>
         <div class="mb-6">
-          <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="login()">Entrar</button>
+          <button class="btn btn-primary w-full" onclick="login()">Entrar</button>
         </div>
-        <div id="message" class="text-red-500 text-sm"></div>
+        <div id="message" class="text-red-500 text-sm text-center"></div>
+      </div>
+  
+      <!-- Animação de automação no WhatsApp -->
+      <div class="flex justify-center mt-6">
+        <img src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeDY5Yzdpb29mZm1ncHYzcHg1ZHl5aTRrd2E2dzhpcWozYWt6ODdsYyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2ikwIgNrmPZICNmRyX/giphy.webp" alt="Automação WhatsApp" class="w-32 h-32">
       </div>
     </div>
   
@@ -346,10 +366,9 @@ router.get('/', (req, res) => {
           .then(data => {
             var instanceFound = data.data.find(instance => instance.instance_key === chave);
             if (instanceFound) {
-  
               document.getElementById("message").innerHTML = "Login realizado com sucesso!";
               setTimeout(function() {
-                window.location.href = '/home/' + chave
+                window.location.href = '/home/' + chave;
               }, 2000); // Redireciona após 2 segundos
             } else {
               // Exibe mensagem de erro
@@ -1233,103 +1252,130 @@ router.get('/gerargp/:chave', async (req, res) => {
 //AUTORESPOSTA
 router.get('/autoresposta/dados/:key', async (req, res) => {
   const key = req.params.key;
-  const docRef = db.collection('config').doc(`autoresp_${key}`);
-  const doc = await docRef.get();
 
-  const docRef2 = db.collection('config').doc(`funilresp_${key}`);
-  const doc2 = await docRef2.get();
+  try {
+      await client.connect()
+      const database = client.db('perfil');
+      const configCollection = database.collection('config');
 
-  res.json({autoresposta: doc._fieldsProto.autoresposta.booleanValue, funil: doc2._fieldsProto.funil.stringValue})
-})
+      const doc = await configCollection.findOne({ _id: `autoresp_${key}` });
+      const doc2 = await configCollection.findOne({ _id: `funilresp_${key}` });
 
+      res.json({
+          autoresposta: doc ? doc.autoresposta : null,
+          funil: doc2 ? doc2.funil : null
+      });
+  } catch (error) {
+      console.error('Erro:', error);
+      res.status(500).send('Erro ao obter dados.');
+  }
+});
+
+// /autoresposta/:key
 router.get('/autoresposta/:key', async (req, res) => {
   const key = req.params.key;
   try {
-    const docRef = db.collection('config').doc(`autoresp_${key}`);
-    const doc = await docRef.get();
-    const autorespostaAtivada = doc.exists && doc.data().autoresposta; // Verifica se o documento existe e se autoresposta é true
-    const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`); 
-    const funis = await response.json();
-    res.render('autoresposta', { autorespostaAtivada, key, funis }); 
+      await client.connect()
+      const database = client.db('perfil');
+      const configCollection = database.collection('config');
+
+      const doc = await configCollection.findOne({ _id: `autoresp_${key}` });
+      const autorespostaAtivada = doc ? doc.autoresposta : false;
+
+      const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`);
+      const funis = await response.json();
+      res.render('autoresposta', { autorespostaAtivada, key, funis });
   } catch (error) {
-    console.error('Erro ao verificar a autoresposta:', error);
-    res.status(500).send('Erro ao verificar a autoresposta.');
+      console.error('Erro ao verificar a autoresposta:', error);
+      res.status(500).send('Erro ao verificar a autoresposta.');
   }
 });
 
+// /api/salvar-funil/:key
 router.post('/api/salvar-funil/:key', async (req, res) => {
   const key = req.params.key;
-  const funilSelecionado = req.body.funil; // Obtém o nome do funil do corpo da requisição
+  const funilSelecionado = req.body.funil;
 
   try {
-    const docRef = db.collection('config').doc(`funilresp_${key}`);
-    await docRef.set({ funil: funilSelecionado });
-    res.json({ success: true });
+      await client.connect()
+      const database = client.db('perfil');
+      const configCollection = database.collection('config');
+
+      await configCollection.updateOne(
+          { _id: `funilresp_${key}` },
+          { $set: { funil: funilSelecionado } },
+          { upsert: true }
+      );
+
+      res.json({ success: true });
   } catch (error) {
-    console.error('Erro ao salvar o funil:', error);
-    res.status(500).json({ success: false, error: 'Erro ao salvar o funil' });
+      console.error('Erro ao salvar o funil:', error);
+      res.status(500).json({ success: false, error: 'Erro ao salvar o funil' });
   }
 });
 
+// /api/autoresposta/:key
 router.post('/api/autoresposta/:key', async (req, res) => {
   const key = req.params.key;
+
   try {
-    const docRef = db.collection('config').doc(`autoresp_${key}`);
-    const doc = await docRef.get();
+      await client.connect()
+      const database = client.db('perfil');
+      const configCollection = database.collection('config');
 
-    if (doc.exists) {
-      // Inverte o valor atual de autoresposta
-      await docRef.update({ autoresposta: !doc.data().autoresposta });
-    } else {
-      // Cria um novo documento com autoresposta = true
-      await docRef.set({ autoresposta: true });
-    }
+      const doc = await configCollection.findOne({ _id: `autoresp_${key}` });
 
-    res.json({ success: true });
+      if (doc) {
+          await configCollection.updateOne(
+              { _id: `autoresp_${key}` },
+              { $set: { autoresposta: !doc.autoresposta } }
+          );
+      } else {
+          await configCollection.insertOne(
+              { _id: `autoresp_${key}`, autoresposta: true }
+          );
+      }
+
+      res.json({ success: true });
   } catch (error) {
-    console.error('Erro ao alternar a autoresposta:', error);
-    res.status(500).json({ success: false, error: 'Erro ao alternar a autoresposta' });
+      console.error('Erro ao alternar a autoresposta:', error);
+      res.status(500).json({ success: false, error: 'Erro ao alternar a autoresposta' });
   }
 });
 
-
+// /clearchats/:key
 router.get('/clearchats/:key', async (req, res) => {
   const key = req.params.key;
-  const chatCollection = db.collection(`conversas2_${key}`);
-  
+
   try {
-    const snapshot = await chatCollection.get();
-    const batch = db.batch();
-    let count = 0;
+      await client.connect()
+      const database = client.db('perfil');
+      const chatCollection = database.collection(`conversas2_${key}`);
 
-    snapshot.forEach(doc => {
-      batch.delete(doc.ref);
-      count++;
-    });
+      const result = await chatCollection.deleteMany({});
+      const count = result.deletedCount;
 
-    await batch.commit();
-
-    res.send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Dados Deletados</title>
-        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-      </head>
-      <body class="flex items-center justify-center h-screen bg-gray-100">
-        <div class="text-center p-6 bg-white rounded-lg shadow-lg">
-          <h1 class="text-2xl font-bold mb-4">Sucesso!</h1>
-          <p class="mb-4">Total de ${count} chats foram deletados com sucesso.</p>
-          <img src="https://media.giphy.com/media/A6aHBCFqlE0Rq/giphy.gif" alt="Sucesso" class="mx-auto">
-        </div>
-      </body>
-      </html>
-    `);
+      res.send(`
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Dados Deletados</title>
+              <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+          </head>
+          <body class="flex items-center justify-center h-screen bg-gray-100">
+              <div class="text-center p-6 bg-white rounded-lg shadow-lg">
+                  <h1 class="text-2xl font-bold mb-4">Sucesso!</h1>
+                  <p class="mb-4">Total de ${count} chats foram deletados com sucesso.</p>
+                  <img src="https://media.giphy.com/media/A6aHBCFqlE0Rq/giphy.gif" alt="Sucesso" class="mx-auto">
+              </div>
+          </body>
+          </html>
+      `);
   } catch (error) {
-    console.error('Erro ao deletar dados:', error);
-    res.status(500).send('Erro ao deletar dados.');
+      console.error('Erro ao deletar dados:', error);
+      res.status(500).send('Erro ao deletar dados.');
   }
 });
 

@@ -10,7 +10,7 @@ const admin = require('firebase-admin');
 const cheerio = require("cheerio")
 
 const urlapi = process.env.urlapi
-
+/*/
 const serviceAccount = require('./firekey.json'); // Caminho para o arquivo de credenciais do Firebase
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -18,7 +18,16 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
-db.settings({ ignoreUndefinedProperties: true });
+db.settings({ ignoreUndefinedProperties: true });/*/
+
+const db = "aa"
+
+const { MongoClient } = require('mongodb');
+
+const uri = 'mongodb+srv://alancalhares123:senha123@cluster0.sgubjmv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
 
 let intervalStore = [];
 
@@ -61,7 +70,7 @@ dados.readFromFile('db/mensagens.json');
 
 setInterval(() => {
     dados.writeToFile('db/mensagens.json');
-}, 60000);
+}, 7200000);
 
 
 
@@ -416,10 +425,13 @@ async SendWebhook(type, hook, body, key) {
 }
 
 async instanceFind(key) {
-    const sessionsRef = db.collection('sessions');
-    const sessionSnapshot = await sessionsRef.where('key', '==', key).get();
+    await client.connect();
+    const database = client.db('conexao');
+    const sessions = database.collection('sessions');
 
-    if (sessionSnapshot.empty) {
+    const sessionSnapshot = await sessions.findOne({ key: key });
+
+    if (!sessionSnapshot) {
         const data = {
             "key": false,
             "browser": false,
@@ -432,21 +444,23 @@ async instanceFind(key) {
         };
         return data;
     } else {
-        const existingSession = sessionSnapshot.docs[0].data();
-        return existingSession;
+        return sessionSnapshot;
     }
 }
 
 async init() {
     const ver = await fetchLatestBaileysVersion();
 
-    const sessionsRef = db.collection('sessions');
-    const sessionSnapshot = await sessionsRef.where('key', '==', this.key).get();
+    await client.connect();
+    const database = client.db('conexao');
+    const sessions = database.collection('sessions');
 
-    if (sessionSnapshot.empty) {
+    const sessionSnapshot = await sessions.findOne({ key: this.key });
+
+    if (!sessionSnapshot) {
         return;
     }
-    const existingSession = sessionSnapshot.docs[0].data();
+    const existingSession = sessionSnapshot;
 
     const { state, saveCreds, keys } = await this.dataBase();
     this.authState = {
@@ -642,83 +656,88 @@ setHandler() {
               
               const checkAndAddChat = async (sender, pushname, body, fromme) => {
                 try {
-                  const chatCollection = db.collection(`conversas2_${this.key}`);
-                  const chatDoc = await chatCollection.doc(sender).get();
-              
-                  if (chatDoc.exists) {
-                    const existingChat = chatDoc.data();
-                    const currentDateTime = getCurrentDateTime();
-                    const newMessage = `${currentDateTime} - ${pushname}: ${body}`;
-                    existingChat.mensagens.push(newMessage);
-              
-                    if (!fromme) {
-                      console.log("> Salvando atualização de nome!");
-                      existingChat.nome = pushname;
+                   await client.connect()
+                    const database = client.db('perfil');
+                    const chatCollection = database.collection(`conversas2_${this.key}`);
+            
+                    const chatDoc = await chatCollection.findOne({ _id: sender });
+            
+                    if (chatDoc) {
+                        const currentDateTime = getCurrentDateTime();
+                        const newMessage = `${currentDateTime} - ${pushname}: ${body}`;
+                        chatDoc.mensagens.push(newMessage);
+            
+                        if (!fromme) {
+                            console.log("> Salvando atualização de nome!");
+                            chatDoc.nome = pushname;
+                        }
+            
+                        await chatCollection.updateOne(
+                            { _id: sender },
+                            { $set: chatDoc }
+                        );
+                        console.log('> Mensagem adicionada ao chat existente.');
+                        return false;
                     }
-              
-                    await chatCollection.doc(sender).set(existingChat);
-                    console.log('> Mensagem adicionada ao chat existente.');
-                    return false;
-                  }
-              
-                  console.log("Chat não existe");
-              
-                  let stringname = pushname;
-                  if (fromme) {
-                    console.log("> Eu que enviei a mensagem primeiro!");
-                    stringname = sender.replace("@s.whatsapp.net", "").replace("@g.us", "");
-                  }
-              
-                  let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-                  const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${this.key}`, {
-                    method: 'POST',
-                    body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const profileData = await profileResponse.json();
-                if (profileData.error === false) {
-                    profileImageUrl = profileData.data;
-                }
-
-                let imagemselecionada;
-                if (sender.includes("@g.us", "")) {
-                    let ppUrl = await this.instance.sock?.profilePictureUrl(sender, 'image');
-                    console.log(ppUrl)
-                    imagemselecionada = ppUrl
-                } else {
-                    imagemselecionada = profileImageUrl
-                }
-
-                  const newChatData = {
-                    chat: sender,
-                    nome: stringname,
-                    mensagens: [`${getCurrentDateTime()} - ${pushname}: ${body}`],
-                    estagio: 0,
-                    nomePix: 'fulano',
-                    imagem: imagemselecionada,
-                    enviando: "nao",
-                    aguardando: {
-                      status: "nao",
-                      id: null,
-                      resposta: null,
-                      inputs_enviados: ["asdasd"],
-                    },
-                    gpconfig: {
-                      antilink: false,
-                      autodivu: false,
-                      timerdivu: 0,
-                      funildivu: null
+            
+                    console.log("Chat não existe");
+            
+                    let stringname = pushname;
+                    if (fromme) {
+                        console.log("> Eu que enviei a mensagem primeiro!");
+                        stringname = sender.replace("@s.whatsapp.net", "").replace("@g.us", "");
                     }
-                  };
-              
-                  await chatCollection.doc(sender).set(newChatData);
-                  console.log('IDCHAT adicionado à base de dados com uma nova mensagem.');
-                  return true;
+            
+                    let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
+                    const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${this.key}`, {
+                        method: 'POST',
+                        body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const profileData = await profileResponse.json();
+                    if (profileData.error === false) {
+                        profileImageUrl = profileData.data;
+                    }
+            
+                    let imagemselecionada;
+                    if (sender.includes("@g.us")) {
+                        let ppUrl = await this.instance.sock?.profilePictureUrl(sender, 'image');
+                        console.log(ppUrl);
+                        imagemselecionada = ppUrl;
+                    } else {
+                        imagemselecionada = profileImageUrl;
+                    }
+            
+                    const newChatData = {
+                        _id: sender,
+                        nome: stringname,
+                        mensagens: [`${getCurrentDateTime()} - ${pushname}: ${body}`],
+                        estagio: 0,
+                        nomePix: 'fulano',
+                        imagem: imagemselecionada,
+                        enviando: "nao",
+                        aguardando: {
+                            status: "nao",
+                            id: null,
+                            resposta: null,
+                            inputs_enviados: ["asdasd"],
+                        },
+                        gpconfig: {
+                            antilink: false,
+                            autodivu: false,
+                            timerdivu: 0,
+                            funildivu: null
+                        }
+                    };
+            
+                    await chatCollection.insertOne(newChatData);
+                    console.log('IDCHAT adicionado à base de dados com uma nova mensagem.');
+                    return true;
                 } catch (error) {
-                  console.error('Erro ao processar o chat:', error);
-                  throw error;
+                    console.error('Erro ao processar o chat:', error);
+                    throw error;
                 }
-              };
+            };
 
 
               if (m.messages[0].key.remoteJid.includes("@g.us")) {
@@ -1173,20 +1192,21 @@ setHandler() {
 }
 
 async deleteInstance(key) {
-    const sessionsRef = db.collection('sessions');
-    const sessionSnapshot = await sessionsRef.where('key', '==', key).get();
+    await client.connect()
+    const database = client.db('conexao');
+    const sessions = database.collection('sessions');
 
-    if (sessionSnapshot.empty) {
+    const sessionSnapshot = await sessions.findOne({ key: key });
+
+    if (!sessionSnapshot) {
         return {
             error: true,
             message: 'Sessão não localizada',
         };
     }
 
-    const sessionDoc = sessionSnapshot.docs[0];
-
     try {
-        await sessionDoc.ref.delete();
+        await sessions.deleteOne({ _id: sessionSnapshot._id });
 
         if (this.instance.online === true) {
             this.instance.deleted = true;
@@ -2014,24 +2034,42 @@ async removeUndefined(obj) {
 
 
 async updateUser(sender, updates) {
-    const cleanedData = await this.removeUndefined(updates);
-    const chatCollection = db.collection(`conversas2_${this.key}`);
-    const userRef = chatCollection.doc(sender);
-    await userRef.set(updates, { merge: true });
-  }
-  
-  async getUser(sender) {
-    const chatCollection = db.collection(`conversas2_${this.key}`);
-    const userRef = chatCollection.doc(sender);
-    const userSnap = await userRef.get();
-    if (userSnap.exists) {
-      return userSnap.data();
-    } else {
-      const newUser = { chat: sender, aguardando: {}, enviando: "nao", estagio: 0 };
-      await userRef.set(newUser);
-      return newUser;
+    try {
+        await client.connect()
+        const database = client.db('perfil');
+        const chatCollection = database.collection(`conversas2_${this.key}`);
+
+        await chatCollection.updateOne(
+            { _id: sender },
+            { $set: updates },
+            { upsert: true }
+        );
+    } catch (error) {
+        console.error('Erro ao atualizar o usuário:', error);
+        throw error;
     }
-  }
+}
+
+async getUser(sender) {
+    try {
+        await client.connect()
+        const database = client.db('perfil');
+        const chatCollection = database.collection(`conversas2_${this.key}`);
+
+        const userDoc = await chatCollection.findOne({ _id: sender });
+
+        if (userDoc) {
+            return userDoc;
+        } else {
+            const newUser = { chat: sender, aguardando: {}, enviando: "nao", estagio: 0 };
+            await chatCollection.insertOne({ _id: sender, ...newUser });
+            return newUser;
+        }
+    } catch (error) {
+        console.error('Erro ao obter o usuário:', error);
+        throw error;
+    }
+}
 
     // get user or group object from db by id
     async getUserOrGroupById(id) {
@@ -2365,98 +2403,111 @@ else
   
 
 // Função para adicionar resultadoFormatado ao array
-async addToFirestore(key, resultadoFormatado) {
-  const collectionRef = db.collection(`funis_${key}`);
-  const docRef = collectionRef.doc("funisDocument");
+async addToDatabase(key, resultadoFormatado) {
+    await client.connect()
+    const database = client.db('perfil');
+    const collection = database.collection(`funis_${key}`);
+    const docId = 'funisDocument';
 
-  const doc = await docRef.get();
+    const doc = await collection.findOne({ _id: docId });
 
-  if (doc.exists) {
-    await docRef.update({
-      funis: admin.firestore.FieldValue.arrayUnion(resultadoFormatado)
-    });
-    console.log("ResultadoFormatado adicionado ao array no Firestore.");
-    return docRef
-  } else {
-    await docRef.set({ funis: [resultadoFormatado] });
-    console.log("Novo documento criado no Firestore.");
-    return docRef
-  }
+    if (doc) {
+        await collection.updateOne(
+            { _id: docId },
+            { $push: { funis: resultadoFormatado } }
+        );
+        console.log("ResultadoFormatado adicionado ao array no MongoDB.");
+        return collection.findOne({ _id: docId });
+    } else {
+        await collection.insertOne({ _id: docId, funis: [resultadoFormatado] });
+        console.log("Novo documento criado no MongoDB.");
+        return collection.findOne({ _id: docId });
+    }
 }
 
 // Função para deletar um funil pelo nome
 async deleteFunilByFunilName(key, funilName) {
-  const collectionRef = db.collection(`funis_${key}`);
-  const docRef = collectionRef.doc("funisDocument");
+    await client.connect()
+    const database = client.db('perfil');
+    const collection = database.collection(`funis_${key}`);
+    const docId = 'funisDocument';
 
-  const doc = await docRef.get();
+    const doc = await collection.findOne({ _id: docId });
 
-  if (doc.exists) {
-    const funis = doc.data().funis;
-    const updatedFunis = funis.filter(funil => funil.funilName !== funilName);
-    await docRef.update({ funis: updatedFunis });
-    console.log(`Funil com funilName '${funilName}' removido do Firestore.`);
-  } else {
-    console.log(`Documento não encontrado no Firestore.`);
-  }
+    if (doc) {
+        const updatedFunis = doc.funis.filter(funil => funil.funilName !== funilName);
+        await collection.updateOne(
+            { _id: docId },
+            { $set: { funis: updatedFunis } }
+        );
+        console.log(`Funil com funilName '${funilName}' removido do MongoDB.`);
+    } else {
+        console.log(`Documento não encontrado no MongoDB.`);
+    }
 }
 
 // Função para exibir todos os funis da base de dados
 async displayAllFunis(key) {
-  const collectionRef = db.collection(`funis_${key}`);
-  const docRef = collectionRef.doc("funisDocument");
+    await client.connect()
+    const database = client.db('perfil');
+    const collection = database.collection(`funis_${key}`);
+    const docId = 'funisDocument';
 
-  const doc = await docRef.get();
-  const funis = doc.exists ? doc.data().funis : [];
+    const doc = await collection.findOne({ _id: docId });
+    const funis = doc ? doc.funis : [];
 
-  console.log("Funis na base de dados:", funis);
-  return funis;
+    console.log("Funis na base de dados:", funis);
+    return funis;
 }
 
 // Função para atualizar a ordem de um funil
-async updateFunilOrderInFirestore(key,funilName, newPosition) {
-  const collectionRef = db.collection(`funis_${key}`);
-  const docRef = collectionRef.doc("funisDocument");
+async updateFunilOrderInDatabase(key, funilName, newPosition) {
+    await client.connect()
+    const database = client.db('perfil');
+    const collection = database.collection(`funis_${key}`);
+    const docId = 'funisDocument';
 
-  const doc = await docRef.get();
-  if (!doc.exists) {
-    throw new Error(`Funil '${funilName}' não encontrado.`);
-  }
+    const doc = await collection.findOne({ _id: docId });
+    if (!doc) {
+        throw new Error(`Funil '${funilName}' não encontrado.`);
+    }
 
-  const funis = doc.data().funis;
-  const funilIndex = funis.findIndex(funil => funil.funilName === funilName);
-  if (funilIndex === -1) {
-    throw new Error(`Funil '${funilName}' não encontrado no documento.`);
-  }
+    const funilIndex = doc.funis.findIndex(funil => funil.funilName === funilName);
+    if (funilIndex === -1) {
+        throw new Error(`Funil '${funilName}' não encontrado no documento.`);
+    }
 
-  funis[funilIndex].position = newPosition;
+    doc.funis[funilIndex].position = newPosition;
 
-  await docRef.update({ funis });
-  console.log("Ordem do funil atualizada:", funilName, newPosition);
+    await collection.updateOne(
+        { _id: docId },
+        { $set: { funis: doc.funis } }
+    );
+    console.log("Ordem do funil atualizada:", funilName, newPosition);
 }
 
 // Função para buscar um funil pelo nome
 async findFunilByName(key, funilName) {
-  const collectionRef = db.collection(`funis_${key}`);
-  const docRef = collectionRef.doc("funisDocument");
+    await client.connect()
+    const database = client.db('perfil');
+    const collection = database.collection(`funis_${key}`);
+    const docId = 'funisDocument';
 
-  const doc = await docRef.get();
-  if (!doc.exists) {
-    console.log(`Nenhum funil encontrado com o nome '${funilName}'.`);
-    return null;
-  }
+    const doc = await collection.findOne({ _id: docId });
+    if (!doc) {
+        console.log(`Nenhum funil encontrado com o nome '${funilName}'.`);
+        return null;
+    }
 
-  const funis = doc.data().funis;
-  const foundFunil = funis.find(funil => funil.funilName === funilName);
-  if (foundFunil) {
-    console.log(`Funil encontrado:`, foundFunil);
-    return foundFunil;
-  } else {
-    console.log(`Nenhum funil encontrado com o nome '${funilName}'.`);
-    return null;
-  }
+    const foundFunil = doc.funis.find(funil => funil.funilName === funilName);
+    if (foundFunil) {
+        console.log(`Funil encontrado:`, foundFunil);
+        return foundFunil;
+    } else {
+        console.log(`Nenhum funil encontrado com o nome '${funilName}'.`);
+        return null;
+    }
 }
-
 
 async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
     try {
@@ -2494,181 +2545,181 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
 
 
 
-// Função para enviar um funil pelo nome
 async sendfunil(key, funilName, chat, visuunica) {
     try {
-    const collectionRef = db.collection(`funis_${key}`);
-    const docRef = collectionRef.doc("funisDocument");
-  
-    const doc = await docRef.get();
-    if (!doc.exists) {
-      console.log(`Nenhum funil encontrado com o nome '${funilName}'.`);
-      return null;
-    }
-  
-    const funis = doc.data().funis;
-    const foundFunil = funis.find(funil => funil.funilName === funilName);
-    if (foundFunil) {
-      console.log(`Funil encontrado:`, foundFunil);
+        await client.connect()
+        const database = client.db('perfil');
+        const collection = database.collection(`funis_${key}`);
+        const docId = 'funisDocument';
 
-      for (const msg of foundFunil.funil) {
-        console.log(msg)
-        if (msg.tipoMensagem == "text") {
-        
-          await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { text: msg.conteudo})
-  
-            
-  
-          } else if (msg.tipoMensagem == "wait") {
-  
-          await sleep(msg.conteudo * 1000);
-  
-        } else if (msg.tipoMensagem == "image") {
-  
-          if (visuunica == 'true') {
-  
-              await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), {  image: { url: msg.conteudo }, viewOnce: true})
-  
-          } else {
-              await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), {  image: { url: msg.conteudo }})  
-          }
-  
-        } else if (msg.tipoMensagem == "audio") {
-  
-          await this.enviarAudio(key, msg.conteudo, this.getWhatsAppId2(chat), "usr", 0)
-         
-  
-        } else if (msg.tipoMensagem == "video") {
-  
-          if (visuunica == 'true') {
-              await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), {  video: { url: msg.conteudo }, viewOnce: true})
-  
-          } else {
-              await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), {  video: { url: msg.conteudo }})  
-          }
+        const doc = await collection.findOne({ _id: docId });
+        if (!doc) {
+            console.log(`Nenhum funil encontrado com o nome '${funilName}'.`);
+            return null;
         }
-      }
 
-   
-      return foundFunil;
-    } else {
-      console.log(`Nenhum funil encontrado com o nome '${funilName}'.`);
-      return null;
+        const funis = doc.funis;
+        const foundFunil = funis.find(funil => funil.funilName === funilName);
+        if (foundFunil) {
+            console.log(`Funil encontrado:`, foundFunil);
+
+            for (const msg of foundFunil.funil) {
+                console.log(msg);
+                if (msg.tipoMensagem == "text") {
+                    await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { text: msg.conteudo });
+                } else if (msg.tipoMensagem == "wait") {
+                    await sleep(msg.conteudo * 1000);
+                } else if (msg.tipoMensagem == "image") {
+                    if (visuunica == 'true') {
+                        await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { image: { url: msg.conteudo }, viewOnce: true });
+                    } else {
+                        await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { image: { url: msg.conteudo } });
+                    }
+                } else if (msg.tipoMensagem == "audio") {
+                    await this.enviarAudio(key, msg.conteudo, this.getWhatsAppId2(chat), "usr", 0);
+                } else if (msg.tipoMensagem == "video") {
+                    if (visuunica == 'true') {
+                        await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { video: { url: msg.conteudo }, viewOnce: true });
+                    } else {
+                        await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { video: { url: msg.conteudo } });
+                    }
+                }
+            }
+
+            return foundFunil;
+        } else {
+            console.log(`Nenhum funil encontrado com o nome '${funilName}'.`);
+            return null;
+        }
+    } catch (e) {
+        console.log(e);
+        return "Erro interno";
     }
-} catch(e) {
-    console.log(e)
-    return "Erro interno"
 }
-  }
 
 
   async obterEmail(key) {
-  try {
-    const chatCollection = db.collection(`conf_${key}`);
-    const chatDoc = await chatCollection.doc("apis").get();
+    try {
+     await client.connect()
+        const database = client.db('perfil');
+        const collection = database.collection(`conf_${key}`);
 
-    if (chatDoc.exists) {
-      const data = chatDoc.data();
-      return data.emailcompra || null; // Retorna o campo emailcompra se existir, senão retorna null
-    } else {
-      return null; // Retorna null se o documento não existir
+        const chatDoc = await collection.findOne({ _id: 'apis' });
+
+        if (chatDoc) {
+            return chatDoc.emailcompra || null; // Retorna o campo emailcompra se existir, senão retorna null
+        } else {
+            return null; // Retorna null se o documento não existir
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        throw new Error('Erro interno do servidor');
     }
-  } catch (error) {
-    console.error('Erro:', error);
-    throw new Error('Erro interno do servidor');
-  }
 }
 
 
-  async salvarEmail(key, email) {
+async salvarEmail(key, email) {
     try {
-      const chatCollection = db.collection(`conf_${key}`);
-      const chatDoc = await chatCollection.doc("apis").get();
-  
-      if (chatDoc.exists) {
-        await chatCollection.doc("apis").update({ emailcompra: email });
-      } else {
-        // Se o documento não existe, você pode optar por criar um novo com o campo emailcompra
-        await chatCollection.doc("apis").set({ emailcompra: email });
-      }
-  return "Email salvo com sucesso."
-  
+      await client.connect()
+        const database = client.db('perfil');
+        const collection = database.collection(`conf_${key}`);
+
+        const filter = { _id: 'apis' };
+        const updateDoc = { $set: { emailcompra: email } };
+        const options = { upsert: true };
+
+        const result = await collection.updateOne(filter, updateDoc, options);
+
+        if (result.modifiedCount === 1 || result.upsertedCount === 1) {
+            return "Email salvo com sucesso.";
+        } else {
+            throw new Error('Falha ao salvar o email');
+        }
     } catch (error) {
-      console.error('Erro:', error);
-      throw new Error('Erro interno do servidor');
+        console.error('Erro:', error);
+        throw new Error('Erro interno do servidor');
     }
-  }
+}
   
   
 
-    async salvarDados(key, dados) {
-        try {
-          const chatCollection = db.collection(`conf_${key}`);
-          const chatDoc = await chatCollection.doc("apis").get();
-      
-          if (!chatDoc.exists) {
-            await chatCollection.doc("apis").set(dados);
+  // Função para salvar dados
+async salvarDados(key, dados) {
+    try {
+        await client.connect()
+        const database = client.db('perfil');
+        const collection = database.collection(`conf_${key}`);
+        const docId = 'apis';
+
+        const doc = await collection.findOne({ _id: docId });
+
+        if (!doc) {
+            await collection.insertOne({ _id: docId, ...dados });
             return 'Dados criados com sucesso!';
-          } else {
-            // Remover campos undefined dos dados
+        } else {
             const dadosLimpos = {};
             for (const [chave, valor] of Object.entries(dados)) {
-              // Verificar se o valor é uma string ou um array
-              // Se for um array, selecionar o primeiro elemento
-              if (Array.isArray(valor)) {
-                dadosLimpos[chave] = valor.length > 0 ? valor[0] : '';
-              } else {
-                dadosLimpos[chave] = valor;
-              }
+                if (Array.isArray(valor)) {
+                    dadosLimpos[chave] = valor.length > 0 ? valor[0] : '';
+                } else {
+                    dadosLimpos[chave] = valor;
+                }
             }
-      
-            await chatCollection.doc("apis").update(dadosLimpos);
+
+            await collection.updateOne({ _id: docId }, { $set: dadosLimpos });
             return 'Dados atualizados com sucesso!';
-          }
-        } catch (error) {
-          console.error('Erro:', error);
-          throw new Error('Erro interno do servidor');
         }
-      }
-      
-      async getconfig(key) {
-        try {
-          const chatCollection = db.collection(`conf_${key}`);
-          const chatDoc = await chatCollection.doc("apis").get();
-      
-          let dados = {};
-
-          if (chatDoc.exists) {
-            dados = chatDoc.data();
-          }
-
-          return dados
-        } catch (error) {
-          console.error('Erro:', error);
-          throw new Error('Erro interno do servidor');
-        }
-      }
-
-    async fetchInstanceMessagesAndChats(key = this.key) {
-        try {
-            const chatCollection = db.collection(`conversas2_${key}`);
-    const snapshot = await chatCollection.get();
-
-    if (snapshot.empty) {
-      console.log('Nenhum chat encontrado.');
-      return [];
+    } catch (error) {
+        console.error('Erro:', error);
+        throw new Error('Erro interno do servidor');
     }
+}
 
-    const chats = [];
-    snapshot.forEach(doc => {
-      chats.push({ id: doc.id, data: doc.data() });
-    });
-    return chats;
-        } catch (error) {
-          console.error('Erro ao buscar mensagens e chats:', error);
-          return { error: true, message: 'Falha ao buscar mensagens e chats' };
+// Função para obter a configuração
+async getconfig(key) {
+    try {
+        await client.connect()
+        const database = client.db('perfil');
+        const collection = database.collection(`conf_${key}`);
+        const docId = 'apis';
+
+        const doc = await collection.findOne({ _id: docId });
+
+        let dados = {};
+
+        if (doc) {
+            dados = doc;
         }
-      }
+
+        return dados;
+    } catch (error) {
+        console.error('Erro:', error);
+        throw new Error('Erro interno do servidor');
+    }
+}
+
+// Função para buscar mensagens e chats
+async fetchInstanceMessagesAndChats(key = this.key) {
+    try {
+        await client.connect()
+        const database = client.db('perfil');
+        const collection = database.collection(`conversas2_${key}`);
+
+        const snapshot = await collection.find().toArray();
+
+        if (snapshot.length === 0) {
+            console.log('Nenhum chat encontrado.');
+            return [];
+        }
+
+        const chats = snapshot.map(doc => ({ id: doc._id, data: doc }));
+
+        return chats;
+    } catch (error) {
+        console.error('Erro ao buscar mensagens e chats:', error);
+        return { error: true, message: 'Falha ao buscar mensagens e chats' };
+    }
+}
       
     // create new group by application
     async createGroupByApp(newChat) {
@@ -3036,5 +3087,6 @@ async groupAcceptInvite(id) {
 
 module.exports = {
     WhatsAppInstance: WhatsAppInstance,
-    db: db
+    db: db,
+    client: client
   };
