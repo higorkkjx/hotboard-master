@@ -847,7 +847,7 @@ function formatarParaFunilAvancado(json) {
   };
 
   let sequencia = 0;
-  let inputidatual = null;
+
   funilGroups.forEach((group) => {
     group.blocks.forEach((block) => {
       let tipoMensagem, conteudo, idInput;
@@ -857,24 +857,30 @@ function formatarParaFunilAvancado(json) {
           sequencia++;
           tipoMensagem = "input";
           conteudo = block.options.labels.placeholder;
-          idInput = block.id;
+          idInput = block.options.variableId;
           input_total++;
-          inputidatual = block.id;
           funilFormatado.inputs_respostas.push({
             input_id: idInput,
             resposta: null,
           });
           break;
         case "text":
+          
+          sequencia++;
           tipoMensagem = "text";
           idInput = block.id;
-          conteudo = formatarTexto(block.content.richText);
-          conteudo = conteudo.replace(/{{([^}]+)}}/g, (_, match) => {
-            const variable = json[0].result.data.json.typebot.variables.find(v => v.name === match.trim());
-            return `%var=${inputidatual}%`;
-          });
+          if (block.content && block.content.richText) {
+            conteudo = formatarTexto(block.content.richText);
+            conteudo = conteudo.replace(/{{([^}]+)}}/g, (_, match) => {
+              const variable = json[0].result.data.json.typebot.variables.find(v => v.name === match.trim());
+              return variable ? `%var=${variable.id}%` : `%var=${match}%`;
+            });
+          } else {
+            conteudo = "";
+          }
           break;
         case "Wait":
+          sequencia++;
           idInput = block.id;
           tipoMensagem = "wait";
           conteudo = parseInt(block.options.secondsToWaitFor);
@@ -882,11 +888,27 @@ function formatarParaFunilAvancado(json) {
         case "image":
         case "video":
         case "audio":
+          sequencia++;
           idInput = block.id;
           tipoMensagem = block.type;
           conteudo = block.content.url;
           break;
+        case "choice input":
+          sequencia++;
+          idInput = block.id;
+          tipoMensagem = "choice";
+          conteudo = {
+            pergunta: block.content && block.content.richText && block.content.richText[0]?.children[0]?.text || "Escolha uma opção:",
+            opcoes: block.items.map((item, index) => `${index + 1} - ${item.content}`),
+            respostas: block.items.map(item => item.content)
+          };
+          funilFormatado.inputs_respostas.push({
+            input_id: idInput,
+            resposta: null,
+          });
+          break;
         default:
+          sequencia++;
           tipoMensagem = "unknown";
           conteudo = null;
       }
@@ -1250,30 +1272,49 @@ router.get('/gerargp/:chave', async (req, res) => {
 
 
 //AUTORESPOSTA
-router.get('/autoresposta/dados/:key', async (req, res) => {
+router.get('/autoresposta/dados/:key/:num', async (req, res) => {
   const key = req.params.key;
-
+  const num = req.params.num;
+console.log(num)
   try {
-      await client.connect()
-      const database = client.db('perfil');
-      const configCollection = database.collection('config');
+    await client.connect();
+    const database = client.db('perfil');
+    const configCollection = database.collection('config');
+    const configCollection2 = database.collection(`funilresp_${key}`);
 
-      const doc = await configCollection.findOne({ _id: `autoresp_${key}` });
-      const doc2 = await configCollection.findOne({ _id: `funilresp_${key}` });
+    const doc = await configCollection.findOne({ _id: `autoresp_${key}` });
 
-      res.json({
-          autoresposta: doc ? doc.autoresposta : null,
-          funil: doc2 ? doc2.funil : null
-      });
+    let doc2;
+    const doc3 = await configCollection2.findOne({ _id: `${num}` });
+    console.log(doc3);
+    
+    if (doc3 !== null) {
+        doc2 = doc3;
+    } else {
+        doc2 = await configCollection2.findOne({ _id: `padrao` });
+    }
+    
+   
+
+    console.log(doc2)
+
+    res.json({
+      autoresposta: doc ? doc.autoresposta : null,
+      funil: doc2 ? doc2.funil : null
+    });
   } catch (error) {
-      console.error('Erro:', error);
-      res.status(500).send('Erro ao obter dados.');
+    console.error('Erro:', error);
+    res.status(500).send('Erro ao obter dados.');
+  } finally {
+    await client.close();
   }
 });
 
 // /autoresposta/:key
 router.get('/autoresposta/:key', async (req, res) => {
   const key = req.params.key;
+  
+
   try {
       await client.connect()
       const database = client.db('perfil');
@@ -1292,17 +1333,19 @@ router.get('/autoresposta/:key', async (req, res) => {
 });
 
 // /api/salvar-funil/:key
-router.post('/api/salvar-funil/:key', async (req, res) => {
+router.post('/api/salvar-funil-user/:key/:num', async (req, res) => {
   const key = req.params.key;
+  const num = req.params.num;
+  
   const funilSelecionado = req.body.funil;
 
   try {
       await client.connect()
       const database = client.db('perfil');
-      const configCollection = database.collection('config');
+      const configCollection = database.collection(`funilresp_${key}`);
 
       await configCollection.updateOne(
-          { _id: `funilresp_${key}` },
+          { _id: `${num}` },
           { $set: { funil: funilSelecionado } },
           { upsert: true }
       );
@@ -1314,9 +1357,38 @@ router.post('/api/salvar-funil/:key', async (req, res) => {
   }
 });
 
+router.post('/api/salvar-funil/:key', async (req, res) => {
+  const key = req.params.key;
+  const funilSelecionado = req.body.funil;
+
+  try {
+    await client.connect();
+    const database = client.db('perfil');
+    const configCollection = database.collection(`funilresp_${key}`);
+
+ 
+    await configCollection.deleteMany({});
+
+    await configCollection.updateMany(
+      { _id: `padrao` },
+      { $set: { funil: funilSelecionado } },
+      { upsert: true }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao salvar o funil:', error);
+    res.status(500).json({ success: false, error: 'Erro ao salvar o funil' });
+  } finally {
+    await client.close();
+  }
+});
+
+
 // /api/autoresposta/:key
 router.post('/api/autoresposta/:key', async (req, res) => {
   const key = req.params.key;
+  const num = req.params.num;
 
   try {
       await client.connect()
@@ -1351,7 +1423,8 @@ router.get('/clearchats/:key', async (req, res) => {
       await client.connect()
       const database = client.db('perfil');
       const chatCollection = database.collection(`conversas2_${key}`);
-
+     // const funilCollection = database.collection(`funilresp_${key}`);
+     // await funilCollection.deleteMany({});
       const result = await chatCollection.deleteMany({});
       const count = result.deletedCount;
 

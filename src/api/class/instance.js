@@ -8,7 +8,7 @@ const cach = require('node-cache');
 const msgRetryCounterCache = new cach();
 const admin = require('firebase-admin');
 const cheerio = require("cheerio")
-
+const colors = require('colors');
 const urlapi = process.env.urlapi
 /*/
 const serviceAccount = require('./firekey.json'); // Caminho para o arquivo de credenciais do Firebase
@@ -637,10 +637,18 @@ setHandler() {
         if (m.type === 'prepend') this.instance.messages.unshift(...m.messages);
         if (m.type !== 'notify') return;
        
+//console.log(m.messages[0].message)
+const messageType2 = Object.keys(m.messages[0].message)[0];
+//console.log(messageType2)
+const autoresp_config = await axios.get(`https://evolucaohot.online/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
+const autoresp = autoresp_config.data.autoresposta
+const funilselecionado = autoresp_config.data.funil
 
-       
-      
+console.log(`CHAVE: ${this.key}`)
+console.log(`Autoresposta: ${autoresp}/funil: ${funilselecionado}`)    
 
+const isGroup = await m.messages[0].key.remoteJid.includes("@g.us")
+console.log("GRUPO?", isGroup)
        try {
                   const sessaoInfo = await this.getInstanceDetail(this.key)
 
@@ -767,7 +775,9 @@ setHandler() {
                     
             const gpmetadata = await this.instance.sock?.groupMetadata(m.messages[0].key.remoteJid)
            // console.log(gpmetadata)
-            
+
+          
+
                var dadomsggp = {
                     "type": "group",
                     "chatId": m.messages[0].key.remoteJid,
@@ -777,7 +787,7 @@ setHandler() {
                     donogp: gpmetadata.subjectOwner,
                     desc: gpmetadata.desc,
                     }
-                console.log(m.messages[0].message.conversation)
+              //  console.log(m.messages[0].message.conversation)
                 let conteudomsg;
             
             if(dadomsggp.message) {
@@ -786,8 +796,13 @@ setHandler() {
                 conteudomsg = "[MEDIA]"
             }
 
-            console.log(typeof conteudomsg); // "string"
-            
+            //console.log(typeof conteudomsg); // "string"
+            console.log(
+                colors.blue.bold('\nSessão: ') + colors.white(this.key) + '\n' +
+                colors.green.bold('Grupo: ') + colors.white(gpmetadata.subject) + '\n' +
+                colors.magenta.bold('Chat: ') + colors.white(m.messages[0].key.remoteJid) + '\n' +
+                colors.cyan.bold('Mensagem: ') + colors.white(conteudomsg) + "\n"
+            );
     
                 await checkAndAddChat(dadomsggp.chatId, dadomsggp.nomegp, conteudomsg, false)
             }
@@ -821,13 +836,48 @@ setHandler() {
                     pushname: msg.pushName,
                     budy: msg.message.conversation
                 }
-                console.log(dadomsg)
+
+                console.log(
+                    colors.blue.bold('\nSessão: ') + colors.white(this.key) + '\n' +
+                    colors.green.bold('Tipo mensagem: ') + colors.white(messageType) + '\n' +
+                    colors.magenta.bold('Chat: ') + colors.white(msg.key.remoteJid) + '\n' +
+                    colors.cyan.bold('Mensagem: ') + colors.white(msg.message.conversation) + "\n"
+                );
+
 
                 await checkAndAddChat(dadomsg.chat, dadomsg.pushname, dadomsg.budy, dadomsg.fromMe)
               
         
                 webhookData['text'] = m;
             }
+
+            if (messageType === 'extendedTextMessage') {
+                //OBTENDO MENSAGENS DOS CHATS
+              
+                console.log(
+                    colors.blue.bold('\nSessão: ') + colors.white(this.key) + '\n' +
+                    colors.green.bold('Tipo mensagem: ') + colors.white(messageType) + '\n' +
+                    colors.magenta.bold('Chat: ') + colors.white(msg.key.remoteJid) + '\n' +
+                    colors.cyan.bold('Mensagem: ') + colors.white(msg.message.extendedTextMessage.text) + "\n"
+                );
+
+               
+               var dadomsg = {
+                    sessao: this.key,
+                    chat: msg.key.remoteJid,
+                    fromMe: msg.key.fromMe,
+                    pushname: msg.pushName,
+                    budy: msg.message.extendedTextMessage.text
+                }
+            
+
+
+                await checkAndAddChat(dadomsg.chat, dadomsg.pushname, dadomsg.budy, dadomsg.fromMe)
+              
+        
+                webhookData['text'] = m;
+            }
+
 
             if (this.instance.webhook === true) {
                 switch (messageType) {
@@ -928,193 +978,221 @@ setHandler() {
 
              //autoresposta
              try {
-                const autoresp_config = await axios.get(`https://evolucaohot.online/autoresposta/dados/${this.key}`)
-              
-                    const autoresp = autoresp_config.data.autoresposta
-                    const funilselecionado = autoresp_config.data.funil
-                    const mensagemuser = m.messages[0].message.conversation
-                    const numeroUser = m.messages[0].key.remoteJid
-    
-                    if(autoresp == true) {
-                        if (m.messages[0].key.remoteJid.includes("@g.us")) return //IGNORANDO GRUPOS
-                        console.log(`Chave: ${this.key} (AUTORESPOSTA ATIVO)`)
-                      console.log(`FUNIL SELECIONADO => ${funilselecionado}`)
-                
-                       
-                          
-                          const repleceado = m.messages[0].key.remoteJid
-                          console.log(repleceado)
-                          const configUser = await this.getUser(repleceado);
-                          console.log(configUser)
-                          
-                          const typebotfunil = await this.findFunilByName(this.key, funilselecionado)
-                          
-                          let contagemFunil = 0;
-                          console.log(configUser.aguardando);
-                          if (configUser.aguardando.status === "sim") {
-                            for (const inps of typebotfunil.inputs_respostas) {
-                              if (configUser.aguardando.id === inps.input_id) {
-                                console.log("salvando resposta no input");
-                                inps.resposta = mensagemuser;
-                                configUser.aguardando.resposta = mensagemuser;
-                                configUser.aguardando.inputs_enviados.push(inps.input_id);
-                                configUser.aguardando.status = "nao";
-                              }
-                            }
-                            await this.updateUser(repleceado, configUser);
-                            console.log(configUser.aguardando);
-                          }
-                          
-                          for (const funil of typebotfunil.funil) {
-                            console.log(funil)
-                            contagemFunil++;
-                          
-                            configUser.estagio = contagemFunil;
-                            await this.updateUser(repleceado, configUser);
-                          
-                            console.log(configUser.enviando);
-                            if (configUser.enviando == "sim") {
-                              console.log("funil ja em execução");
-                              return;
-                            }
-                          
-                            if (funil.tipoMensagem === "wait") {
-                              if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
-                              if (configUser.enviando == "sim") return;
-                              configUser.enviando = "sim";
-                              configUser.aguardando.inputs_enviados.push(funil.idInput);
-                              await this.updateUser(repleceado, configUser);
-                              await sleep(funil.conteudo * 1000);
-                              configUser.enviando = "nao";
-                              await this.updateUser(repleceado, configUser);
-                            }
-                          
-                            if (funil.tipoMensagem === "image") {
-                              if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
-                              if (configUser.enviando == "sim") return;
-                              configUser.aguardando.inputs_enviados.push(funil.idInput);
-                              configUser.enviando = "sim";
-                              await this.updateUser(repleceado, configUser);
-                              console.log(funil.conteudo)
-                              await this.instance.sock?.sendMessage(numeroUser, {  image: { url: funil.conteudo }})  
-                              configUser.enviando = "nao";
-                              await this.updateUser(repleceado, configUser);
-                            }
-                          
-                            if (funil.tipoMensagem === "audio") {
-                                console.log("audio")
-                                console.log(funil.idInput)
-                              if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
-                              console.log("audio2")
-                              if (configUser.enviando == "sim") return;
-                              console.log("audio3")
-                              configUser.aguardando.inputs_enviados.push(funil.idInput);
-                              configUser.enviando = "sim";
-                              await this.updateUser(repleceado, configUser);     
-                              console.log("audio4")    
-                              await this.enviarAudio(this.key, funil.conteudo, numeroUser, "usr", 0)
-                              console.log("audio5")
-                              configUser.enviando = "nao";
-                              await this.updateUser(repleceado, configUser);
-                            }
-                          
-                            if (funil.tipoMensagem === "video") {
-                              if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
-                              if (configUser.enviando == "sim") return;
-                              configUser.aguardando.inputs_enviados.push(funil.idInput);
-                              configUser.enviando = "sim";
-                              await this.updateUser(repleceado, configUser);
-                              await this.instance.sock?.sendMessage(numeroUser, { video: { url: funil.conteudo } });
-                              configUser.enviando = "nao";
-                              await this.updateUser(repleceado, configUser);
-                            }
-                          
-                            if (funil.tipoMensagem === "input") {
-                              if (configUser.aguardando.inputs_enviados.includes(funil.idInput)) continue;
-                              if (configUser.enviando == "sim") return;
-                              configUser.enviando = "sim";
-                              await this.updateUser(repleceado, configUser);
-                              await this.instance.sock?.sendMessage(numeroUser, { text: funil.conteudo });
-                              configUser.aguardando.status = "sim";
-                              configUser.aguardando.id = funil.idInput;
-                              configUser.enviando = "nao";
-                              await this.updateUser(repleceado, configUser);
-                              return;
-                            }
-                          
-                            if (funil.tipoMensagem === "text") {
-                              if (configUser.aguardando.inputs_enviados.includes(funil.conteudo)) continue;
-                              if (configUser.enviando == "sim") return;
-                          
-                              if (funil.conteudo.includes("%var=")) {
-                                const varRegex = /%var=(.*?)%/;
-                                const varMatch = funil.conteudo.match(varRegex);
-                                console.log(varMatch);
-                                let varValue = '';
-                                if (varMatch && varMatch.length > 1) {
-                                  varValue = varMatch[1];
-                                }
-                          
-                                const msgRegex = /^(.*?)%/;
-                                const msgMatch = funil.conteudo.match(msgRegex);
-                          
-                                let message = '';
-                                if (msgMatch && msgMatch.length > 1) {
-                                  message = msgMatch[1].trim();
-                                }
-                          
-                                console.log('Valor de var:', varValue);
-                                console.log('Mensagem:', message);
-                          
-                                for (const inps of typebotfunil.inputs_respostas) {
-                                  if (varValue === inps.input_id) {
-                                    console.log("ENVIANDO MENSAGEMMMMMMMMM");
-                                    configUser.enviando = "sim";
-                                    await this.updateUser(repleceado, configUser);
-                                    var mensagemformatadaresp = funil.conteudo.replace('%var=' + varValue + "%", configUser.aguardando.resposta);
-                                    console.log(mensagemformatadaresp);
-    
-                                    await this.instance.sock?.sendMessage(numeroUser, { text: `${mensagemformatadaresp}` });
-    
-                             
-                                    configUser.aguardando.inputs_enviados.push(funil.conteudo);
-                                    configUser.enviando = "nao";
-                                    await this.updateUser(repleceado, configUser);
+                const mensagemuser = m.messages[0].message.conversation;
+                const numeroUser = m.messages[0].key.remoteJid;
+            
+                if (autoresp === true) {
+                    if (m.messages[0].key.remoteJid.includes("@g.us")) return; //IGNORANDO GRUPOS
+            
+                    const repleceado = m.messages[0].key.remoteJid;
+                    const configUser = await this.getUser(repleceado);
+                    const typebotfunil = await this.findFunilByName(this.key, funilselecionado);
+            
+                    if (!configUser.inputs_respostas) {
+                        configUser.inputs_respostas = [];
+                    }
+            
+                    let contagemFunil = 0;
+            
+                    if (configUser.aguardando.status === "sim") {
+                        const currentFunilStep = typebotfunil.funil.find(step => step.idInput === configUser.aguardando.id);
+                        if (currentFunilStep && currentFunilStep.tipoMensagem === "choice") {
+                            const userChoice = parseInt(mensagemuser.trim(), 10);
+                            if (!isNaN(userChoice) && userChoice > 0 && userChoice <= currentFunilStep.conteudo.opcoes.length) {
+                                const selectedOption = currentFunilStep.conteudo.opcoes[userChoice - 1];
+                                const selectedResponse = `dinamico_${currentFunilStep.conteudo.respostas[userChoice - 1]}`
+
+                                async function salvarFunil(key, funilSelecionado) {
+                                    const url = `https://evolucaohot.online/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
+                                    const data = {
+                                      funil: funilSelecionado
+                                    };
+                                  
+                                    try {
+                                      const response = await fetch(url, {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify(data)
+                                      });
+                                  
+                                      if (!response.ok) {
+                                        throw new Error(`HTTP error! Status: ${response.status}`);
+                                      }
+                                  
+                                      const result = await response.json();
+                                      console.log('Funil salvo com sucesso:', result);
+                                    } catch (error) {
+                                      console.error('Erro ao salvar o funil:', error);
+                                    }
                                   }
+
+                                console.log(`User selected option: ${selectedOption}`);
+                                console.log(`Response for selected option: ${selectedResponse}`);
+                                console.log(currentFunilStep.conteudo)
+                                await salvarFunil(this.key, selectedResponse)
+
+                                configUser.inputs_respostas.push({ input_id: currentFunilStep.idInput, resposta: selectedResponse });
+                                configUser.inputs_enviados.push(currentFunilStep.idInput);
+                                configUser.aguardando.status = "nao";
+                                configUser.aguardando.id = null;
+                                await this.instance.sock?.sendMessage(numeroUser, { text: "Ok, me envie qualquer mensagem para confirmar!" });
+                                return
+                            } else {
+                                await this.instance.sock?.sendMessage(numeroUser, { text: "Opção inválida. Tente novamente." });
+                                return;
+                            }
+                        } else {
+                            for (const inps of typebotfunil.inputs_respostas) {
+                                if (configUser.aguardando.id === inps.input_id) {
+                                    inps.resposta = mensagemuser.trim();
+            
+                                    const existingInput = configUser.inputs_respostas.find(input => input.input_id === inps.input_id);
+                                    if (existingInput) {
+                                        existingInput.resposta = mensagemuser.trim();
+                                    } else {
+                                        configUser.inputs_respostas.push({ input_id: inps.input_id, resposta: mensagemuser.trim() });
+                                    }
+                                    console.log(configUser.inputs_respostas);
+                                    configUser.inputs_enviados.push(inps.input_id);
+                                    configUser.aguardando.status = "nao";
+                                    configUser.aguardando.id = null;
                                 }
-                              } else {
+                            }
+                        }
+                        await this.updateUser(repleceado, configUser);
+                    }
+            
+                    for (const funil of typebotfunil.funil) {
+                        contagemFunil++;
+                        configUser.estagio = contagemFunil;
+                        await this.updateUser(repleceado, configUser);
+            
+                        if (configUser.enviando === "sim") {
+                            return;
+                        }
+            
+                        switch (funil.tipoMensagem) {
+                            case "wait":
+                                if (configUser.inputs_enviados.includes(funil.idInput)) continue;
                                 configUser.enviando = "sim";
+                                configUser.inputs_enviados.push(funil.idInput);
                                 await this.updateUser(repleceado, configUser);
-                                await this.instance.sock?.sendMessage(numeroUser, { text: `${funil.conteudo}` });
-                                configUser.aguardando.inputs_enviados.push(`${funil.conteudo}`);
+                                await sleep(funil.conteudo * 1000);
+                                await this.lerMensagem(m.messages[0].key.id, m.messages[0].key.remoteJid);
                                 configUser.enviando = "nao";
                                 await this.updateUser(repleceado, configUser);
-                              }
-                            }
-                          }
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                        //fim da função autoresposta ativo
-                    }
-              
-                
-                
-                        } catch(e) {
-                          console.log(e)  
+                                break;
+                            case "image":
+                                if (configUser.inputs_enviados.includes(funil.idInput)) continue;
+                                configUser.enviando = "sim";
+                                configUser.inputs_enviados.push(funil.idInput);
+                                await this.updateUser(repleceado, configUser);
+                                await this.instance.sock?.sendMessage(numeroUser, { image: { url: funil.conteudo } });
+                                configUser.enviando = "nao";
+                                await this.updateUser(repleceado, configUser);
+                                break;
+                            case "audio":
+                                if (configUser.inputs_enviados.includes(funil.idInput)) continue;
+                                configUser.enviando = "sim";
+                                configUser.inputs_enviados.push(funil.idInput);
+                                await this.updateUser(repleceado, configUser);
+                                await this.enviarAudio(this.key, funil.conteudo, numeroUser, "usr", 0);
+                                configUser.enviando = "nao";
+                                await this.updateUser(repleceado, configUser);
+                                break;
+                            case "video":
+                                if (configUser.inputs_enviados.includes(funil.idInput)) continue;
+                                configUser.enviando = "sim";
+                                configUser.inputs_enviados.push(funil.idInput);
+                                await this.updateUser(repleceado, configUser);
+                                await this.instance.sock?.sendMessage(numeroUser, { video: { url: funil.conteudo } });
+                                configUser.enviando = "nao";
+                                await this.updateUser(repleceado, configUser);
+                                break;
+                            case "input":
+                                if (configUser.inputs_enviados.includes(funil.idInput)) continue;
+                                configUser.enviando = "sim";
+                                await this.updateUser(repleceado, configUser);
+                                await this.instance.sock?.sendMessage(numeroUser, { text: funil.conteudo });
+                                configUser.aguardando.status = "sim";
+                                configUser.aguardando.id = funil.idInput;
+                                configUser.enviando = "nao";
+                                await this.updateUser(repleceado, configUser);
+                                return;
+                            case "text":
+                                
+                                if (configUser.inputs_enviados.includes(funil.idInput)) continue;
+                                if (funil.conteudo.includes('[FLUXO]')) continue;
+                                configUser.enviando = "sim";
+                                await this.updateUser(repleceado, configUser);
+                                let conteudoFormatado = funil.conteudo;
+                                const varMatches = conteudoFormatado.match(/%var=([^%]+)%/g) || [];
+                                for (const varMatch of varMatches) {
+                                    const varName = varMatch.replace(/%var=|%/g, '');
+                                    const resposta = configUser.inputs_respostas.find(input => input.input_id === varName)?.resposta || '';
+                                    conteudoFormatado = conteudoFormatado.replace(varMatch, resposta);
+                                }
+                                console.log(conteudoFormatado);
+            
+                                function extrairValorENumero(str) {
+                                    const regex = /\[([a-zA-Z]+)\]\[(\d+)\]/;
+                                    const match = str.match(regex);
+                                    if (match) {
+                                        const valor = match[1];
+                                        const numero = parseInt(match[2], 10);
+                                        return { valor, numero };
+                                    } else {
+                                        return { error: 'Formato inválido' };
+                                    }
+                                }
+            
+                                const resultadopresenca = await extrairValorENumero(conteudoFormatado);
+            
+                                if (resultadopresenca.error) {
+                                    console.log("mensagem de texto...");
+                                    console.log(resultadopresenca.error);
+                                    await this.instance.sock?.sendMessage(numeroUser, { text: conteudoFormatado });
+                                } else {
+                                    console.log(resultadopresenca);
+                                    if (resultadopresenca.valor == "digitar") {
+                                        await this.instance.sock?.sendPresenceUpdate('composing', numeroUser);
+                                        await sleep(resultadopresenca.numero * 1000);
+                                        console.log(resultadopresenca.numero * 1000);
+                                    } else if (resultadopresenca.valor == "gravar") {
+                                        await this.instance.sock?.sendPresenceUpdate('recording', numeroUser);
+                                        await sleep(resultadopresenca.numero * 1000);
+                                    }
+                                }
+            
+                                configUser.inputs_enviados.push(funil.idInput);
+                                configUser.enviando = "nao";
+                                await this.updateUser(repleceado, configUser);
+                                break;
+                            case "choice":
+                                if (configUser.inputs_enviados.includes(funil.idInput)) continue;
+                                configUser.enviando = "sim";
+                                await this.updateUser(repleceado, configUser);
+                                await this.instance.sock?.sendMessage(numeroUser, { text: funil.conteudo.pergunta });
+                                await this.instance.sock?.sendMessage(numeroUser, { text: funil.conteudo.opcoes.join('\n') });
+                                configUser.aguardando.status = "sim";
+                                configUser.aguardando.id = funil.idInput;
+                                configUser.enviando = "nao";
+                                await this.updateUser(repleceado, configUser);
+                                return;
+                            default:
+                                break;
                         }
+                    }
+                }
+            } catch (e) {
+                console.log(e);
+            }
+            
+            
+            
+            
                    
             
                     // ---------//
@@ -2035,7 +2113,7 @@ async removeUndefined(obj) {
 
 async updateUser(sender, updates) {
     try {
-        await client.connect()
+        await client.connect();
         const database = client.db('perfil');
         const chatCollection = database.collection(`conversas2_${this.key}`);
 
@@ -2050,18 +2128,25 @@ async updateUser(sender, updates) {
     }
 }
 
+
 async getUser(sender) {
     try {
-        await client.connect()
+        await client.connect();
         const database = client.db('perfil');
         const chatCollection = database.collection(`conversas2_${this.key}`);
 
         const userDoc = await chatCollection.findOne({ _id: sender });
 
         if (userDoc) {
+            if (!userDoc.inputs_enviados) {
+                userDoc.inputs_enviados = [];
+            }
+            if (!userDoc.inputs_respostas) {
+                userDoc.inputs_respostas = [];
+            }
             return userDoc;
         } else {
-            const newUser = { chat: sender, aguardando: {}, enviando: "nao", estagio: 0 };
+            const newUser = { chat: sender, aguardando: {}, enviando: "nao", estagio: 0, inputs_enviados: [], inputs_respostas: [] };
             await chatCollection.insertOne({ _id: sender, ...newUser });
             return newUser;
         }
@@ -2070,6 +2155,7 @@ async getUser(sender) {
         throw error;
     }
 }
+
 
     // get user or group object from db by id
     async getUserOrGroupById(id) {

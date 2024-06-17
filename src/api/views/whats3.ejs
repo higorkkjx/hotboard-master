@@ -961,8 +961,9 @@
                                 
                                                             <div class="d-flex align-items-center">
                                                                 <div class="line-clamp me-auto">
-                                                                    <%= chat.data.mensagens[0].split(' - ')[1] %>
+                                                                    <%= chat.data.mensagens[chat.data.mensagens.length - 1].split(' - ')[1] %>
                                                                 </div>
+                                                                
                                 
                                                                 <div class="badge badge-circle bg-primary ms-5">
                                                                     <span>1</span>
