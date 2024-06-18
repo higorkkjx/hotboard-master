@@ -56,7 +56,7 @@ app.get('/whats2/:chave', async (req, res) => {
 
   
   
-    const contactsResponse = await fetch(`http://evolucaohot.online/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
   
     res.render('whats', {chats: contactsData.data.contacts, chave})
@@ -75,7 +75,7 @@ app.get('/whats2/:chave', async (req, res) => {
 };
 
 const getInstanceInfo = async (chave) => {
-    const instanceInfoUrl = `http://evolucaohot.online/instance/info?key=${chave}`;
+    const instanceInfoUrl = `https://evolucaohot.online/instance/info?key=${chave}`;
     const bearerToken = "Bearer " + generateRandomString(20);
     const config = { headers: { Authorization: bearerToken } };
 
@@ -91,7 +91,7 @@ const getInstanceInfo = async (chave) => {
 
 const getProfileImageUrl = async (chave, numeroid) => {
     try {
-        const profileResponse = await fetch(`http://evolucaohot.online/misc/downProfile?key=${chave}`, {
+        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
             method: 'POST',
             body: JSON.stringify({ id: numeroid }),
             headers: { 'Content-Type': 'application/json' }
@@ -119,7 +119,7 @@ const sortChatsByLastMessageTime = (chatsdata) => {
 app.get('/whats/:chave', async (req, res, next) => {
     const chave = req.params.chave;
     try {
-        const chatsMsgs = await fetch(`http://evolucaohot.online/instance/gchats?key=${chave}`);
+        const chatsMsgs = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
         const chatsdata = await chatsMsgs.json();
 
         const configuracoes = await getConfigurations();
@@ -135,7 +135,7 @@ app.get('/whats/:chave', async (req, res, next) => {
             configuracoes,
             chave,
             profileImageUrl,
-            urlapi: "http://evolucaohot.online"
+            urlapi: "https://evolucaohot.online"
         });
     } catch (error) {
         console.error('Erro ao processar a requisição:', error);
@@ -149,7 +149,7 @@ app.get('/chat', async (req, res, next) => {
     try {
         const configuracoes = await getConfigurations();
 
-        const chatResponse = await fetch(`http://evolucaohot.online/instance/gchats?key=${chave}`);
+        const chatResponse = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
         if (!chatResponse.ok) {
             throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
         }
@@ -161,7 +161,7 @@ app.get('/chat', async (req, res, next) => {
         }
 
         const { nomezap, numeroid } = await getInstanceInfo(chave);
-        const funisResponse = await fetch(`http://evolucaohot.online/instance/displayallfunis?key=${chave}`);
+        const funisResponse = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`);
         if (!funisResponse.ok) {
             throw new Error(`Erro na resposta da API: ${funisResponse.statusText}`);
         }
@@ -272,7 +272,7 @@ app.post('/gerar-audio', async (req, res) => {
   });
   
   async function getConfigFromAPI(key) {
-    const response = await axios.get(`http://evolucaohot.online/instance/gconfig?key=${key}`);
+    const response = await axios.get(`https://evolucaohot.online/instance/gconfig?key=${key}`);
     return response.data;
   }
   
@@ -371,7 +371,7 @@ app.post('/gerar-audio', async (req, res) => {
                 event.preventDefault();
                 const key = document.getElementById('key').value;
                 try {
-                    const response = await fetch('http://evolucaohot.online/instance/delete?key=' + key);
+                    const response = await fetch('https://evolucaohot.online/instance/delete?key=' + key);
                     if (response.ok) {
                         alert('Acesso deletado com sucesso!');
                     } else {
@@ -430,7 +430,7 @@ app.post('/gerar-audio', async (req, res) => {
                     messagesRead: false
                 };
                 try {
-                    const response = await axios.post('http://evolucaohot.online/instance/init', requestData);
+                    const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
                     alert('Acesso criado com sucesso!');
                 } catch (error) {
                     alert('Erro ao criar acesso. Por favor, tente novamente.');
