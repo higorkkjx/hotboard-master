@@ -3,7 +3,7 @@ const dotenv = require('dotenv')
 const logger = require('pino')()
 dotenv.config()
 
-const app = require('./config/express')
+const {app} = require('./config/express')
 const config = require('./config/config')
 
 const { Session } = require('./api/class/session')

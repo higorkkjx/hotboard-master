@@ -4,6 +4,9 @@ const path = require('path');
 const config = require('../../config/config');
 const { Session } = require('../class/session');
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const os = require('os');
+const homeDirectory = os.homedir();
+
 
 exports.init = async (req, res) => {
     let webhook = req.body.webhook || false;
@@ -18,7 +21,7 @@ exports.init = async (req, res) => {
     const key = req.body.key;
 
     try {
-        await client.connect()
+        
         const database = client.db('conexao');
         const sessions = database.collection('sessions');
 
@@ -99,7 +102,7 @@ exports.editar = async (req, res) => {
     const key = req.body.key;
 
     try {
-       await client.connect();
+       
         const database = client.db('conexao');
         const sessions = database.collection('sessions');
 
@@ -160,7 +163,7 @@ exports.getcode = async (req, res) => {
             });
         } else {
             console.log(req.query.key)
-    console.log(req.body.key)
+    console.log(req.query.key)
             const instance = WhatsAppInstances[req.query.key];
             data = await instance.getInstanceDetail(req.query.key);
 
@@ -626,7 +629,7 @@ exports.logout = async (req, res) => {
     let errormsg;
     try {
         await WhatsAppInstances[req.query.key].instance?.sock?.logout();
-        await WhatsAppInstances.removeFolder('db/' + req.query.key);
+        await WhatsAppInstances.removeFolder(homeDirectory + '/db/' + req.query.key);
         await WhatsAppInstances.init();
     } catch (error) {
         errormsg = error;

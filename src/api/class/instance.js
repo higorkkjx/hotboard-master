@@ -10,6 +10,9 @@ const admin = require('firebase-admin');
 const cheerio = require("cheerio")
 const colors = require('colors');
 const urlapi = process.env.urlapi
+const {server} = require("../../config/express")
+const io = require('../../config/public/assets/socket.io/dist')(server);
+
 /*/
 const serviceAccount = require('./firekey.json'); // Caminho para o arquivo de credenciais do Firebase
 admin.initializeApp({
@@ -27,7 +30,7 @@ const { MongoClient } = require('mongodb');
 const uri = 'mongodb+srv://alancalhares123:senha123@cluster0.sgubjmv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-
+ client.connect();
 
 let intervalStore = [];
 
@@ -66,10 +69,14 @@ const util = require('util');
 const url = require('url');
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-dados.readFromFile('db/mensagens.json');
+const os = require('os');
+const homeDirectory = os.homedir();
+
+
+dados.readFromFile(`${homeDirectory}/db/mensagens.json`);
 
 setInterval(() => {
-    dados.writeToFile('db/mensagens.json');
+    dados.writeToFile(`${homeDirectory}/db/mensagens.json`);
 }, 7200000);
 
 
@@ -394,7 +401,7 @@ async getFileNameFromUrl(url) {
 
 async dataBase() {
     try {
-        return await useMultiFileAuthState('db/' + this.key);
+        return await useMultiFileAuthState(homeDirectory + '/db/' + this.key);
     } catch (error) {
         console.log('Falha ao atualizar a base de dados');
     }
@@ -425,7 +432,7 @@ async SendWebhook(type, hook, body, key) {
 }
 
 async instanceFind(key) {
-    await client.connect();
+    
     const database = client.db('conexao');
     const sessions = database.collection('sessions');
 
@@ -451,7 +458,7 @@ async instanceFind(key) {
 async init() {
     const ver = await fetchLatestBaileysVersion();
 
-    await client.connect();
+    
     const database = client.db('conexao');
     const sessions = database.collection('sessions');
 
@@ -532,7 +539,7 @@ setHandler() {
 
         if (connection === 'close') {
             if (status === DisconnectReason.loggedOut || status === 405 || status === 402 || status === 403) {
-                await this.deleteFolder('db/' + this.key);
+                await this.deleteFolder(homeDirectory + '/db/' + this.key);
                 await delay(1000);
                 this.instance.online = false;
                 await this.init();
@@ -572,7 +579,7 @@ setHandler() {
         let folderPath;
         let filePath;
         try {
-            const folderPath = 'db/' + this.key;
+            const folderPath = homeDirectory + '/db/' + this.key;
 
             const filePath = path.join(folderPath, 'contacts.json');
             await fs.access(folderPath);
@@ -596,7 +603,7 @@ setHandler() {
 
             await this.SendWebhook('contacts', 'contacts.upsert', contacts, this.key);
         } catch (error) {
-            const folderPath = 'db/' + this.key;
+            const folderPath = homeDirectory + '/db/' + this.key;
 
             const filePath = path.join(folderPath, 'contacts.json');
             await fs.mkdir(folderPath, { recursive: true });
@@ -637,10 +644,9 @@ setHandler() {
         if (m.type === 'prepend') this.instance.messages.unshift(...m.messages);
         if (m.type !== 'notify') return;
        
-//console.log(m.messages[0].message)
-const messageType2 = Object.keys(m.messages[0].message)[0];
+
 //console.log(messageType2)
-const autoresp_config = await axios.get(`https://evolucaohot.online/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
+const autoresp_config = await axios.get(`http://localhost:3000/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
 const autoresp = autoresp_config.data.autoresposta
 const funilselecionado = autoresp_config.data.funil
 
@@ -652,19 +658,22 @@ console.log("GRUPO?", isGroup)
        try {
                   const sessaoInfo = await this.getInstanceDetail(this.key)
 
-              function getCurrentDateTime() {
-                const now = new Date();
-                const year = now.getFullYear().toString();
-                const month = (now.getMonth() + 1).toString().padStart(2, "0");
-                const day = now.getDate().toString().padStart(2, "0");
-                const hours = now.getHours().toString().padStart(2, "0");
-                const minutes = now.getMinutes().toString().padStart(2, "0");
-                return `${year}-${month}-${day} ${hours}:${minutes}`;
-              }
+                  const moment = require('moment-timezone');
+                  function getCurrentDateTime() {
+                    const now = moment().tz('America/Sao_Paulo');
+                    
+                    const year = now.year().toString();
+                    const month = (now.month() + 1).toString().padStart(2, "0");
+                    const day = now.date().toString().padStart(2, "0");
+                    const hours = now.hours().toString().padStart(2, "0");
+                    const minutes = now.minutes().toString().padStart(2, "0");
+                    
+                    return `${year}-${month}-${day} ${hours}:${minutes}`;
+                  }
               
-              const checkAndAddChat = async (sender, pushname, body, fromme) => {
+              const checkAndAddChat = async (sender, pushname, body, fromme, gppessoanome) => {
                 try {
-                   await client.connect()
+                   
                     const database = client.db('perfil');
                     const chatCollection = database.collection(`conversas2_${this.key}`);
             
@@ -673,7 +682,13 @@ console.log("GRUPO?", isGroup)
                     if (chatDoc) {
                         const currentDateTime = getCurrentDateTime();
                         const newMessage = `${currentDateTime} - ${pushname}: ${body}`;
-                        chatDoc.mensagens.push(newMessage);
+                        try {
+                            chatDoc.mensagens.push(newMessage);
+                        } catch(e) {
+                            console.log("erro ao salvar msg")
+                            chatDoc.mensagens.push(`${currentDateTime} - ${pushname}: [MENSAGEM INDISPONIVEL]`);
+                        }
+                      
             
                         if (!fromme) {
                             console.log("> Salvando atualização de nome!");
@@ -697,7 +712,7 @@ console.log("GRUPO?", isGroup)
                     }
             
                     let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-                    const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${this.key}`, {
+                    const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${this.key}`, {
                         method: 'POST',
                         body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
                         headers: { 'Content-Type': 'application/json' }
@@ -716,10 +731,17 @@ console.log("GRUPO?", isGroup)
                         imagemselecionada = profileImageUrl;
                     }
             
+                    let nomegpOrpeople;
+                    if (sender.includes("@g.us")) {
+                        nomegpOrpeople = gppessoanome
+                    } else {
+                        nomegpOrpeople = pushname
+                    }
+
                     const newChatData = {
                         _id: sender,
                         nome: stringname,
-                        mensagens: [`${getCurrentDateTime()} - ${pushname}: ${body}`],
+                        mensagens: [`${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`],
                         estagio: 0,
                         nomePix: 'fulano',
                         imagem: imagemselecionada,
@@ -739,6 +761,8 @@ console.log("GRUPO?", isGroup)
                     };
             
                     await chatCollection.insertOne(newChatData);
+                    io.emit('new_chat', newChatData);
+
                     console.log('IDCHAT adicionado à base de dados com uma nova mensagem.');
                     return true;
                 } catch (error) {
@@ -747,6 +771,106 @@ console.log("GRUPO?", isGroup)
                 }
             };
 
+           const checkAndAddChat2 = async(sender, pushname, body, fromme, gppessoanome) => {
+                try {
+                    console.log(`------------------`);
+
+                    
+                    const database = client.db('perfil');
+                    const chatCollection = database.collection(`conversas2_${this.key}`);
+            
+                    const existingChat = await chatCollection.findOne({ _id: sender });
+
+                   
+                    if (existingChat) {
+                        const currentDateTime = getCurrentDateTime();
+                        const newMessage = `${currentDateTime} - ${pushname}: ${body}`;
+                        existingChat.mensagens.push(newMessage);
+            
+                        if (!fromme) {
+                            console.log("> Salvando atualização de nome!");
+                            existingChat.nome = pushname;
+                        }
+            
+                        await chatCollection.updateOne(
+                            { _id: sender },
+                            { $set: existingChat }
+                        );
+                        console.log('> Mensagem adicionada ao IDCHAT existente.');
+                        return false;
+                    }
+            
+                   
+            
+                    let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
+                    const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${this.key}`, {
+                        method: 'POST',
+                        body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const profileData = await profileResponse.json();
+                    if (profileData.error === false) {
+                        profileImageUrl = profileData.data;
+                    }
+            
+                    let imagemselecionada;
+
+                    if (sender.includes("@g.us")) {
+                        let ppUrl = await this.instance.sock?.profilePictureUrl(sender, 'image');
+                        console.log(ppUrl);
+                        imagemselecionada = ppUrl;
+                    } else {
+                        imagemselecionada = profileImageUrl;
+                    }
+            
+            
+                    let stringname = pushname;
+                    if (fromme) {
+                        console.log("> Eu que enviei a mensagem primeiro!");
+                        stringname = sender.replace("@s.whatsapp.net", "").replace("@g.us", "");
+                    }
+            
+
+                    let nomegpOrpeople;
+                    if (sender.includes("@g.us")) {
+                        nomegpOrpeople = gppessoanome
+                    } else {
+                        nomegpOrpeople = pushname
+                    }
+
+                    const newChatData = {
+                        chat: sender,
+                        nome: stringname,
+                        mensagens: [`${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`],
+                        imagem: imagemselecionada,
+                        estagio: 0,
+                        nomePix: 'fulano',
+                        enviando: "nao",
+                        aguardando: {
+                            status: "nao",
+                            id: null,
+                            resposta: null,
+                            inputs_enviados: ["0vazio"],
+                        },
+                        gpconfig: {
+                          antilink: false,
+                          autodivu: false,
+                          timerdivu: 0,
+                          funildivu: null
+                        }
+                    };
+            console.log(newChatData)
+                    console.log("..");
+                    await chatCollection.insertOne(newChatData);
+
+                    console.log("...");
+                    console.log('IDCHAT adicionado à base de dados com uma nova mensagem.');
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao processar o chat:', error);
+                    throw error;
+                }
+            }
 
               if (m.messages[0].key.remoteJid.includes("@g.us")) {
 
@@ -783,6 +907,8 @@ console.log("GRUPO?", isGroup)
                     "chatId": m.messages[0].key.remoteJid,
                     "message": m.messages[0].message.conversation,
                     "sender": m.messages[0].key.participant,
+                    pushname: m.messages[0].pushname,
+                    fromMe: m.messages[0].key.fromMe,
                     nomegp: gpmetadata.subject,
                     donogp: gpmetadata.subjectOwner,
                     desc: gpmetadata.desc,
@@ -804,7 +930,7 @@ console.log("GRUPO?", isGroup)
                 colors.cyan.bold('Mensagem: ') + colors.white(conteudomsg) + "\n"
             );
     
-                await checkAndAddChat(dadomsggp.chatId, dadomsggp.nomegp, conteudomsg, false)
+                await checkAndAddChat(dadomsggp.chatId, dadomsggp.nomegp, conteudomsg, dadomsggp.fromMe, dadomsggp.pushname)
             }
             
         this.instance.messages.unshift(...m.messages);
@@ -845,7 +971,7 @@ console.log("GRUPO?", isGroup)
                 );
 
 
-                await checkAndAddChat(dadomsg.chat, dadomsg.pushname, dadomsg.budy, dadomsg.fromMe)
+                await checkAndAddChat(dadomsg.chat, dadomsg.pushname, dadomsg.budy, dadomsg.fromMe, dadomsg.pushname)
               
         
                 webhookData['text'] = m;
@@ -872,7 +998,7 @@ console.log("GRUPO?", isGroup)
             
 
 
-                await checkAndAddChat(dadomsg.chat, dadomsg.pushname, dadomsg.budy, dadomsg.fromMe)
+                await checkAndAddChat(dadomsg.chat, dadomsg.pushname, dadomsg.budy, dadomsg.fromMe, dadomsg.pushname)
               
         
                 webhookData['text'] = m;
@@ -896,7 +1022,7 @@ console.log("GRUPO?", isGroup)
                         }
                         console.log(dadomsg)
         
-                        await checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[IMAGEM]", dadomsg.fromMe)
+                        await checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[IMAGEM]", dadomsg.fromMe, dadomsg.pushname)
 
                         break;
                     case 'videoMessage':
@@ -920,7 +1046,7 @@ console.log("GRUPO?", isGroup)
                         }
                         console.log(dadomsg)
         
-                        await checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[VIDEO]", dadomsg.fromMe)
+                        await checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[VIDEO]", dadomsg.fromMe, dadomsg.pushname)
                         break;
 			case 'audioMessage':
                         const arquivo_audio = await downloadMessage(
@@ -939,7 +1065,7 @@ console.log("GRUPO?", isGroup)
                         }
                         console.log(dadomsg)
         
-                        await checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[AUDIO]", dadomsg.fromMe)
+                        await checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[AUDIO]", dadomsg.fromMe, dadomsg.pushname)
                         break;
                     case 'documentMessage':
                         webhookData['msgContent'] = await downloadMessage(
@@ -956,7 +1082,7 @@ console.log("GRUPO?", isGroup)
                         }
                         console.log(dadomsg)
         
-                        await checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[DOCUMENTO]", dadomsg.fromMe)
+                        await checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[DOCUMENTO]", dadomsg.fromMe, dadomsg.pushname)
                         break;
                     default:
                         var dadomsg = {
@@ -968,7 +1094,7 @@ console.log("GRUPO?", isGroup)
                         }
                         console.log(dadomsg)
         
-                        await checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[MIDIA]", dadomsg.fromMe)
+                        await checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[MIDIA]", dadomsg.fromMe, dadomsg.pushname)
                         webhookData['msgContent'] = '';
                         break;
                 }
@@ -1003,7 +1129,7 @@ console.log("GRUPO?", isGroup)
                                 const selectedResponse = `dinamico_${currentFunilStep.conteudo.respostas[userChoice - 1]}`
 
                                 async function salvarFunil(key, funilSelecionado) {
-                                    const url = `https://evolucaohot.online/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
+                                    const url = `http://localhost:3000/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
                                     const data = {
                                       funil: funilSelecionado
                                     };
@@ -1270,7 +1396,7 @@ console.log("GRUPO?", isGroup)
 }
 
 async deleteInstance(key) {
-    await client.connect()
+    
     const database = client.db('conexao');
     const sessions = database.collection('sessions');
 
@@ -1290,7 +1416,7 @@ async deleteInstance(key) {
             this.instance.deleted = true;
             await this.instance.sock?.logout();
         } else {
-            await this.deleteFolder('db/' + this.key);
+            await this.deleteFolder(homeDirectory + '/db/' + this.key);
         }
     } catch (error) {
         console.log('Erro ao excluir a sessão:', error);
@@ -1366,6 +1492,7 @@ return id.includes('-') ? `${id}@g.us` : `${id}@s.whatsapp.net`;
 
 getWhatsAppId2(id) {
     if (id.includes('@g.us')) return id
+    if (id.includes('@s.whatsapp.net')) return id
     return id + '@s.whatsapp.net'
     }
 
@@ -1473,6 +1600,7 @@ async sendTextMessage(data) {
         },
         quoted
     );
+    
     return send;
 }
 
@@ -1861,7 +1989,7 @@ async getUserStatus(of) {
 }
 
 async contacts() {
-    const folderPath = 'db/' + this.key;
+    const folderPath = homeDirectory + '/db/' + this.key;
     const filePath = path.join(folderPath, 'contacts.json');
     try {
         await fs.access(folderPath);
@@ -2113,7 +2241,7 @@ async removeUndefined(obj) {
 
 async updateUser(sender, updates) {
     try {
-        await client.connect();
+        
         const database = client.db('perfil');
         const chatCollection = database.collection(`conversas2_${this.key}`);
 
@@ -2131,7 +2259,7 @@ async updateUser(sender, updates) {
 
 async getUser(sender) {
     try {
-        await client.connect();
+        
         const database = client.db('perfil');
         const chatCollection = database.collection(`conversas2_${this.key}`);
 
@@ -2490,7 +2618,7 @@ else
 
 // Função para adicionar resultadoFormatado ao array
 async addToDatabase(key, resultadoFormatado) {
-    await client.connect()
+    
     const database = client.db('perfil');
     const collection = database.collection(`funis_${key}`);
     const docId = 'funisDocument';
@@ -2513,7 +2641,7 @@ async addToDatabase(key, resultadoFormatado) {
 
 // Função para deletar um funil pelo nome
 async deleteFunilByFunilName(key, funilName) {
-    await client.connect()
+    
     const database = client.db('perfil');
     const collection = database.collection(`funis_${key}`);
     const docId = 'funisDocument';
@@ -2534,7 +2662,7 @@ async deleteFunilByFunilName(key, funilName) {
 
 // Função para exibir todos os funis da base de dados
 async displayAllFunis(key) {
-    await client.connect()
+    
     const database = client.db('perfil');
     const collection = database.collection(`funis_${key}`);
     const docId = 'funisDocument';
@@ -2548,7 +2676,7 @@ async displayAllFunis(key) {
 
 // Função para atualizar a ordem de um funil
 async updateFunilOrderInDatabase(key, funilName, newPosition) {
-    await client.connect()
+    
     const database = client.db('perfil');
     const collection = database.collection(`funis_${key}`);
     const docId = 'funisDocument';
@@ -2574,7 +2702,7 @@ async updateFunilOrderInDatabase(key, funilName, newPosition) {
 
 // Função para buscar um funil pelo nome
 async findFunilByName(key, funilName) {
-    await client.connect()
+    
     const database = client.db('perfil');
     const collection = database.collection(`funis_${key}`);
     const docId = 'funisDocument';
@@ -2616,7 +2744,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
         formData.append('userType', typeusr);
         formData.append('delay', parseInt(delay));
 
-        const result = await axios.post(`https://evolucaohot.online/message/audiofile?key=` + key, formData);
+        const result = await axios.post(`http://localhost:3000/message/audiofile?key=` + key, formData);
 
         console.log(result.data);
         if (result.data.error) {
@@ -2633,7 +2761,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
 
 async sendfunil(key, funilName, chat, visuunica) {
     try {
-        await client.connect()
+        
         const database = client.db('perfil');
         const collection = database.collection(`funis_${key}`);
         const docId = 'funisDocument';
@@ -2656,9 +2784,12 @@ async sendfunil(key, funilName, chat, visuunica) {
                 } else if (msg.tipoMensagem == "wait") {
                     await sleep(msg.conteudo * 1000);
                 } else if (msg.tipoMensagem == "image") {
+                    
                     if (visuunica == 'true') {
                         await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { image: { url: msg.conteudo }, viewOnce: true });
                     } else {
+                        console.log("enviando")
+                        console.log(this.getWhatsAppId2(chat))
                         await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { image: { url: msg.conteudo } });
                     }
                 } else if (msg.tipoMensagem == "audio") {
@@ -2686,7 +2817,7 @@ async sendfunil(key, funilName, chat, visuunica) {
 
   async obterEmail(key) {
     try {
-     await client.connect()
+     
         const database = client.db('perfil');
         const collection = database.collection(`conf_${key}`);
 
@@ -2706,7 +2837,7 @@ async sendfunil(key, funilName, chat, visuunica) {
 
 async salvarEmail(key, email) {
     try {
-      await client.connect()
+      
         const database = client.db('perfil');
         const collection = database.collection(`conf_${key}`);
 
@@ -2732,7 +2863,7 @@ async salvarEmail(key, email) {
   // Função para salvar dados
 async salvarDados(key, dados) {
     try {
-        await client.connect()
+        
         const database = client.db('perfil');
         const collection = database.collection(`conf_${key}`);
         const docId = 'apis';
@@ -2764,7 +2895,7 @@ async salvarDados(key, dados) {
 // Função para obter a configuração
 async getconfig(key) {
     try {
-        await client.connect()
+        
         const database = client.db('perfil');
         const collection = database.collection(`conf_${key}`);
         const docId = 'apis';
@@ -2787,7 +2918,7 @@ async getconfig(key) {
 // Função para buscar mensagens e chats
 async fetchInstanceMessagesAndChats(key = this.key) {
     try {
-        await client.connect()
+        
         const database = client.db('perfil');
         const collection = database.collection(`conversas2_${key}`);
 

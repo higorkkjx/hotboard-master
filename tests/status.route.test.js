@@ -1,6 +1,6 @@
 const request = require('supertest')
 const assert = require('assert')
-const app = require('../src/server')
+const {app} = require('../src/server')
 const { protectRoutes } = require('../src/config/config')
 
 if (protectRoutes) {

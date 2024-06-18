@@ -11,9 +11,9 @@ class Session {
     async restoreSessions() {
         let restoredSessions = [];
         let allSessions = [];
-
+console.log("Restaurando sessoes")
         try {
-            await client.connect();
+            
             const database = client.db('conexao');
             const sessions = database.collection('sessions');
 
@@ -21,12 +21,14 @@ class Session {
 console.log(sessionsSnapshot)
             if (sessionsSnapshot.length > 0) {
                 sessionsSnapshot.forEach(doc => {
+                    console.log(doc)
                     allSessions.push(doc);
                 });
             }
 
             for (const sessionData of allSessions) {
                 const { key, webhook, webhookUrl } = sessionData;
+   
                 const instance = new WhatsAppInstance(key, webhook, webhookUrl);
                 await instance.init();
                 WhatsAppInstances[key] = instance;
