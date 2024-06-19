@@ -56,6 +56,8 @@ async function checkWhatsApp(chave) {
 
 
 // ------------ ADMIN --------//
+
+
 router.get("/admin/dark/adduser", async (req, res) => {
   try {
     res.render("addassinatura");
@@ -66,7 +68,7 @@ router.get("/admin/dark/adduser", async (req, res) => {
 
 router.post("/criar-assinatura", async (req, res) => {
   const { email, nome, dias } = req.body;
-  const validade = moment().add(parseInt(dias), "days").toDate();
+  var validade = moment().add(parseInt(dias), "days").toDate();
 
   try {
      
@@ -79,6 +81,190 @@ router.post("/criar-assinatura", async (req, res) => {
       res.send(err.message);
   }
 });
+
+
+
+const sendMessageHook = async (number, msg, keybase) => {
+  const url = `https://evolucaohot.online/message/text?key=${keybase}`;
+  const headers = {
+    "accept": "*/*",
+    "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+    "content-type": "application/json",
+    "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "Referer": `https://evolucaohot.online/chat?num=5517996607540@s.whatsapp.net&key=${keybase}`,
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  };
+
+  const body = {
+    id: number,
+    typeId: "user",
+    message: msg,
+    options: {
+      delay: 0,
+      replyFrom: ""
+    },
+    groupOptions: {
+      markUser: ""
+    }
+  };
+
+  try {
+    const response = await axios.post(url, body, { headers });
+
+    if (response.status !== 200) {
+      console.log(`Error: ${response.statusText}`);
+    }
+
+    const data = response.data;
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error("Error sending message:", error);
+  }
+};
+
+
+
+//webhook
+router.post('/webhook', express.json({type: 'application/json'}), async(request, response) => {
+  const event = request.body;
+
+
+  const userinfo = {
+    "email": event.data.object.email,
+    "phone": event.data.object.phone,
+    "nome": event.data.object.name,
+    "balance": event.data.object.balance
+  }
+
+console.log(event)
+  // Handle the event
+  switch (event.type) {
+
+    case 'customer.created':
+      console.log("Checkout aberto!")
+      const carrinho = event.data.object;
+     console.log(userinfo)
+     await sendMessageHook(userinfo.phone.replace("+55", "55"), `👋 Olá ${userinfo.nome},
+
+Aqui é a equipe de suporte da Hotboard! Queremos te avisar que, após a finalização do seu pagamento, você receberá acesso imediato à plataforma. Qualquer dúvida, estamos à disposição.
+
+Atenciosamente,
+Equipe Hotboard`, "chefe5")
+      break;
+
+   case 'invoice.paid':
+    console.log("Pagamento recebido!");
+
+    const payment = event.data.object;
+    
+    const dadosass = {
+        email: payment.customer_email,
+        nome: payment.customer_name,
+        phone: payment.customer_phone,
+        item: {
+            valor: payment.lines.data[0].amount,
+            nome: payment.lines.data[0].description
+        }
+    };
+
+    console.log(dadosass);
+console.log(`formato ${dadosass.phone.replace("+55", "55")}`)
+    await sendMessageHook(dadosass.phone.replace("+55", "55"), `👋 Olá ${dadosass.nome},
+
+Estamos felizes em informar que sua assinatura do item "${dadosass.item.nome}" no valor de ${dadosass.item.valor} foi realizada com sucesso!
+
+Detalhes do Cliente:
+
+*Email: ${dadosass.email}*
+*Telefone: ${dadosass.phone}*
+
+Obrigado por escolher nossos serviços. Já estou criando o seu acesso.
+
+Atenciosamente,
+Equipe de Suporte`, "chefe5");
+
+    // Criando acesso automaticamente:
+    const { email, nome } = dadosass;
+    const validade = moment().add(30, "days").toDate();
+
+    try {
+        const database = client.db('hotboard');
+        const assinaturas = database.collection('assinaturas');
+
+        await assinaturas.insertOne({ email, nome, validade, ativo: true });
+
+        const gerarStringAleatoria = () => {
+            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let resultado = '';
+            for (let i = 0; i < 6; i++) {
+                const indiceAleatorio = Math.floor(Math.random() * caracteres.length);
+                resultado += caracteres[indiceAleatorio];
+            }
+            return resultado;
+        };
+
+        const key = gerarStringAleatoria();
+
+        const requestData = {
+            key,
+            browser: "Ubuntu",
+            webhook: false,
+            base64: true,
+            webhookUrl: "",
+            webhookEvents: ["messages.upsert"],
+            ignoreGroups: false,
+            messagesRead: false
+        };
+
+        try {
+            const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+            console.log('Acesso criado com sucesso!');
+        } catch (error) {
+            console.log('Erro ao criar acesso. Por favor, tente novamente.');
+        }
+
+        await sendMessageHook(dadosass.phone.replace("+55", "55"), `✅ *Acesso liberado com sucesso*
+
+Plataforma: https://evolucaohot.online/
+
+Sua chave de acesso: ${key}
+
+Seu email de validação: ${email}`, "chefe5");
+
+    } catch (err) {
+        res.send(err.message);
+    }
+
+    break;
+
+
+    case 'payment_intent.succeeded':
+      const paymentIntent = event.data.object;
+      // Then define and call a method to handle the successful payment intent.
+      // handlePaymentIntentSucceeded(paymentIntent);
+      break;
+    case 'payment_method.attached':
+      const paymentMethod = event.data.object;
+      // Then define and call a method to handle the successful attachment of a PaymentMethod.
+      // handlePaymentMethodAttached(paymentMethod);
+      break;
+    // ... handle other event types
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  
+
+  // Return a response to acknowledge receipt of the event
+  response.json({received: true});
+});
+
 
 router.get("/admin/dark/assinaturas-ativas", async (req, res) => {
   try {
