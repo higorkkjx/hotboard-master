@@ -237,6 +237,11 @@ Sua chave de acesso: ${key}
 
 Seu email de validação: ${email}`, "chefe5");
 
+await sendMessageHook(dadosass.phone.replace("+55", "55"), `Grupo de clientes: https://chat.whatsapp.com/E9x0eM5RkzxB2Vj1Dt5TnB
+
+Tutorial: https://www.canva.com/design/DAGImSc0sus/pLZ6FDrKe89hIjs38Vsb6w/edit?utm_content=DAGImSc0sus&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+`, "chefe5");
+
     } catch (err) {
         res.send(err.message);
     }
