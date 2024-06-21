@@ -29,8 +29,9 @@ const { MongoClient } = require('mongodb');
 
 const uri = 'mongodb+srv://alancalhares123:senha123@cluster0.sgubjmv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
- client.connect();
+
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, maxPoolSize: 10 });
+client.connect();
 
 let intervalStore = [];
 

@@ -119,29 +119,29 @@ const sortChatsByLastMessageTime = (chatsdata) => {
 app.get('/whats/:chave', async (req, res, next) => {
     const chave = req.params.chave;
     try {
-        //const chatsMsgs = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
-       // const chatsdata = await chatsMsgs.json();
+        const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);
+        const chatsdata = await chatsMsgs.json();
 
-       const database = client.db('perfil');
-       const collection = database.collection(`conversas2_${chave}`);
+      // const database = client.db('perfil');
+       //const collection = database.collection(`conversas2_${chave}`);
 
-       const snapshot = await collection.find().toArray();
+     //  const snapshot = await collection.find().toArray();
 
-       if (snapshot.length === 0) {
-           console.log('Nenhum chat encontrado.');
-           return [];
-       }
+      // if (snapshot.length === 0) {
+      //     console.log('Nenhum chat encontrado.');
+       //    return [];
+     //  }
 
-       const chatsdata = snapshot.map(doc => ({ id: doc._id, data: doc }));
+       //const chatsdata = snapshot.map(doc => ({ id: doc._id, data: doc }));
 
         const configuracoes = await getConfigurations();
         const { nomezap, numeroid } = await getInstanceInfo(chave);
         const profileImageUrl = await getProfileImageUrl(chave, numeroid);
 
-        sortChatsByLastMessageTime(chatsdata);
+      //  sortChatsByLastMessageTime(chatsdata.chatsdata);
 
         res.render("whats3", {
-            chats: chatsdata,
+            chats: chatsdata.chatsdata,
             nomezap,
             numeroid,
             configuracoes,
@@ -154,6 +154,91 @@ app.get('/whats/:chave', async (req, res, next) => {
         return next(error);
     }
 });
+
+app.get('/findchat/:id/:chave', async (req, res, next) => {
+  try {
+    const { id, chave } = req.params;
+    const database = client.db('perfil');
+    const collection = database.collection('conversas2_' + chave);
+
+    // Obter todos os documentos e armazenar em uma variável temporária
+    const snapshot = await collection.find({}, { projection: { _id: 1, nome: 1, mensagens: 1 } }).toArray();
+
+    if (snapshot.length === 0) {
+      console.log('Nenhum chat encontrado.');
+      return res.status(404).json({ error: 'Nenhum chat encontrado.' });
+    }
+
+    // Mapear os dados dos chats
+    const chatsData = snapshot.map(doc => ({ id: doc._id, data: doc }));
+
+
+    
+    // Localizar o chat específico pelo ID
+    const chat = chatsData.find(chat => chat.id === id);
+
+    if (!chat) {
+      console.log('Chat não encontrado.');
+      return res.status(404).json({ error: 'Chat não encontrado.' });
+    }
+
+    // Preparar os dados do chat para resposta
+    const chatdata = {
+      id: chat.id,
+      nome: chat.data.nome,
+      mensagens: chat.data.mensagens || []
+    };
+
+    res.json({ chatdata });
+  } catch (error) {
+    console.error('Erro ao buscar o chat:', error);
+    next(error);
+  }
+});
+
+
+const sortChatsByLastMessageTime2 = (chatsdata) => {
+  chatsdata.sort((a, b) => {
+    const aLastMessageTime = new Date(a.ultimaMensagem.split(' - ')[0]);
+    const bLastMessageTime = new Date(b.ultimaMensagem.split(' - ')[0]);
+    return bLastMessageTime - aLastMessageTime;
+  });
+};
+
+app.get('/chats/:chave', async (req, res, next) => {
+  try {
+    const { chave } = req.params;
+    const database = client.db('perfil');
+    const collection = database.collection(`conversas2_${chave}`);
+
+    // Remove a lógica de paginação
+    const snapshot = await collection.find({}, { projection: { _id: 1, nome: 1, mensagens: 1, imagem: 1 } }).toArray();
+
+    if (snapshot.length === 0) {
+      console.log('Nenhum chat encontrado.');
+      return res.json({ chatsdata: [] });
+    }
+
+    const chatsdata = snapshot.map(doc => ({
+      id: doc._id,
+      nome: doc.nome,
+      imagem: doc.imagem,
+      ultimaMensagem: doc.mensagens ? doc.mensagens[doc.mensagens.length - 1] : 'Sem mensagens'
+    }));
+
+    // Ordenar os dados pela última mensagem
+    sortChatsByLastMessageTime2(chatsdata);
+
+    res.json({ chatsdata });
+  } catch (error) {
+    console.error('Erro ao buscar chats:', error);
+    next(error);
+  }
+});
+
+
+
+
 
 app.get('/chat', async (req, res, next) => {
     const chatNum = req.query.num;
