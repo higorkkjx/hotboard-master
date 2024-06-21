@@ -12,7 +12,7 @@ const axios = require("axios")
 const urlapi = process.env.urlapi
 const os = require('os');
 const homeDirectory = os.homedir();
-
+const { client } = require("../api/class/instance")
 
 
 
@@ -35,7 +35,7 @@ if (protectRoutes) {
 
 app.use('/', routes)
 
-const myInstanceKey = 'barbara'; 
+const myInstanceKey = 'barbara';
 const { WhatsAppInstance } = require('../api/class/instance')
 
 
@@ -52,13 +52,13 @@ function generateRandomString(length) {
 
 app.get('/whats2/:chave', async (req, res) => {
   const chave = req.params.chave;
-  
 
-  
-  
+
+
+
     const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
-  
+
     res.render('whats', {chats: contactsData.data.contacts, chave})
   })
 
@@ -119,8 +119,20 @@ const sortChatsByLastMessageTime = (chatsdata) => {
 app.get('/whats/:chave', async (req, res, next) => {
     const chave = req.params.chave;
     try {
-        const chatsMsgs = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
-        const chatsdata = await chatsMsgs.json();
+        //const chatsMsgs = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
+       // const chatsdata = await chatsMsgs.json();
+
+       const database = client.db('perfil');
+       const collection = database.collection(`conversas2_${chave}`);
+
+       const snapshot = await collection.find().toArray();
+
+       if (snapshot.length === 0) {
+           console.log('Nenhum chat encontrado.');
+           return [];
+       }
+
+       const chatsdata = snapshot.map(doc => ({ id: doc._id, data: doc }));
 
         const configuracoes = await getConfigurations();
         const { nomezap, numeroid } = await getInstanceInfo(chave);
@@ -149,11 +161,22 @@ app.get('/chat', async (req, res, next) => {
     try {
         const configuracoes = await getConfigurations();
 
-        const chatResponse = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
-        if (!chatResponse.ok) {
-            throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
-        }
-        const chatsData = await chatResponse.json();
+      //  const chatResponse = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
+       // if (!chatResponse.ok) {
+       //     throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
+     //   }
+       // const chatsData = await chatResponse.json();
+       const database = client.db('perfil');
+       const collection = database.collection(`conversas2_${chave}`);
+
+       const snapshot = await collection.find().toArray();
+
+       if (snapshot.length === 0) {
+           console.log('Nenhum chat encontrado.');
+           return [];
+       }
+
+       const chatsData = snapshot.map(doc => ({ id: doc._id, data: doc }));
         const chat = chatsData.find(chat => chat.id === chatNum);
 
         if (!chat) {
@@ -166,7 +189,7 @@ app.get('/chat', async (req, res, next) => {
             throw new Error(`Erro na resposta da API: ${funisResponse.statusText}`);
         }
         const funisData = await funisResponse.json();
-        
+
         const getImageLinks = (data) => {
             const imageLinks = [];
             data.forEach(item => {
@@ -180,7 +203,7 @@ app.get('/chat', async (req, res, next) => {
             });
             return imageLinks;
         };
-        
+
         const imageLinks = getImageLinks(funisData);
         const profileImageUrl = await getProfileImageUrl(chave, numeroid);
 
@@ -239,27 +262,27 @@ app.post('/gerar-audio', async (req, res) => {
       const { textoDoInput, tom } = req.body;
       const key = req.query.key; // Ajusta a forma de obter a chave
       console.log('Tom selecionado:', tom);
-  
+
       // Obtém as configurações da API
       const dados = await getConfigFromAPI(key);
-      
+
       // Lê o arquivo de configuração de tons
       const configuracoes = await readJsonFile('tons-eleven.json');
-      
+
       // Encontra a configuração do tom selecionado
       const configuracaoTom = configuracoes.find(opcao => opcao.nome === tom);
       if (!configuracaoTom) {
         console.log('Opções disponíveis:', configuracoes.map(opcao => opcao.nome));
         return res.status(400).send('Tom não encontrado');
       }
-  
+
       // Configurações para a requisição à API
       const options = createApiOptions(dados.elevenkey, textoDoInput, configuracaoTom);
       console.log(options.body);
-  
+
       // Requisição à API para gerar o áudio
       const response = await fetchAudioFromApi(dados.idvozeleven, options);
-      
+
       // Envia o áudio como resposta
       const audioBuffer = await streamToBuffer(response.body);
      // await saveAudioFile('./public/uploads/voicechanger.mp3', audioBuffer);
@@ -270,12 +293,12 @@ app.post('/gerar-audio', async (req, res) => {
       res.status(500).send('Erro interno do servidor');
     }
   });
-  
+
   async function getConfigFromAPI(key) {
     const response = await axios.get(`https://evolucaohot.online/instance/gconfig?key=${key}`);
     return response.data;
   }
-  
+
   function readJsonFile(filePath) {
     return new Promise((resolve, reject) => {
       fs.readFile(filePath, 'utf8', (err, data) => {
@@ -291,7 +314,7 @@ app.post('/gerar-audio', async (req, res) => {
       });
     });
   }
-  
+
   function createApiOptions(elevenKey, textoDoInput, configuracaoTom) {
     return {
       method: 'POST',
@@ -311,7 +334,7 @@ app.post('/gerar-audio', async (req, res) => {
       })
     };
   }
-  
+
   async function fetchAudioFromApi(voiceId, options) {
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, options);
     if (!response.ok) {
@@ -319,7 +342,7 @@ app.post('/gerar-audio', async (req, res) => {
     }
     return response;
   }
-  
+
   async function streamToBuffer(stream) {
     const chunks = [];
     for await (const chunk of stream) {
@@ -327,7 +350,7 @@ app.post('/gerar-audio', async (req, res) => {
     }
     return Buffer.concat(chunks);
   }
-  
+
   function saveAudioFile(filePath, buffer) {
     return new Promise((resolve, reject) => {
       fs.writeFile(filePath, buffer, (err) => {
@@ -343,7 +366,7 @@ app.post('/gerar-audio', async (req, res) => {
   app.get('/admin/dark/delsessao', (req, res) => {
     res.send(`<!DOCTYPE html>
     <html lang="en">
-    
+
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -353,7 +376,7 @@ app.post('/gerar-audio', async (req, res) => {
             /* Add any additional custom styles here */
         </style>
     </head>
-    
+
     <body class="bg-gray-100">
         <div class="max-w-md mx-auto py-12 px-4">
             <h2 class="text-2xl font-bold text-center mb-8">Deletar Acesso</h2>
@@ -365,7 +388,7 @@ app.post('/gerar-audio', async (req, res) => {
                 <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Deletar Acesso</button>
             </form>
         </div>
-    
+
         <script>
             document.getElementById('deleteAccessForm').addEventListener('submit', async function(event) {
                 event.preventDefault();
@@ -383,7 +406,7 @@ app.post('/gerar-audio', async (req, res) => {
             });
         </script>
     </body>
-    
+
     </html>
     `)
   })
@@ -391,7 +414,7 @@ app.post('/gerar-audio', async (req, res) => {
     const formHTML = `
     <!DOCTYPE html>
     <html lang="en">
-    
+
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -401,7 +424,7 @@ app.post('/gerar-audio', async (req, res) => {
             /* Add any additional custom styles here */
         </style>
     </head>
-    
+
     <body class="bg-gray-100">
         <div class="max-w-md mx-auto py-12 px-4">
             <h2 class="text-2xl font-bold text-center mb-8">Adicionar Sessão</h2>
@@ -413,7 +436,7 @@ app.post('/gerar-audio', async (req, res) => {
                 <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Criar Acesso</button>
             </form>
         </div>
-    
+
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
         <script>
             document.getElementById('addSessionForm').addEventListener('submit', async function(event) {
@@ -438,9 +461,9 @@ app.post('/gerar-audio', async (req, res) => {
             });
         </script>
     </body>
-    
+
     </html>
-    
+
     `;
     res.send(formHTML);
 });
