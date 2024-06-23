@@ -51,9 +51,9 @@ function createConnection() {
 // Função para adicionar mensagens a um número em uma tabela de usuário específica
 async function addMessageToUserTable(user, numero, mensagem) {
     const connection = await createConnection();
-    const tableName = `usuario_${mysql.escapeId(user)}`;
+    const tableName = `usuario_${user}`;
   
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       connection.connect(async (err) => {
         if (err) {
           console.error('Erro ao conectar ao banco de dados:', err);
@@ -63,14 +63,14 @@ async function addMessageToUserTable(user, numero, mensagem) {
         console.log('Conectado ao banco de dados MySQL.');
   
         const checkTableQuery = `
-          CREATE TABLE IF NOT EXISTS ${tableName} (
+          CREATE TABLE IF NOT EXISTS ${mysql.escapeId(tableName)} (
             id INT AUTO_INCREMENT PRIMARY KEY,
             numero VARCHAR(15) UNIQUE NOT NULL,
             mensagens JSON NOT NULL
           )
         `;
   
-        await connection.query(checkTableQuery, async (err, result) => {
+        connection.query(checkTableQuery, (err, result) => {
           if (err) {
             console.error(`Erro ao criar ou verificar a tabela ${tableName}:`, err);
             connection.end();
@@ -78,9 +78,9 @@ async function addMessageToUserTable(user, numero, mensagem) {
           }
           console.log(`Tabela ${tableName} criada ou já existe.`);
   
-          const selectQuery = `SELECT mensagens FROM ${tableName} WHERE numero = ?`;
+          const selectQuery = `SELECT mensagens FROM ${mysql.escapeId(tableName)} WHERE numero = ?`;
   
-          await connection.query(selectQuery, [numero], async (err, results) => {
+          connection.query(selectQuery, [numero], (err, results) => {
             if (err) {
               console.error(`Erro ao buscar número na tabela ${tableName}:`, err);
               connection.end();
@@ -91,8 +91,8 @@ async function addMessageToUserTable(user, numero, mensagem) {
               const mensagens = JSON.parse(results[0].mensagens);
               mensagens.push(mensagem);
   
-              const updateQuery = `UPDATE ${tableName} SET mensagens = ? WHERE numero = ?`;
-              connection.query(updateQuery, [JSON.stringify(mensagens), numero], async (err, result) => {
+              const updateQuery = `UPDATE ${mysql.escapeId(tableName)} SET mensagens = ? WHERE numero = ?`;
+              connection.query(updateQuery, [JSON.stringify(mensagens), numero], (err, result) => {
                 connection.end();
                 if (err) {
                   console.error(`Erro ao atualizar mensagens na tabela ${tableName}:`, err);
@@ -102,9 +102,9 @@ async function addMessageToUserTable(user, numero, mensagem) {
                 resolve(`Mensagens atualizadas com sucesso na tabela ${tableName}.`);
               });
             } else {
-              const insertQuery = `INSERT INTO ${tableName} (numero, mensagens) VALUES (?, ?)`;
-              connection.query(insertQuery, [numero, JSON.stringify([mensagem])], async (err, result) => {
-                await connection.end();
+              const insertQuery = `INSERT INTO ${mysql.escapeId(tableName)} (numero, mensagens) VALUES (?, ?)`;
+              connection.query(insertQuery, [numero, JSON.stringify([mensagem])], (err, result) => {
+                connection.end();
                 if (err) {
                   console.error(`Erro ao inserir número e mensagens na tabela ${tableName}:`, err);
                   return reject(err);
