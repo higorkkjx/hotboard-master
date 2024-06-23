@@ -123,7 +123,7 @@ app.get('/whats/:chave', async (req, res, next) => {
         const chatsdata = await chatsMsgs.json();
 
       // const database = client.db('perfil');
-       //const collection = database.collection(`conversas2_${chave}`);
+       //const collection = database.collection(`conversas_${chave}`);
 
      //  const snapshot = await collection.find().toArray();
 
@@ -141,7 +141,7 @@ app.get('/whats/:chave', async (req, res, next) => {
       //  sortChatsByLastMessageTime(chatsdata.chatsdata);
 
         res.render("whats3", {
-            chats: chatsdata.chatsdata,
+            chats: chatsdata.chatsData,
             nomezap,
             numeroid,
             configuracoes,
@@ -159,7 +159,7 @@ app.get('/findchat/:id/:chave', async (req, res, next) => {
   try {
     const { id, chave } = req.params;
     const database = client.db('perfil');
-    const collection = database.collection('conversas2_' + chave);
+    const collection = database.collection('conversas_' + chave);
 
     // Obter todos os documentos e armazenar em uma variável temporária
     const snapshot = await collection.find({}, { projection: { _id: 1, nome: 1, mensagens: 1 } }).toArray();
@@ -208,33 +208,35 @@ const sortChatsByLastMessageTime2 = (chatsdata) => {
 app.get('/chats/:chave', async (req, res, next) => {
   try {
     const { chave } = req.params;
-    const database = client.db('perfil');
-    const collection = database.collection(`conversas2_${chave}`);
-
-    // Remove a lógica de paginação
-    const snapshot = await collection.find({}, { projection: { _id: 1, nome: 1, mensagens: 1, imagem: 1 } }).toArray();
-
-    if (snapshot.length === 0) {
-      console.log('Nenhum chat encontrado.');
-      return res.json({ chatsdata: [] });
+   
+    const chatResponse = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
+    if (!chatResponse.ok) {
+      throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
     }
+    
+    const chatsList = await chatResponse.json();
 
-    const chatsdata = snapshot.map(doc => ({
-      id: doc._id,
-      nome: doc.nome,
-      imagem: doc.imagem,
-      ultimaMensagem: doc.mensagens ? doc.mensagens[doc.mensagens.length - 1] : 'Sem mensagens'
+    const chatsData = chatsList.map(chat => ({
+      id: chat.data._id,
+      nome: chat.data.nome,
+      imagem: chat.data.imagem,
+      ultimaMensagem: chat.data.mensagens.length > 0 ? chat.data.mensagens[chat.data.mensagens.length - 1] : 'Sem mensagens'
     }));
 
     // Ordenar os dados pela última mensagem
-    sortChatsByLastMessageTime2(chatsdata);
+    chatsData.sort((a, b) => {
+      const aTime = new Date(a.ultimaMensagem.split(' - ')[0]);
+      const bTime = new Date(b.ultimaMensagem.split(' - ')[0]);
+      return bTime - aTime; // Ordem decrescente (mais recente primeiro)
+    });
 
-    res.json({ chatsdata });
+    res.json({ chatsData });
   } catch (error) {
     console.error('Erro ao buscar chats:', error);
     next(error);
   }
 });
+
 
 
 
@@ -246,13 +248,17 @@ app.get('/chat', async (req, res, next) => {
     try {
         const configuracoes = await getConfigurations();
 
-      //  const chatResponse = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
-       // if (!chatResponse.ok) {
-       //     throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
-     //   }
-       // const chatsData = await chatResponse.json();
+       const chatResponse = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
+       if (!chatResponse.ok) {
+          throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
+    }
+      const chatsData = await chatResponse.json();
+      const chat = chatsData.find(chat => chat.id === chatNum);
+
+
+       /*/
        const database = client.db('perfil');
-       const collection = database.collection(`conversas2_${chave}`);
+       const collection = database.collection(`conversas_${chave}`);
 
        const snapshot = await collection.find().toArray();
 
@@ -266,7 +272,7 @@ app.get('/chat', async (req, res, next) => {
 
         if (!chat) {
             return res.status(404).send('Chat não encontrado');
-        }
+        }/*/
 
         const { nomezap, numeroid } = await getInstanceInfo(chave);
         const funisResponse = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`);
@@ -292,8 +298,9 @@ app.get('/chat', async (req, res, next) => {
         const imageLinks = getImageLinks(funisData);
         const profileImageUrl = await getProfileImageUrl(chave, numeroid);
 
-        sortChatsByLastMessageTime(chatsData);
-
+     //   sortChatsByLastMessageTime(chatsData);
+console.log(chat.data)
+console.log(chatsData)
         res.render("chat", {
             chat: chat.data,
             chatfull: chatsData,

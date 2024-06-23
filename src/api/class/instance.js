@@ -29,9 +29,134 @@ const { MongoClient } = require('mongodb');
 
 const uri = 'mongodb+srv://alancalhares123:senha123@cluster0.sgubjmv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+ client.connect();
 
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, maxPoolSize: 50 });
-client.connect();
+//const {sql, addMessageToUserTable, getMessagesFromUserTable} = require("./sql")
+
+const mysql = require('mysql');
+
+// Configurar a conexão MySQL
+function createConnection() {
+    return mysql.createConnection({
+      host: 'srv1487.hstgr.io',
+      user: 'u735825450_dark',
+      password: 'H26032007h',
+      database: 'u735825450_hotboard'
+    });
+  }
+  
+
+
+// Função para adicionar mensagens a um número em uma tabela de usuário específica
+async function addMessageToUserTable(user, numero, mensagem) {
+    const connection = await createConnection();
+    const tableName = `usuario_${user}`;
+  
+    return new Promise(async (resolve, reject) => {
+      connection.connect(async (err) => {
+        if (err) {
+          console.error('Erro ao conectar ao banco de dados:', err);
+          connection.end();
+          return reject(err);
+        }
+        console.log('Conectado ao banco de dados MySQL.');
+  
+        const checkTableQuery = `
+          CREATE TABLE IF NOT EXISTS ${tableName} (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            numero VARCHAR(15) UNIQUE NOT NULL,
+            mensagens JSON NOT NULL
+          )
+        `;
+  
+        await connection.query(checkTableQuery, async(err, result) => {
+          if (err) {
+            console.error(`Erro ao criar ou verificar a tabela ${tableName}:`, err);
+            connection.end();
+            return reject(err);
+          }
+          console.log(`Tabela ${tableName} criada ou já existe.`);
+  
+          const selectQuery = `SELECT mensagens FROM ${tableName} WHERE numero = ?`;
+  
+          await connection.query(selectQuery, [numero], (err, results) => {
+            if (err) {
+              console.error(`Erro ao buscar número na tabela ${tableName}:`, err);
+              connection.end();
+              return reject(err);
+            }
+  
+            if (results.length > 0) {
+              const mensagens = JSON.parse(results[0].mensagens);
+              mensagens.push(mensagem);
+  
+              const updateQuery = `UPDATE ${tableName} SET mensagens = ? WHERE numero = ?`;
+              connection.query(updateQuery, [JSON.stringify(mensagens), numero], async(err, result) => {
+                connection.end();
+                if (err) {
+                  console.error(`Erro ao atualizar mensagens na tabela ${tableName}:`, err);
+                  return reject(err);
+                }
+                console.log(`Mensagens atualizadas com sucesso na tabela ${tableName}.`);
+                resolve(`Mensagens atualizadas com sucesso na tabela ${tableName}.`);
+              });
+            } else {
+              const insertQuery = `INSERT INTO ${tableName} (numero, mensagens) VALUES (?, ?)`;
+              connection.query(insertQuery, [numero, JSON.stringify([mensagem])], async(err, result) => {
+              await  connection.end();
+                if (err) {
+                  console.error(`Erro ao inserir número e mensagens na tabela ${tableName}:`, err);
+                  return reject(err);
+                }
+                console.log(`Número e mensagens inseridos com sucesso na tabela ${tableName}.`);
+                resolve(`Número e mensagens inseridos com sucesso na tabela ${tableName}.`);
+              });
+            }
+          });
+        });
+      });
+    });
+  }
+  
+  // Função para obter o array de mensagens de um número em uma tabela de usuário específica
+  async function getMessagesFromUserTable(user, numero) {
+    const connection = await createConnection();
+    console.log("buscando msgs")
+ 
+    const tableName = `usuario_${user}`;
+  
+    return new Promise(async (resolve, reject) => {
+      connection.connect(async (err) => {
+        if (err) {
+          console.error('Erro ao conectar ao banco de dados:', err);
+          connection.end();
+          return reject(err);
+        }
+        console.log('Conectado ao banco de dados MySQL.');
+  
+        const selectQuery = `SELECT mensagens FROM ${tableName} WHERE numero = ?`;
+  
+        await connection.query(selectQuery, [numero], async(err, results) => {
+          connection.end();
+          if (err) {
+            console.error(`Erro ao buscar número na tabela ${tableName}:`, err);
+            return reject(err);
+          }
+  
+          if (results.length > 0) {
+            const mensagens = JSON.parse(results[0].mensagens);
+            console.log(mensagens)
+            resolve(mensagens);
+          } else {
+            resolve([]);
+          }
+        });
+      });
+    });
+  }
+
+
 
 let intervalStore = [];
 
@@ -647,7 +772,7 @@ setHandler() {
        
 
 //console.log(messageType2)
-const autoresp_config = await axios.get(`http://localhost:3000/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
+const autoresp_config = await axios.get(`https://evolucaohot.online/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
 const autoresp = autoresp_config.data.autoresposta
 const funilselecionado = autoresp_config.data.funil
 
@@ -672,23 +797,34 @@ console.log("GRUPO?", isGroup)
                     return `${year}-${month}-${day} ${hours}:${minutes}`;
                   }
               
+                  let ultimoNu;
               const checkAndAddChat = async (sender, pushname, body, fromme, gppessoanome) => {
                 try {
-                   
+                   let msg;
                     const database = client.db('perfil');
-                    const chatCollection = database.collection(`conversas2_${this.key}`);
+                    const chatCollection = database.collection(`conversas_${this.key}`);
             
                     const chatDoc = await chatCollection.findOne({ _id: sender });
             
                     if (chatDoc) {
                         const currentDateTime = getCurrentDateTime();
                         const newMessage = `${currentDateTime} - ${pushname}: ${body}`;
-                        try {
-                            chatDoc.mensagens.push(newMessage);
-                        } catch(e) {
-                            console.log("erro ao salvar msg")
-                            chatDoc.mensagens.push(`${currentDateTime} - ${pushname}: [MENSAGEM INDISPONIVEL]`);
-                        }
+
+                        if (!sender.includes("@g.us")) {
+                            try {
+                                // chatDoc.mensagens.push(newMessage);
+                              msg = await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", ""), newMessage)
+                               console.log(msg)
+                             } catch(e) {
+                                 console.log("erro ao salvar msg")
+                                  msg = await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", ""), `${currentDateTime} - ${pushname}: [MENSAGEM INDISPONIVEL]`)
+                              console.log(msg)
+                              
+                                 //  chatDoc.mensagens.push(`${currentDateTime} - ${pushname}: [MENSAGEM INDISPONIVEL]`);
+                             }
+                        } 
+
+                     
                       
             
                         if (!fromme) {
@@ -701,6 +837,7 @@ console.log("GRUPO?", isGroup)
                             { $set: chatDoc }
                         );
                         console.log('> Mensagem adicionada ao chat existente.');
+                        const msgsuser = await getMessagesFromUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", ""))
                         return false;
                     }
             
@@ -713,7 +850,7 @@ console.log("GRUPO?", isGroup)
                     }
             
                     let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-                    const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${this.key}`, {
+                    const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${this.key}`, {
                         method: 'POST',
                         body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
                         headers: { 'Content-Type': 'application/json' }
@@ -736,13 +873,20 @@ console.log("GRUPO?", isGroup)
                     if (sender.includes("@g.us")) {
                         nomegpOrpeople = gppessoanome
                     } else {
+                         msg =  await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", ""), `${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`)
+                        ultimoNu = sender.replace("@s.whatsapp.net", "")
+                        const msgsuser = await getMessagesFromUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", ""))
                         nomegpOrpeople = pushname
                     }
 
+
+                  
+
+                    console.log(msg)
                     const newChatData = {
                         _id: sender,
                         nome: stringname,
-                        mensagens: [`${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`],
+                       //mensagens: [`${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`],
                         estagio: 0,
                         nomePix: 'fulano',
                         imagem: imagemselecionada,
@@ -762,9 +906,11 @@ console.log("GRUPO?", isGroup)
                     };
             
                     await chatCollection.insertOne(newChatData);
-                    io.emit('new_chat', newChatData);
+                  
 
                     console.log('IDCHAT adicionado à base de dados com uma nova mensagem.');
+
+                   
                     return true;
                 } catch (error) {
                     console.error('Erro ao processar o chat:', error);
@@ -778,7 +924,7 @@ console.log("GRUPO?", isGroup)
 
                     
                     const database = client.db('perfil');
-                    const chatCollection = database.collection(`conversas2_${this.key}`);
+                    const chatCollection = database.collection(`conversas_${this.key}`);
             
                     const existingChat = await chatCollection.findOne({ _id: sender });
 
@@ -804,7 +950,7 @@ console.log("GRUPO?", isGroup)
                    
             
                     let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-                    const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${this.key}`, {
+                    const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${this.key}`, {
                         method: 'POST',
                         body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
                         headers: { 'Content-Type': 'application/json' }
@@ -1130,7 +1276,7 @@ console.log("GRUPO?", isGroup)
                                 const selectedResponse = `dinamico_${currentFunilStep.conteudo.respostas[userChoice - 1]}`
 
                                 async function salvarFunil(key, funilSelecionado) {
-                                    const url = `http://localhost:3000/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
+                                    const url = `https://evolucaohot.online/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
                                     const data = {
                                       funil: funilSelecionado
                                     };
@@ -2244,7 +2390,7 @@ async updateUser(sender, updates) {
     try {
         
         const database = client.db('perfil');
-        const chatCollection = database.collection(`conversas2_${this.key}`);
+        const chatCollection = database.collection(`conversas_${this.key}`);
 
         await chatCollection.updateOne(
             { _id: sender },
@@ -2262,7 +2408,7 @@ async getUser(sender) {
     try {
         
         const database = client.db('perfil');
-        const chatCollection = database.collection(`conversas2_${this.key}`);
+        const chatCollection = database.collection(`conversas_${this.key}`);
 
         const userDoc = await chatCollection.findOne({ _id: sender });
 
@@ -2745,7 +2891,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
         formData.append('userType', typeusr);
         formData.append('delay', parseInt(delay));
 
-        const result = await axios.post(`http://localhost:3000/message/audiofile?key=` + key, formData);
+        const result = await axios.post(`https://evolucaohot.online/message/audiofile?key=` + key, formData);
 
         console.log(result.data);
         if (result.data.error) {
@@ -2921,7 +3067,7 @@ async fetchInstanceMessagesAndChats(key = this.key) {
     try {
         
         const database = client.db('perfil');
-        const collection = database.collection(`conversas2_${key}`);
+        const collection = database.collection(`conversas_${key}`);
 
         const snapshot = await collection.find().toArray();
 
@@ -2938,7 +3084,19 @@ async fetchInstanceMessagesAndChats(key = this.key) {
         return { error: true, message: 'Falha ao buscar mensagens e chats' };
     }
 }
-      
+  
+async getmsgsql(key = this.key, num) {
+    try {
+        
+        const msgsuser = await getMessagesFromUserTable(key, num.replace("@s.whatsapp.net", "").replace("@g.us", ""))
+
+        return msgsuser;
+    } catch (error) {
+        console.error('Erro ao buscar mensagens e chats:', error);
+        return { error: true, message: 'Falha ao buscar mensagens e chats' };
+    }
+}
+
     // create new group by application
     async createGroupByApp(newChat) {
         try {

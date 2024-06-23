@@ -1075,13 +1075,18 @@
                                                                 <h5 class="me-auto mb-0"><%= chat.data.nome %></h5>
                                                                 <!-- Assuming mensagens[0] is the latest message -->
                                                                 <span class="text-muted extra-small ms-2">
-                                                                    <%= new Date(chat.data.mensagens[0].split(' - ')[0]).toLocaleTimeString() %>
+                                                                 0
                                                                 </span>
                                                             </div>
 
                                                             <div class="d-flex align-items-center">
                                                                 <div class="line-clamp me-auto">
-                                                                    <%= chat.data.mensagens[chat.data.mensagens.length - 1].split(' - ')[1] %>
+                                                                    <% 
+                                                                    var ultimaMensagem = chat.data.mensagens[chat.data.mensagens.length - 1];
+                                                                    var conteudoMensagem = ultimaMensagem ? ultimaMensagem.split(' - ')[1] : 'Nenhuma mensagem disponível';
+                                                                  %>
+                                                                  <%= conteudoMensagem %>
+                                                                  
                                                                 </div>
 
 

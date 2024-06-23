@@ -351,8 +351,39 @@ exports.gchats = async (req, res) => {
     if (verifica == true) {
         const instance = WhatsAppInstances[req.query.key];
         let data;
+        let msgs;
+        let arraynovo = []
         try {
+        
             data = await instance.fetchInstanceMessagesAndChats(req.query.key);
+
+            for (dado of data) {
+                msgs = await instance.getmsgsql(req.query.key, dado.id);
+                dado.data.mensagens = msgs
+                arraynovo.push(dado)
+            }
+
+
+            console.log(arraynovo)
+        } catch (error) {
+            data = {};
+        }
+        return res.json(arraynovo);
+    } else {
+        return res.json({
+            error: true,
+            message: 'Instâcncia não existente'
+        });
+    }
+};
+
+exports.msgsql = async (req, res) => {
+    const verifica = await exports.validar(req, res);
+    if (verifica == true) {
+        const instance = WhatsAppInstances[req.query.key];
+        let data;
+        try {
+            data = await instance.getmsgsql(req.query.key, req.query.num);
             console.log(data)
         } catch (error) {
             data = {};
