@@ -51,10 +51,10 @@ function createConnection() {
 // Função para adicionar mensagens a um número em uma tabela de usuário específica
 async function addMessageToUserTable(user, numero, mensagem) {
     const connection = await createConnection();
-    const tableName = `usuario_${user}`;
+    const tableName = `usuario_${user.replace(/[^a-zA-Z0-9]/g, '_')}`; // Remove caracteres especiais
   
     return new Promise((resolve, reject) => {
-      connection.connect(async (err) => {
+      connection.connect((err) => {
         if (err) {
           console.error('Erro ao conectar ao banco de dados:', err);
           connection.end();
@@ -122,12 +122,12 @@ async function addMessageToUserTable(user, numero, mensagem) {
   // Função para obter o array de mensagens de um número em uma tabela de usuário específica
   async function getMessagesFromUserTable(user, numero) {
     const connection = await createConnection();
-    console.log("buscando msgs")
- 
-    const tableName = `usuario_${mysql.escapeId(user)}`;
+    console.log("buscando msgs");
   
-    return new Promise(async (resolve, reject) => {
-      connection.connect(async (err) => {
+    const tableName = `usuario_${user.replace(/[^a-zA-Z0-9]/g, '_')}`; // Remove caracteres especiais
+  
+    return new Promise((resolve, reject) => {
+      connection.connect((err) => {
         if (err) {
           console.error('Erro ao conectar ao banco de dados:', err);
           connection.end();
@@ -135,9 +135,9 @@ async function addMessageToUserTable(user, numero, mensagem) {
         }
         console.log('Conectado ao banco de dados MySQL.');
   
-        const selectQuery = `SELECT mensagens FROM ${tableName} WHERE numero = ?`;
+        const selectQuery = `SELECT mensagens FROM ${mysql.escapeId(tableName)} WHERE numero = ?`;
   
-        await connection.query(selectQuery, [numero], async(err, results) => {
+        connection.query(selectQuery, [numero], (err, results) => {
           connection.end();
           if (err) {
             console.error(`Erro ao buscar número na tabela ${tableName}:`, err);
@@ -146,7 +146,7 @@ async function addMessageToUserTable(user, numero, mensagem) {
   
           if (results.length > 0) {
             const mensagens = JSON.parse(results[0].mensagens);
-            console.log(mensagens)
+            console.log(mensagens);
             resolve(mensagens);
           } else {
             resolve([]);
