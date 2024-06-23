@@ -301,9 +301,16 @@ app.get('/chat', async (req, res, next) => {
      //   sortChatsByLastMessageTime(chatsData);
 console.log(chat.data)
 console.log(chatsData)
+
+const sortedChatsData = chatsData.sort((a, b) => {
+  const lastMessageA = a.data.mensagens.length > 0 ? new Date(a.data.mensagens[a.data.mensagens.length - 1].split(' - ')[0]) : new Date(0);
+  const lastMessageB = b.data.mensagens.length > 0 ? new Date(b.data.mensagens[b.data.mensagens.length - 1].split(' - ')[0]) : new Date(0);
+  return lastMessageB - lastMessageA;
+});
+
         res.render("chat", {
             chat: chat.data,
-            chatfull: chatsData,
+            chatfull: sortedChatsData,
             nomezap,
             chave,
             configuracoes,
