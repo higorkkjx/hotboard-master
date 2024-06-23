@@ -890,7 +890,7 @@ console.log("GRUPO?", isGroup)
                     if (sender.includes("@g.us")) {
                         nomegpOrpeople = gppessoanome
                     } else {
-                         msg =  await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"), `${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`)
+                         msg =  await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"), `${getCurrentDateTime()} - ${pushname}: ${body}`)
                         ultimoNu = sender.replace("@s.whatsapp.net", "")
                         const msgsuser = await getMessagesFromUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"))
                         nomegpOrpeople = pushname
