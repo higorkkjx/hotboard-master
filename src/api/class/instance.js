@@ -135,22 +135,39 @@ async function addMessageToUserTable(user, numero, mensagem) {
         }
         console.log('Conectado ao banco de dados MySQL.');
   
-        const selectQuery = `SELECT mensagens FROM ${mysql.escapeId(tableName)} WHERE numero = ?`;
+        const checkTableQuery = `
+          CREATE TABLE IF NOT EXISTS ${mysql.escapeId(tableName)} (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            numero VARCHAR(15) UNIQUE NOT NULL,
+            mensagens JSON NOT NULL
+          )
+        `;
   
-        connection.query(selectQuery, [numero], (err, results) => {
-          connection.end();
+        connection.query(checkTableQuery, (err, result) => {
           if (err) {
-            console.error(`Erro ao buscar número na tabela ${tableName}:`, err);
+            console.error(`Erro ao criar ou verificar a tabela ${tableName}:`, err);
+            connection.end();
             return reject(err);
           }
+          console.log(`Tabela ${tableName} criada ou já existe.`);
   
-          if (results.length > 0) {
-            const mensagens = JSON.parse(results[0].mensagens);
-            console.log(mensagens);
-            resolve(mensagens);
-          } else {
-            resolve([]);
-          }
+          const selectQuery = `SELECT mensagens FROM ${mysql.escapeId(tableName)} WHERE numero = ?`;
+  
+          connection.query(selectQuery, [numero], (err, results) => {
+            connection.end();
+            if (err) {
+              console.error(`Erro ao buscar número na tabela ${tableName}:`, err);
+              return reject(err);
+            }
+  
+            if (results.length > 0) {
+              const mensagens = JSON.parse(results[0].mensagens);
+              console.log(mensagens);
+              resolve(mensagens);
+            } else {
+              resolve([]);
+            }
+          });
         });
       });
     });
@@ -813,11 +830,11 @@ console.log("GRUPO?", isGroup)
                         if (!sender.includes("@g.us")) {
                             try {
                                 // chatDoc.mensagens.push(newMessage);
-                              msg = await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", ""), newMessage)
+                              msg = await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"), newMessage)
                                console.log(msg)
                              } catch(e) {
                                  console.log("erro ao salvar msg")
-                                  msg = await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", ""), `${currentDateTime} - ${pushname}: [MENSAGEM INDISPONIVEL]`)
+                                  msg = await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"), `${currentDateTime} - ${pushname}: [MENSAGEM INDISPONIVEL]`)
                               console.log(msg)
                               
                                  //  chatDoc.mensagens.push(`${currentDateTime} - ${pushname}: [MENSAGEM INDISPONIVEL]`);
@@ -837,7 +854,7 @@ console.log("GRUPO?", isGroup)
                             { $set: chatDoc }
                         );
                         console.log('> Mensagem adicionada ao chat existente.');
-                        const msgsuser = await getMessagesFromUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", ""))
+                        const msgsuser = await getMessagesFromUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"))
                         return false;
                     }
             
@@ -846,7 +863,7 @@ console.log("GRUPO?", isGroup)
                     let stringname = pushname;
                     if (fromme) {
                         console.log("> Eu que enviei a mensagem primeiro!");
-                        stringname = sender.replace("@s.whatsapp.net", "").replace("@g.us", "");
+                        stringname = sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0");
                     }
             
                     let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
@@ -873,9 +890,9 @@ console.log("GRUPO?", isGroup)
                     if (sender.includes("@g.us")) {
                         nomegpOrpeople = gppessoanome
                     } else {
-                         msg =  await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", ""), `${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`)
+                         msg =  await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"), `${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`)
                         ultimoNu = sender.replace("@s.whatsapp.net", "")
-                        const msgsuser = await getMessagesFromUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", ""))
+                        const msgsuser = await getMessagesFromUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"))
                         nomegpOrpeople = pushname
                     }
 
@@ -974,7 +991,7 @@ console.log("GRUPO?", isGroup)
                     let stringname = pushname;
                     if (fromme) {
                         console.log("> Eu que enviei a mensagem primeiro!");
-                        stringname = sender.replace("@s.whatsapp.net", "").replace("@g.us", "");
+                        stringname = sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0");
                     }
             
 
