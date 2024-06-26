@@ -574,6 +574,32 @@ async SendWebhook(type, hook, body, key) {
     }
 }
 
+
+async instanceFindMail(email) {
+    
+    const database = client.db('conexao');
+    const sessions = database.collection('sessions');
+
+    const sessionSnapshot = await sessions.findOne({ key: key });
+
+    if (!sessionSnapshot) {
+        const data = {
+            "key": false,
+            "browser": false,
+            "webhook": false,
+            "base64": false,
+            "webhookUrl": false,
+            "mongourl": false,
+            "webhookEvents": false,
+            "messagesRead": false,
+        };
+        return data;
+    } else {
+        return sessionSnapshot;
+    }
+}
+
+
 async instanceFind(key) {
     
     const database = client.db('conexao');
@@ -789,7 +815,7 @@ setHandler() {
        
 
 //console.log(messageType2)
-const autoresp_config = await axios.get(`https://evolucaohot.online/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
+const autoresp_config = await axios.get(`http://localhost:3000/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
 const autoresp = autoresp_config.data.autoresposta
 const funilselecionado = autoresp_config.data.funil
 
@@ -851,7 +877,7 @@ console.log("GRUPO?", isGroup)
                         let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
                         
                         try {
-                            const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${this.key}`, {
+                            const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${this.key}`, {
                                 method: 'POST',
                                 body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
                                 headers: { 'Content-Type': 'application/json' }
@@ -1172,7 +1198,7 @@ console.log("GRUPO?", isGroup)
                                 const selectedResponse = `dinamico_${currentFunilStep.conteudo.respostas[userChoice - 1]}`
 
                                 async function salvarFunil(key, funilSelecionado) {
-                                    const url = `https://evolucaohot.online/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
+                                    const url = `http://localhost:3000/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
                                     const data = {
                                       funil: funilSelecionado
                                     };
@@ -1479,6 +1505,10 @@ async getInstanceDetail(key) {
     const sessionData = await this.instanceFind(key);
     return {
         instance_key: key,
+        email: sessionData.email,
+        phone: sessionData.phone,
+        name: sessionData.name,
+        dias: sessionData.dias,
         phone_connected: connect,
         browser: sessionData.browser,
         webhook: sessionData.webhook,
@@ -2787,7 +2817,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
         formData.append('userType', typeusr);
         formData.append('delay', parseInt(delay));
 
-        const result = await axios.post(`https://evolucaohot.online/message/audiofile?key=` + key, formData);
+        const result = await axios.post(`http://localhost:3000/message/audiofile?key=` + key, formData);
 
         console.log(result.data);
         if (result.data.error) {

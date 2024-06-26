@@ -6,25 +6,31 @@ const { Session } = require('../class/session');
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const os = require('os');
 const homeDirectory = os.homedir();
-
+const moment = require('moment-timezone');
 
 exports.init = async (req, res) => {
-    let webhook = req.body.webhook || false;
-    let webhookUrl = req.body.webhookUrl || false;
-    let mongourl = req.body.mongourl || false;
-    let browser = req.body.browser || 'Minha Api';
-    let ignoreGroups = req.body.ignoreGroups || false;
-    let webhookEvents = req.body.webhookEvents || [];
-    let messagesRead = req.body.messagesRead || false;
-    let base64 = req.body.base64 || false;
-
-    const key = req.body.key;
+    // Extração de dados do corpo da requisição
+    let {
+        webhook = false,
+        webhookUrl = false,
+        mongourl = false,
+        browser = 'Minha Api',
+        ignoreGroups = false,
+        webhookEvents = [],
+        messagesRead = false,
+        base64 = false,
+        key,
+        email,
+        phone,
+        name,
+        dias
+    } = req.body;
 
     try {
-        
         const database = client.db('conexao');
         const sessions = database.collection('sessions');
 
+        // Verificação de existência prévia da sessão
         const sessionSnapshot = await sessions.findOne({ key: key });
         console.log('Session snapshot:', sessionSnapshot);
 
@@ -37,8 +43,16 @@ exports.init = async (req, res) => {
         } else {
             const appUrl = config.appUrl || req.protocol + '://' + req.headers.host;
 
+
+            var validade = moment().add(parseInt(dias), "days").toDate();
+
+            // Dados da sessão incluindo novos campos
             const sessionData = {
                 key: key,
+                email: email,
+                phone: phone,
+                name: name,
+                dias: validade,
                 ignoreGroups: ignoreGroups,
                 webhook: webhook,
                 base64: base64,
@@ -49,6 +63,7 @@ exports.init = async (req, res) => {
                 messagesRead: messagesRead
             };
 
+            // Atualização ou inserção da sessão
             const updateResult = await sessions.updateOne(
                 { key: key },
                 { $set: sessionData },
@@ -59,6 +74,7 @@ exports.init = async (req, res) => {
             if (!updateResult.upsertedCount && !updateResult.modifiedCount) {
                 throw new Error('Failed to insert session data');
             }
+
             const instance = new WhatsAppInstance(key, webhook, webhookUrl);
             const data = await instance.init();
             WhatsAppInstances[data.key] = instance;
@@ -67,6 +83,10 @@ exports.init = async (req, res) => {
                 error: false,
                 message: 'Instancia iniciada',
                 key: data.key,
+                email: data.email,
+                phone: data.phone,
+                name: data.name,
+                dias: data.validade,
                 webhook: {
                     enabled: webhook,
                     webhookUrl: webhookUrl,
@@ -89,6 +109,7 @@ exports.init = async (req, res) => {
     }
 };
 
+
 exports.editar = async (req, res) => {
     let webhook = req.body.webhook || false;
     let webhookUrl = req.body.webhookUrl || false;
@@ -98,9 +119,15 @@ exports.editar = async (req, res) => {
     let webhookEvents = req.body.webhookEvents || [];
     let messagesRead = req.body.messagesRead || false;
     let base64 = req.body.base64 || false;
+    let  {
+    email,
+    phone,
+    name,
+    dias
+} = req.body;
 
     const key = req.body.key;
-
+    var validade = moment().add(parseInt(dias), "days").toDate();
     try {
        
         const database = client.db('conexao');
@@ -111,6 +138,10 @@ exports.editar = async (req, res) => {
         if (sessionSnapshot) {
             const sessionData = {
                 key: key,
+                email: email,
+                phone: phone,
+                name: name,
+                dias: validade,
                 ignoreGroups: ignoreGroups,
                 webhook: webhook,
                 base64: base64,
@@ -130,6 +161,10 @@ exports.editar = async (req, res) => {
                 error: false,
                 message: 'Instancia editada',
                 key: key,
+                email: email,
+                phone: phone,
+                name: name,
+                dias: validade,
                 webhook: {
                     enabled: webhook,
                     webhookUrl: webhookUrl,
