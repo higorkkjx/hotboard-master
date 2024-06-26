@@ -357,18 +357,18 @@ exports.gchats = async (req, res) => {
         
             data = await instance.fetchInstanceMessagesAndChats(req.query.key);
 
-            for (dado of data) {
+          /*/  for (dado of data) {
                 msgs = await instance.getmsgsql(req.query.key, dado.id);
                 dado.data.mensagens = msgs
                 arraynovo.push(dado)
-            }
+            }/*/
 
 
-            console.log(arraynovo)
+            //console.log(arraynovo)
         } catch (error) {
             data = {};
         }
-        return res.json(arraynovo);
+        return res.json(data);
     } else {
         return res.json({
             error: true,

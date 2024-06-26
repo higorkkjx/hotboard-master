@@ -789,7 +789,7 @@ setHandler() {
        
 
 //console.log(messageType2)
-const autoresp_config = await axios.get(`https://195.200.7.87:3000/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
+const autoresp_config = await axios.get(`https://evolucaohot.online/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
 const autoresp = autoresp_config.data.autoresposta
 const funilselecionado = autoresp_config.data.funil
 
@@ -815,226 +815,105 @@ console.log("GRUPO?", isGroup)
                   }
               
                   let ultimoNu;
-              const checkAndAddChat = async (sender, pushname, body, fromme, gppessoanome) => {
-                try {
-                   let msg;
-                    const database = client.db('perfil');
-                    const chatCollection = database.collection(`conversas_${this.key}`);
-            
-                    const chatDoc = await chatCollection.findOne({ _id: sender });
-            
-                    if (chatDoc) {
+                  const checkAndAddChat = async (sender, pushname, body, fromme, gppessoanome) => {
+                    try {
+                        const database = client.db('perfil');
+                        const chatCollection = database.collection(`chatss_${this.key}`);
+                        
+                        const chatDoc = await chatCollection.findOne({ _id: sender });
                         const currentDateTime = getCurrentDateTime();
-                        const newMessage = `${currentDateTime} - ${pushname}: ${body}`;
-
-                        if (!sender.includes("@g.us")) {
-                            try {
-                                // chatDoc.mensagens.push(newMessage);
-                              msg = await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"), newMessage)
-                               console.log(msg)
-                             } catch(e) {
-                                 console.log("erro ao salvar msg")
-                                  msg = await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"), `${currentDateTime} - ${pushname}: [MENSAGEM INDISPONIVEL]`)
-                              console.log(msg)
-                              
-                                 //  chatDoc.mensagens.push(`${currentDateTime} - ${pushname}: [MENSAGEM INDISPONIVEL]`);
-                             }
-                        } 
-
-                     
-                      
-            
-                        if (!fromme) {
-                            console.log("> Salvando atualização de nome!");
-                            chatDoc.nome = pushname;
+                        
+                        if (chatDoc) {
+                            const newMessage = `${currentDateTime} - ${pushname}: ${body}`;
+                            
+                            if (!sender.includes("@g.us")) {
+                                try {
+                                    chatDoc.mensagens.push(newMessage);
+                                } catch (e) {
+                                    console.log("Erro ao salvar mensagem");
+                                    chatDoc.mensagens.push(`${currentDateTime} - ${pushname}: [MENSAGEM INDISPONIVEL]`);
+                                }
+                            }
+                            
+                            if (!fromme) {
+                                console.log("> Salvando atualização de nome!");
+                                chatDoc.nome = pushname;
+                            }
+                            
+                            await chatCollection.updateOne({ _id: sender }, { $set: chatDoc });
+                            console.log('> Mensagem adicionada ao chat existente.');
+                            return false;
                         }
-            
-                        await chatCollection.updateOne(
-                            { _id: sender },
-                            { $set: chatDoc }
-                        );
-                        console.log('> Mensagem adicionada ao chat existente.');
-                        const msgsuser = await getMessagesFromUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"))
-                        return false;
-                    }
-            
-                    console.log("Chat não existe");
-            
-                    let stringname = pushname;
-                    if (fromme) {
-                        console.log("> Eu que enviei a mensagem primeiro!");
-                        stringname = sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0");
-                    }
-            
-                    let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-                    const profileResponse = await fetch(`https://195.200.7.87:3000/misc/downProfile?key=${this.key}`, {
-                        method: 'POST',
-                        body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    const profileData = await profileResponse.json();
-                    if (profileData.error === false) {
-                        profileImageUrl = profileData.data;
-                    }
-            
-                    let imagemselecionada;
-                    if (sender.includes("@g.us")) {
-                        let ppUrl = await this.instance.sock?.profilePictureUrl(sender, 'image');
-                        console.log(ppUrl);
-                        imagemselecionada = ppUrl;
-                    } else {
-                        imagemselecionada = profileImageUrl;
-                    }
-            
-                    let nomegpOrpeople;
-                    if (sender.includes("@g.us")) {
-                        nomegpOrpeople = gppessoanome
-                    } else {
-                         msg =  await addMessageToUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"), `${getCurrentDateTime()} - ${pushname}: ${body}`)
-                        ultimoNu = sender.replace("@s.whatsapp.net", "")
-                        const msgsuser = await getMessagesFromUserTable(this.key, sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0"))
-                        nomegpOrpeople = pushname
-                    }
-
-
-                  
-
-                    console.log(msg)
-                    const newChatData = {
-                        _id: sender,
-                        nome: stringname,
-                       //mensagens: [`${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`],
-                        estagio: 0,
-                        nomePix: 'fulano',
-                        imagem: imagemselecionada,
-                        enviando: "nao",
-                        aguardando: {
-                            status: "nao",
-                            id: null,
-                            resposta: null,
-                            inputs_enviados: ["asdasd"],
-                        },
-                        gpconfig: {
-                            antilink: false,
-                            autodivu: false,
-                            timerdivu: 0,
-                            funildivu: null
+                        
+                        console.log("Chat não existe");
+                        
+                        let stringname = fromme ? sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0") : pushname;
+                        let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
+                        
+                        try {
+                            const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${this.key}`, {
+                                method: 'POST',
+                                body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                            const profileData = await profileResponse.json();
+                            
+                            if (!profileData.error) {
+                                profileImageUrl = profileData.data;
+                            }
+                        } catch (e) {
+                            console.log("Erro ao buscar imagem de perfil");
                         }
-                    };
-            
-                    await chatCollection.insertOne(newChatData);
-                  
+                        
+                        const imagemselecionada = sender.includes("@g.us") 
+                            ? await this.instance.sock?.profilePictureUrl(sender, 'image') 
+                            : profileImageUrl;
+                
+ 
+                            let nomegpOrpeople;
+                            if (sender.includes("@g.us")) {
+                                nomegpOrpeople = gppessoanome
+                            } else {
+                                nomegpOrpeople = pushname
+                               
+                            }
 
-                    console.log('IDCHAT adicionado à base de dados com uma nova mensagem.');
-
-                   
-                    return true;
-                } catch (error) {
-                    console.error('Erro ao processar o chat:', error);
-                    throw error;
-                }
-            };
-
-           const checkAndAddChat2 = async(sender, pushname, body, fromme, gppessoanome) => {
-                try {
-                    console.log(`------------------`);
-
-                    
-                    const database = client.db('perfil');
-                    const chatCollection = database.collection(`conversas_${this.key}`);
-            
-                    const existingChat = await chatCollection.findOne({ _id: sender });
-
-                   
-                    if (existingChat) {
-                        const currentDateTime = getCurrentDateTime();
-                        const newMessage = `${currentDateTime} - ${pushname}: ${body}`;
-                        existingChat.mensagens.push(newMessage);
-            
-                        if (!fromme) {
-                            console.log("> Salvando atualização de nome!");
-                            existingChat.nome = pushname;
-                        }
-            
-                        await chatCollection.updateOne(
-                            { _id: sender },
-                            { $set: existingChat }
-                        );
-                        console.log('> Mensagem adicionada ao IDCHAT existente.');
-                        return false;
+                       
+                
+                        const newChatData = {
+                            _id: sender,
+                            nome: stringname,
+                            mensagens: [`${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`],
+                            estagio: 0,
+                            nomePix: 'fulano',
+                            imagem: imagemselecionada,
+                            enviando: "nao",
+                            aguardando: {
+                                status: "nao",
+                                id: null,
+                                resposta: null,
+                                inputs_enviados: ["asdasd"],
+                            },
+                            gpconfig: {
+                                antilink: false,
+                                autodivu: false,
+                                timerdivu: 0,
+                                funildivu: null
+                            }
+                        };
+                        
+                        await chatCollection.insertOne(newChatData);
+                        console.log('IDCHAT adicionado à base de dados com uma nova mensagem.');
+                        
+                        return true;
+                    } catch (error) {
+                        console.error('Erro ao processar o chat:', error);
+                        throw error;
                     }
-            
-                   
-            
-                    let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-                    const profileResponse = await fetch(`https://195.200.7.87:3000/misc/downProfile?key=${this.key}`, {
-                        method: 'POST',
-                        body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    const profileData = await profileResponse.json();
-                    if (profileData.error === false) {
-                        profileImageUrl = profileData.data;
-                    }
-            
-                    let imagemselecionada;
+                };
+                
 
-                    if (sender.includes("@g.us")) {
-                        let ppUrl = await this.instance.sock?.profilePictureUrl(sender, 'image');
-                        console.log(ppUrl);
-                        imagemselecionada = ppUrl;
-                    } else {
-                        imagemselecionada = profileImageUrl;
-                    }
-            
-            
-                    let stringname = pushname;
-                    if (fromme) {
-                        console.log("> Eu que enviei a mensagem primeiro!");
-                        stringname = sender.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("status@broadcas", "0");
-                    }
-            
-
-                    let nomegpOrpeople;
-                    if (sender.includes("@g.us")) {
-                        nomegpOrpeople = gppessoanome
-                    } else {
-                        nomegpOrpeople = pushname
-                    }
-
-                    const newChatData = {
-                        chat: sender,
-                        nome: stringname,
-                        mensagens: [`${getCurrentDateTime()} - ${nomegpOrpeople}: ${body}`],
-                        imagem: imagemselecionada,
-                        estagio: 0,
-                        nomePix: 'fulano',
-                        enviando: "nao",
-                        aguardando: {
-                            status: "nao",
-                            id: null,
-                            resposta: null,
-                            inputs_enviados: ["0vazio"],
-                        },
-                        gpconfig: {
-                          antilink: false,
-                          autodivu: false,
-                          timerdivu: 0,
-                          funildivu: null
-                        }
-                    };
-            console.log(newChatData)
-                    console.log("..");
-                    await chatCollection.insertOne(newChatData);
-
-                    console.log("...");
-                    console.log('IDCHAT adicionado à base de dados com uma nova mensagem.');
-                    return true;
-                } catch (error) {
-                    console.error('Erro ao processar o chat:', error);
-                    throw error;
-                }
-            }
+           
 
               if (m.messages[0].key.remoteJid.includes("@g.us")) {
 
@@ -1293,7 +1172,7 @@ console.log("GRUPO?", isGroup)
                                 const selectedResponse = `dinamico_${currentFunilStep.conteudo.respostas[userChoice - 1]}`
 
                                 async function salvarFunil(key, funilSelecionado) {
-                                    const url = `https://195.200.7.87:3000/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
+                                    const url = `https://evolucaohot.online/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
                                     const data = {
                                       funil: funilSelecionado
                                     };
@@ -2407,7 +2286,7 @@ async updateUser(sender, updates) {
     try {
         
         const database = client.db('perfil');
-        const chatCollection = database.collection(`conversas_${this.key}`);
+        const chatCollection = database.collection(`chatss_${this.key}`);
 
         await chatCollection.updateOne(
             { _id: sender },
@@ -2425,7 +2304,7 @@ async getUser(sender) {
     try {
         
         const database = client.db('perfil');
-        const chatCollection = database.collection(`conversas_${this.key}`);
+        const chatCollection = database.collection(`chatss_${this.key}`);
 
         const userDoc = await chatCollection.findOne({ _id: sender });
 
@@ -2908,7 +2787,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
         formData.append('userType', typeusr);
         formData.append('delay', parseInt(delay));
 
-        const result = await axios.post(`https://195.200.7.87:3000/message/audiofile?key=` + key, formData);
+        const result = await axios.post(`https://evolucaohot.online/message/audiofile?key=` + key, formData);
 
         console.log(result.data);
         if (result.data.error) {
@@ -3084,7 +2963,7 @@ async fetchInstanceMessagesAndChats(key = this.key) {
     try {
         
         const database = client.db('perfil');
-        const collection = database.collection(`conversas_${key}`);
+        const collection = database.collection(`chatss_${key}`);
 
         const snapshot = await collection.find().toArray();
 
