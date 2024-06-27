@@ -16,6 +16,7 @@ const { client } = require("../api/class/instance")
 
 
 
+
 app.use('/static', express.static(__dirname + '/public'));
 app.use(express.json())
 app.use(express.json({ limit: '50mb' }))
@@ -61,6 +62,14 @@ app.get('/whats2/:chave', async (req, res) => {
 
     res.render('whats', {chats: contactsData.data.contacts, chave})
   })
+
+  app.get('/teste', async (req, res) => {
+
+  
+  
+  
+      res.render('teste', {})
+    })
 
   const getConfigurations = async () => {
     return new Promise((resolve, reject) => {
@@ -225,8 +234,8 @@ app.get('/chats/:chave', async (req, res, next) => {
 
     // Ordenar os dados pela última mensagem
     chatsData.sort((a, b) => {
-      const aTime = new Date(a.ultimaMensagem.split(' - ')[0]);
-      const bTime = new Date(b.ultimaMensagem.split(' - ')[0]);
+      const aTime = new Date(a.ultimaMensagem.data);
+      const bTime = new Date(b.ultimaMensagem.data);
       return bTime - aTime; // Ordem decrescente (mais recente primeiro)
     });
 
@@ -255,6 +264,8 @@ app.get('/chat', async (req, res, next) => {
       const chatsData = await chatResponse.json();
       const chat = chatsData.find(chat => chat.id === chatNum);
 
+      const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);
+      const chatsdata = await chatsMsgs.json();
 
        /*/
        const database = client.db('perfil');
@@ -298,18 +309,18 @@ app.get('/chat', async (req, res, next) => {
         const imageLinks = getImageLinks(funisData);
         const profileImageUrl = await getProfileImageUrl(chave, numeroid);
 
-     //   sortChatsByLastMessageTime(chatsData);
-console.log(chat.data)
-console.log(chatsData)
+
 
 const sortedChatsData = chatsData.sort((a, b) => {
-  const lastMessageA = a.data.mensagens.length > 0 ? new Date(a.data.mensagens[a.data.mensagens.length - 1].split(' - ')[0]) : new Date(0);
-  const lastMessageB = b.data.mensagens.length > 0 ? new Date(b.data.mensagens[b.data.mensagens.length - 1].split(' - ')[0]) : new Date(0);
+  const lastMessageA = a.data.mensagens.length > 0 ? new Date(a.data.mensagens[a.data.mensagens.length - 1].data) : new Date(0);
+  const lastMessageB = b.data.mensagens.length > 0 ? new Date(b.data.mensagens[b.data.mensagens.length - 1].data) : new Date(0);
   return lastMessageB - lastMessageA;
 });
 
+console.log(chat.data)
         res.render("chat", {
             chat: chat.data,
+            filtro: chatsdata.chatsData,
             chatfull: sortedChatsData,
             nomezap,
             chave,

@@ -23,6 +23,41 @@ server = app.listen(config.port, '0.0.0.0', async () => {
     }
 })
 
+
+const io = require('socket.io')(server);
+
+// Manipulador para conexão de cliente
+io.on('connection', (socket) => {
+    console.log('Um cliente se conectou');
+
+    // Enviar mensagem ao cliente
+    socket.emit('message', 'Bem-vindo ao servidor Socket.IO!');
+
+    // Escutar mensagem do cliente
+    socket.on('clientMessage', (msg) => {
+        console.log('Mensagem do cliente:', msg);
+    });
+
+    // Manipulador para desconexão de cliente
+    socket.on('disconnect', () => {
+        console.log('Um cliente se desconectou');
+    });
+});
+
+
+app.post('/sendmessage', async (req, res) => {
+    const { newChat } = req.body; // Obtendo a mensagem do corpo da requisição
+
+    if (newChat) {
+        io.emit('newChat', newChat);
+        console.log('Mensagem enviada para todos os clientes:', newChat);
+        res.json({ success: true, newChat: 'Mensagem enviada com sucesso!' });
+    } else {
+        console.log('Corpo da requisição "newChat" não fornecido.');
+        res.status(400).json({ success: false, newChat: 'Corpo da requisição "newChat" não fornecido.' });
+    }
+});
+
 const exitHandler = () => {
     if (server) {
         server.close(() => {
@@ -49,4 +84,4 @@ process.on('SIGTERM', () => {
     }
 })
 
-module.exports = server
+module.exports = {server, io}

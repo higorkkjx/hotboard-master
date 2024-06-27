@@ -957,13 +957,13 @@
                                                                 <h5 class="me-auto mb-0"><%= chat.nome %></h5>
                                                                 <!-- Assuming mensagens[0] is the latest message -->
                                                                 <span class="text-muted extra-small ms-2">
-                                                                    <%= new Date(chat.ultimaMensagem.split(' - ')[0]).toLocaleTimeString() %>
+                                                                    <%= new Date(chat.ultimaMensagem.data).toLocaleTimeString() %>
                                                                 </span>
                                                             </div>
                                         
                                                             <div class="d-flex align-items-center">
                                                                 <div class="line-clamp me-auto">
-                                                                    <%= chat.ultimaMensagem %>
+                                                                    <%= chat.ultimaMensagem.mensagem %>
                                                                 </div>
                                         
                                                                 <div class="badge badge-circle bg-primary ms-5">

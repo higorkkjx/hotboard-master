@@ -40,8 +40,8 @@
         "cheerio": "^1.0.0-rc.12",
         "colors": "^1.4.0",
         "dotenv": "^16.0.3",
-        "ejs": "^3.1.7",
-        "express": "^4.18.2",
+        "ejs": "^3.1.10",
+        "express": "^4.19.2",
         "express-exception-handler": "^1.3.23",
         "ffmpeg-installer": "^1.0.2",
         "firebase-admin": "^12.1.1",
@@ -60,7 +60,10 @@
         "sharp": "^0.32.2",
         "socket.io": "^4.7.5",
         "socket.io-client": "^4.7.5",
-        "uuid": "^9.0.1"
+        "sockjs": "^0.3.24",
+        "sockjs-client": "^1.6.1",
+        "uuid": "^9.0.1",
+        "ws": "^8.17.1"
     },
     "devDependencies": {
         "eslint": "^8.28.0",

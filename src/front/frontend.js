@@ -347,29 +347,49 @@ router.post("/excluir-assinatura", async (req, res) => {
 // Função para obter e-mails ativos
 async function getEmailsAtivos() {
   try {
-     
-      const database = client.db('hotboard');
-      const assinaturas = database.collection('assinaturas');
+    const instanceResponse = await fetch(`https://evolucaohot.online/instance/list`);
+    const instanceData = await instanceResponse.json();
+    const emailsAtivos = [];
+    const dataAtualSP = moment().tz("America/Sao_Paulo");
 
-      const snapshot = await assinaturas.find({ ativo: true }).toArray();
-      const emailsAtivos = [];
+    for (const doc of instanceData.data) {
+      if (doc.email === "invalido") continue;
 
-      const dataAtualSP = moment().tz("America/Sao_Paulo");
+      if (moment(doc.dias).isBefore(dataAtualSP)) {
+        const data = {
+          key: doc.key,
+          email: "invalido",
+          phone: doc.phone,
+          name: doc.name,
+          dias: doc.dias,
+          webhook: doc.webhook || false,
+          webhookUrl: doc.webhookUrl || false,
+          mongourl: doc.mongourl || false,
+          browser: doc.browser || 'Minha Api',
+          ignoreGroups: doc.ignoreGroups || false,
+          webhookEvents: doc.webhookEvents || [],
+          messagesRead: doc.messagesRead || false,
+          base64: doc.base64 || false
+        };
 
-      for (const doc of snapshot) {
-          if (moment(doc.validade).isBefore(dataAtualSP)) {
-              await assinaturas.updateOne({ _id: doc._id }, { $set: { ativo: false } });
-          } else {
-              emailsAtivos.push(doc.email);
-          }
+        try {
+          const response = await axios.post('https://evolucaohot.online/instance/editar', data);
+          console.log(response.data);
+        } catch (error) {
+          console.error("Erro ao editar email:", error);
+        }
+      } else {
+        emailsAtivos.push(doc.email);
       }
+    }
 
-      return emailsAtivos;
+    return emailsAtivos;
   } catch (err) {
-      console.error(err);
-      return [];
+    console.error("Erro ao obter emails ativos:", err);
+    return [];
   }
 }
+
 
 // Função para consultar validade
 async function consultarValidade(chave) {
@@ -386,7 +406,7 @@ async function consultarValidade(chave) {
           const mes = dataVencimento.getMonth() + 1;
 
           // Buscar o nome de usuário correspondente ao email
-          const nomeUsuario = instanceData.instance_data.nome || "Usuário"; // Se não encontrar o nome, usa "Usuário" como padrão
+          const nomeUsuario = instanceData.instance_data.name || "Usuário"; // Se não encontrar o nome, usa "Usuário" como padrão
 
           return {
               nome: nomeUsuario,

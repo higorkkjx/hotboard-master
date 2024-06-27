@@ -18,10 +18,10 @@ console.log("Restaurando sessoes")
             const sessions = database.collection('sessions');
 
             const sessionsSnapshot = await sessions.find().toArray();
-console.log(sessionsSnapshot)
+//console.log(sessionsSnapshot)
             if (sessionsSnapshot.length > 0) {
                 sessionsSnapshot.forEach(doc => {
-                    console.log(doc)
+               //     console.log(doc)
                     allSessions.push(doc);
                 });
             }

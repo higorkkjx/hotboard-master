@@ -19,8 +19,60 @@
         <link rel="stylesheet" href="/static/assets/css/template.bundle.css">
         <link rel="stylesheet" href="/static/assets/css/template.dark.bundle.css" media="(prefers-color-scheme: dark)">
     </head>
+ 
+    <script src="/socket.io/socket.io.js"></script>
 
     <body>
+        <style>
+            #notification-area {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1050;
+                max-width: 300px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+    
+            .toast-custom {
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #dddddd;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                padding: 15px;
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+    
+            .toast-custom .toast-header {
+                background-color: transparent;
+                color: #333333;
+                border-bottom: 1px solid #eeeeee;
+                padding-bottom: 10px;
+                font-weight: bold;
+            }
+    
+            .toast-custom .toast-body {
+                color: #666666;
+            }
+    
+            .toast-custom .close-button {
+                background: none;
+                border: none;
+                font-size: 16px;
+                color: #999999;
+                cursor: pointer;
+            }
+    
+            .toast-custom .close-button:hover {
+                color: #333333;
+            }
+        </style>
+    
+        
         <!-- Layout -->
         <div class="layout overflow-hidden">
             <!-- Navigation -->
@@ -1054,57 +1106,48 @@
                                         </form>
                                     </div>
 
-                                    <!-- Chats -->
-                                    <div class="card-list">
+                                        <!-- Área de notificações -->
+                                        <div id="notification-area"></div>
+                                        <audio id="notification-sound" src="/static/assets/web_whatsapp.mp3" preload="auto"></audio>
 
-
-                                        <!-- Card -->
-                                        <% chatfull.forEach(chat => { %>
-                                            <!-- Card -->
-                                            <a href="/chat?num=<%= chat.data._id %>&key=<%= chave %>" class="card border-0 text-reset">
-                                                <div class="card-body">
-                                                    <div class="row gx-5">
-                                                        <div class="col-auto">
-                                                            <div class="avatar avatar-online">
-                                                                <img src="<%= chat.data.imagem %>" alt="#" class="avatar-img">
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col">
-                                                            <div class="d-flex align-items-center mb-3">
-                                                                <h5 class="me-auto mb-0"><%= chat.data.nome %></h5>
-                                                                <!-- Assuming mensagens[0] is the latest message -->
-                                                                <span class="text-muted extra-small ms-2">
-                                                                 0
-                                                                </span>
-                                                            </div>
-
-                                                            <div class="d-flex align-items-center">
-                                                                <div class="line-clamp me-auto">
-                                                                    <% 
-                                                                    var ultimaMensagem = chat.data.mensagens[chat.data.mensagens.length - 1];
-                                                                    var conteudoMensagem = ultimaMensagem ? ultimaMensagem.split(' - ')[1] : 'Nenhuma mensagem disponível';
-                                                                  %>
-                                                                  <%= conteudoMensagem %>
-                                                                  
-                                                                </div>
-
-
-                                                                <div class="badge badge-circle bg-primary ms-5">
-                                                                    <span>1</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div><!-- .card-body -->
-                                            </a>
-                                            <!-- Card -->
-                                        <% }) %>
-                                        <!-- Card -->
-
-
-                                    </div>
-                                    <!-- Chats -->
+                                 <!-- Chats -->
+<div class="card-list" id="chat-list">
+    <!-- Card -->
+    <% filtro.forEach(chat => { %>
+        <!-- Card -->
+        <a href="/chat?num=<%= chat.id %>&key=<%= chave %>" class="card border-0 text-reset" id="chat-<%= chat.id %>">
+            <div class="card-body">
+                <div class="row gx-5">
+                    <div class="col-auto">
+                        <div class="avatar avatar-online">
+                            <img src="<%= chat.imagem %>" alt="#" class="avatar-img">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="d-flex align-items-center mb-3">
+                            <h5 class="me-auto mb-0"><%= chat.nome %></h5>
+                            <!-- Assuming mensagens[0] is the latest message -->
+                            <span class="text-muted extra-small ms-2 chat-time">
+                                <%= new Date(chat.ultimaMensagem.data).toLocaleTimeString() %>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="line-clamp me-auto chat-message">
+                                <%= chat.ultimaMensagem.mensagem %>
+                            </div>
+                            <div class="badge badge-circle bg-primary ms-5">
+                                <span>1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- .card-body -->
+        </a>
+        <!-- Card -->
+    <% }) %>
+    <!-- Card -->
+</div>
+<!-- Chats -->
                                 </div>
 
                             </div>
@@ -2126,76 +2169,88 @@
     <div class="chat-body hide-scrollbar flex-1 h-100">
         <div class="chat-body-inner">
             <div class="py-6 py-lg-12">
-                <% chat.mensagens.forEach(mensagem => { %>
-                    <% var parts = mensagem.split(': '); %>
-                    <% var nome = parts[0].split(' - ')[1]; %>
-                    <% var texto = parts.slice(1).join(': '); %>
-                    <% var data = parts[0].split(' - ')[0]; %>
-                    <% var isOut = nome === nomezap; %>
-
-                    <!-- Message -->
-                    <div class="message <%= isOut ? 'message-out' : '' %>">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#modal-user-profile" class="avatar avatar-responsive">
-                            <img class="avatar-img" src="<%= isOut ? profileImageUrl : chat.imagem %>" alt="">
-
-                        </a>
-
-                        <div class="message-inner">
-                            <div class="message-body">
-                                <div class="message-content">
-                                    <div class="message-text">
-                                        <p><%= texto %></p>
-                                    </div>
-
-                                    <!-- Dropdown -->
-                                    <div class="message-action">
-                                        <div class="dropdown">
-                                            <a class="icon text-muted" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                                            </a>
-
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <a class="dropdown-item d-flex align-items-center" href="#">
-                                                        <span class="me-auto">Edit</span>
-                                                        <div class="icon">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit-3"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                                                        </div>
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item d-flex align-items-center" href="#">
-                                                        <span class="me-auto">Reply</span>
-                                                        <div class="icon">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-corner-up-left"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>
-                                                        </div>
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <hr class="dropdown-divider">
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item d-flex align-items-center text-danger" href="#">
-                                                        <span class="me-auto">Delete</span>
-                                                        <div class="icon">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                                                        </div>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
+                <% chat.mensagens.forEach(mensagem => { 
+                    const { user: nome, mensagem: texto, data } = mensagem;
+                    const isOut = nome === nomezap;
+                %>
+                <!-- Message -->
+                <div class="message <%= isOut ? 'message-out' : '' %>">
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#modal-user-profile" class="avatar avatar-responsive">
+                        <img class="avatar-img" src="<%= isOut ? profileImageUrl : chat.imagem %>" alt="">
+                    </a>
+            
+                    <div class="message-inner">
+                        <div class="message-body">
+                            <div class="message-content">
+                                <div class="message-text">
+                                    <p><%= texto %></p>
+                                </div>
+            
+                                <!-- Dropdown -->
+                                <div class="message-action">
+                                    <div class="dropdown">
+                                        <a class="icon text-muted" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical">
+                                                <circle cx="12" cy="12" r="1"></circle>
+                                                <circle cx="12" cy="5" r="1"></circle>
+                                                <circle cx="12" cy="19" r="1"></circle>
+                                            </svg>
+                                        </a>
+            
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center" href="#">
+                                                    <span class="me-auto">Edit</span>
+                                                    <div class="icon">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit-3">
+                                                            <path d="M12 20h9"></path>
+                                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                                        </svg>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center" href="#">
+                                                    <span class="me-auto">Reply</span>
+                                                    <div class="icon">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-corner-up-left">
+                                                            <polyline points="9 14 4 9 9 4"></polyline>
+                                                            <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+                                                        </svg>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center text-danger" href="#">
+                                                    <span class="me-auto">Delete</span>
+                                                    <div class="icon">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2">
+                                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                        </svg>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="message-footer">
-                                <span class="extra-small text-muted"><%= new Date(data).toLocaleTimeString() %></span>
-                            </div>
+                        </div>
+            
+                        <div class="message-footer">
+                            <span class="extra-small text-muted"><%= new Date(data).toLocaleTimeString() %></span>
                         </div>
                     </div>
-                    <!-- Message -->
+                </div>
+                <!-- Message -->
                 <% }) %>
             </div>
+            
         </div>
     </div>
     <!-- Chat: Content -->
@@ -2888,7 +2943,7 @@ document.getElementById('send-button').addEventListener('click', function() {
         typeId: tipouserr, // "group" ou "user"
         message: messageInput,
         options: {
-            delay: 3, // para aparecer digitando..
+            delay: 0, // para aparecer digitando..
             replyFrom: "" // id da mensagem que você quer responder.
         },
         groupOptions: {
@@ -3165,6 +3220,117 @@ sendButton.addEventListener('click', processMessageSend);
               alert("An unhandled promise rejection occurred. Please check the console for more details.");
             });
           </script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const socket = io();
+
+        socket.on('message', (msg) => {
+            console.log('Mensagem do servidor:', msg);
+        });
+
+        socket.on('newChat', (chat) => {
+            showNotification('Mensagem recebida', chat.mensagens[chat.mensagens.length - 1].mensagem);
+            addOrUpdateChatCard(chat);
+        });
+
+        socket.emit('clientMessage', 'Olá, servidor!');
+
+        // Enviar mensagem para o servidor ao clicar no botão
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            const message = document.getElementById('messageInput').value;
+            socket.emit('clientMessage', message);
+        });
+
+        function addOrUpdateChatCard(chat) {
+            const chatList = document.getElementById('chat-list');
+            if (!chatList) {
+                console.error('Elemento chat-list não encontrado');
+                return;
+            }
+
+            const existingChatCard = document.getElementById(`chat-${chat._id}`);
+            const latestMessage = chat.mensagens[chat.mensagens.length - 1];
+            if (existingChatCard) {
+                // Atualizar a mensagem e a hora do chat existente
+                existingChatCard.querySelector('.chat-time').textContent = new Date(latestMessage.data).toLocaleTimeString();
+                existingChatCard.querySelector('.chat-message').textContent = latestMessage.mensagem;
+                // Mover o card atualizado para o topo
+                chatList.insertBefore(existingChatCard, chatList.firstChild);
+            } else {
+                // Criar um novo card para o novo chat
+                const card = document.createElement('a');
+                card.href = `/chat?num=${chat._id}&key=<%= chave %>`;
+                card.classList.add('card', 'border-0', 'text-reset');
+                card.id = `chat-${chat._id}`;
+                card.innerHTML = `
+                    <div class="card-body">
+                        <div class="row gx-5">
+                            <div class="col-auto">
+                                <div class="avatar avatar-online">
+                                    <img src="${chat.imagem}" alt="#" class="avatar-img">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex align-items-center mb-3">
+                                    <h5 class="me-auto mb-0">${chat.nome}</h5>
+                                    <span class="text-muted extra-small ms-2 chat-time">
+                                        ${new Date(latestMessage.data).toLocaleTimeString()}
+                                    </span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="line-clamp me-auto chat-message">
+                                        ${latestMessage.mensagem}
+                                    </div>
+                                    <div class="badge badge-circle bg-primary ms-5">
+                                        <span>1</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatList.insertBefore(card, chatList.firstChild);
+            }
+        }
+
+        function showNotification(title, message) {
+                const notificationArea = document.getElementById('notification-area');
+                if (!notificationArea) {
+                    console.error('Elemento notification-area não encontrado');
+                    return;
+                }
+
+                const notification = document.createElement('div');
+                notification.classList.add('toast', 'toast-custom', 'show');
+                notification.role = 'alert';
+                notification.ariaLive = 'assertive';
+                notification.ariaAtomic = 'true';
+                notification.innerHTML = `
+                    <div class="toast-header">
+                        <strong class="mr-auto">${title}</strong>
+                      
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                `;
+
+                notificationArea.appendChild(notification);
+                const notificationSound = document.getElementById('notification-sound');
+                notificationSound.play();
+
+                // Remover notificação após 5 segundos
+                setTimeout(() => {
+                    notification.remove();
+                }, 3500);
+            }
+
+    });
+
+
+</script>
 
         <!-- Scripts -->
         <script src="/static/assets/js/vendor.js"></script>
