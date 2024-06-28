@@ -3231,8 +3231,11 @@ sendButton.addEventListener('click', processMessageSend);
         });
 
         socket.on('newChat', (chat) => {
-            showNotification('Mensagem recebida', chat.mensagens[chat.mensagens.length - 1].mensagem);
-            addOrUpdateChatCard(chat);
+            if(chat.key == '<%= chave %>') {
+                showNotification('Mensagem recebida', chat.mensagens[chat.mensagens.length - 1].mensagem);
+                addOrUpdateChatCard(chat);
+            }
+         
         });
 
         socket.emit('clientMessage', 'Olá, servidor!');
@@ -3296,36 +3299,47 @@ sendButton.addEventListener('click', processMessageSend);
         }
 
         function showNotification(title, message) {
-                const notificationArea = document.getElementById('notification-area');
-                if (!notificationArea) {
-                    console.error('Elemento notification-area não encontrado');
-                    return;
-                }
+    const notificationArea = document.getElementById('notification-area');
+    if (!notificationArea) {
+        console.error('Elemento notification-area não encontrado');
+        return;
+    }
 
-                const notification = document.createElement('div');
-                notification.classList.add('toast', 'toast-custom', 'show');
-                notification.role = 'alert';
-                notification.ariaLive = 'assertive';
-                notification.ariaAtomic = 'true';
-                notification.innerHTML = `
-                    <div class="toast-header">
-                        <strong class="mr-auto">${title}</strong>
-                      
-                    </div>
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                `;
+    // Verifica se já existe uma notificação na área
+    const existingNotification = notificationArea.querySelector('.toast');
+    if (existingNotification) {
+        // Atualiza o conteúdo da notificação existente
+        const notificationHeader = existingNotification.querySelector('.toast-header strong');
+        const notificationBody = existingNotification.querySelector('.toast-body');
+        notificationHeader.textContent = title;
+        notificationBody.textContent = message;
+    } else {
+        // Cria uma nova notificação se não houver nenhuma existente
+        const notification = document.createElement('div');
+        notification.classList.add('toast', 'toast-custom', 'show');
+        notification.role = 'alert';
+        notification.ariaLive = 'assertive';
+        notification.ariaAtomic = 'true';
+        notification.innerHTML = `
+            <div class="toast-header">
+                <strong class="mr-auto">${title}</strong>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        `;
 
-                notificationArea.appendChild(notification);
-                const notificationSound = document.getElementById('notification-sound');
-                notificationSound.play();
+        notificationArea.appendChild(notification);
+        const notificationSound = document.getElementById('notification-sound');
+        notificationSound.play();
 
-                // Remover notificação após 5 segundos
-                setTimeout(() => {
-                    notification.remove();
-                }, 3500);
-            }
+        // Remover notificação após 5 segundos
+        setTimeout(() => {
+            notification.remove();
+        }, 3500);
+    }
+}
+
 
     });
 

@@ -1633,7 +1633,7 @@ router.get('/clearchats/:key', async (req, res) => {
   try {
       
       const database = client.db('perfil');
-      const chatCollection = database.collection(`chatss_${key}`);
+      const chatCollection = database.collection(`chatis_${key}`);
      // const funilCollection = database.collection(`funilresp_${key}`);
      // await funilCollection.deleteMany({});
       const result = await chatCollection.deleteMany({});

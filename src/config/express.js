@@ -132,7 +132,7 @@ app.get('/whats/:chave', async (req, res, next) => {
         const chatsdata = await chatsMsgs.json();
 
       // const database = client.db('perfil');
-       //const collection = database.collection(`chatss_${chave}`);
+       //const collection = database.collection(`chatis_${chave}`);
 
      //  const snapshot = await collection.find().toArray();
 
@@ -168,7 +168,7 @@ app.get('/findchat/:id/:chave', async (req, res, next) => {
   try {
     const { id, chave } = req.params;
     const database = client.db('perfil');
-    const collection = database.collection('chatss_' + chave);
+    const collection = database.collection('chatis_' + chave);
 
     // Obter todos os documentos e armazenar em uma variável temporária
     const snapshot = await collection.find({}, { projection: { _id: 1, nome: 1, mensagens: 1 } }).toArray();
@@ -269,7 +269,7 @@ app.get('/chat', async (req, res, next) => {
 
        /*/
        const database = client.db('perfil');
-       const collection = database.collection(`chatss_${chave}`);
+       const collection = database.collection(`chatis_${chave}`);
 
        const snapshot = await collection.find().toArray();
 

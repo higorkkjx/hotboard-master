@@ -541,7 +541,7 @@ async getFileNameFromUrl(url) {
 
 
 
-async servidormsg(json) {
+async servidormsg(json, key) {
     try {
     const response = await axios.post('https://evolucaohot.online/sendmessage', {newChat: json});
 
@@ -1555,7 +1555,7 @@ async getCurrentDateTime() {
 async checkAndAddChat(sender, pushname, body, fromme, gppessoanome) {
     try {
         const database = client.db('perfil');
-        const chatCollection = database.collection(`chatss_${this.key}`);
+        const chatCollection = database.collection(`chatis_${this.key}`);
         
         const chatDoc = await chatCollection.findOne({ _id: sender });
      const currentDateTime = await this.getCurrentDateTime();
@@ -1641,6 +1641,7 @@ stringname = gppessoanome
        
         const newChatData = {
             _id: sender,
+            key: this.key,
             nome: stringname,
             mensagens: [dataMenesagem],
             estagio: 0,
@@ -2366,7 +2367,7 @@ async updateUser(sender, updates) {
     try {
         
         const database = client.db('perfil');
-        const chatCollection = database.collection(`chatss_${this.key}`);
+        const chatCollection = database.collection(`chatis_${this.key}`);
 
         await chatCollection.updateOne(
             { _id: sender },
@@ -2384,7 +2385,7 @@ async getUser(sender) {
     try {
         
         const database = client.db('perfil');
-        const chatCollection = database.collection(`chatss_${this.key}`);
+        const chatCollection = database.collection(`chatis_${this.key}`);
 
         const userDoc = await chatCollection.findOne({ _id: sender });
 
@@ -3043,7 +3044,7 @@ async fetchInstanceMessagesAndChats(key = this.key) {
     try {
         
         const database = client.db('perfil');
-        const collection = database.collection(`chatss_${key}`);
+        const collection = database.collection(`chatis_${key}`);
 
         const snapshot = await collection.find().toArray();
 
