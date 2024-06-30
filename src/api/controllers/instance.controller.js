@@ -123,15 +123,15 @@ exports.init = async (req, res) => {
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
-                                id: `${data.phone}@s.whatsapp.net`,
+                                id: `${phone}@s.whatsapp.net`,
                                 typeId: "user",
                                 message: `✅ Acesso liberado com sucesso!
 
 ➣ Plataforma: https://evolucaohot.online
 
-➣ Sua chave de acesso: ${data.key}
+➣ Sua chave de acesso: ${key}
 
-🕗 Validade: ${data.dias}`,
+🕗 Validade: ${dias}`,
                                 options: options,
                                 groupOptions: groupOptions
                             })
