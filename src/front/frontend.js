@@ -1306,7 +1306,7 @@ router.post("/hospedar", uploadxs.single("videoFile"), async (req, res) => {
     const rawUrl = await uploadToGitHub(
       buffer,
       filename + ".mp4",
-      "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",
+      "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",
       "higorkkjx",
       "uploads2",
     );

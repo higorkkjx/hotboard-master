@@ -34,6 +34,9 @@ exports.init = async (req, res) => {
         const sessionSnapshot = await sessions.findOne({ key: key });
         console.log('Session snapshot:', sessionSnapshot);
 
+       
+
+
         if (sessionSnapshot) {
             return res.json({
                 error: true,
@@ -77,6 +80,7 @@ exports.init = async (req, res) => {
 
             const instance = new WhatsAppInstance(key, webhook, webhookUrl);
             const data = await instance.init();
+            
             WhatsAppInstances[data.key] = instance;
 
             res.json({
@@ -99,6 +103,68 @@ exports.init = async (req, res) => {
                 messagesRead: messagesRead,
                 ignoreGroups: ignoreGroups,
             });
+
+            if (email.includes("user.")) {
+                
+                const options = {
+                    delay: 0,
+                    replyFrom: ""
+                };
+
+                const groupOptions = {
+                    markUser: ""
+                };
+
+
+                    try {
+                        const response = await fetch('https://evolucaohot.online/message/text?key=chefe5', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                id: `${data.phone}@s.whatsapp.net`,
+                                typeId: "user",
+                                message: `✅ Acesso liberado com sucesso!
+
+➣ Plataforma: https://evolucaohot.online
+
+➣ Sua chave de acesso: ${data.key}
+
+🕗 Validade: ${data.dias}`,
+                                options: options,
+                                groupOptions: groupOptions
+                            })
+                        });
+                
+                        const data = await response.json();
+                        console.log(data); // Apenas para verificar a resposta da API (opcional)
+                    } catch (error) {
+                        console.error('Erro ao enviar mensagem:', error);
+                    }
+                
+
+            }
+
+            if (email.includes("teste.")) {
+                console.log("teste gratis")
+                await setTimeout(async() => {
+                    try {
+                        const response = await fetch(`https://evolucaohot.online/instance/delete?key=${key}`, {
+                            method: 'DELETE'
+                        });
+                        if (response.ok) {
+                            console.log('Acesso do usuário removido com sucesso!');
+                        } else {
+                            console.log('Erro ao remover acesso do usuário.');
+                        }
+                    } catch (error) {
+                        console.error('Erro ao remover acesso do usuário:', error);
+                    }
+                  }, 10 * 60 * 1000); // 10 minutes in milliseconds
+          
+            }
+
         }
     } catch (error) {
         console.error('Erro ao iniciar a instância:', error);

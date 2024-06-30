@@ -473,53 +473,342 @@ app.post('/gerar-audio', async (req, res) => {
     });
   }
 
-  app.get('/admin/dark/delsessao', (req, res) => {
-    res.send(`<!DOCTYPE html>
-    <html lang="en">
 
+
+// Function to render HTML for adding session
+const renderAddSessionForm = () => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Acesso</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-md mx-auto py-12 px-4">
+        <h2 class="text-2xl font-bold text-center mb-8">Adicionar Sessão</h2>
+        <form id="addSessionForm" class="space-y-4">
+            <div>
+                <label for="key" class="block">Chave de Acesso:</label>
+                <input type="text" id="key" name="key" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="email" class="block">Email:</label>
+                <input type="email" id="email" name="email" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="phone" class="block">Telefone:</label>
+                <input type="tel" id="phone" name="phone" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="name" class="block">Nome:</label>
+                <input type="text" id="name" name="name" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Criar Acesso</button>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.getElementById('addSessionForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const key = document.getElementById('key').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const name = document.getElementById('name').value;
+           const requestData = {
+        key: key,
+        email: email,
+        phone: phone,
+        name: name,
+        dias: 'teste',  // Inclusão do valor de dias
+        browser: "Ubuntu",
+        webhook: false,
+        base64: true,
+        webhookUrl: "",
+        webhookEvents: ["messages.upsert"],
+        ignoreGroups: false,
+        messagesRead: false
+    };
+            try {
+         const response = await fetch('https://evolucaohot.online/addteste', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestData)
+});
+
+             
+                alert('Acesso criado com sucesso para teste grátis de 10 minutos!');
+            } catch (error) {
+             console.log(error)
+                alert('Erro ao criar acesso. Por favor, tente novamente.');
+            }
+        });
+    </script>
+</body>
+</html>
+`;
+
+// Function to render HTML for deleting session
+const renderDeleteSessionForm = () => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deletar Acesso</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-md mx-auto py-12 px-4">
+        <h2 class="text-2xl font-bold text-center mb-8">Deletar Acesso</h2>
+        <form id="deleteAccessForm" class="space-y-4">
+            <div>
+                <label for="key" class="block">Chave de Acesso:</label>
+                <input type="text" id="key" name="key" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Deletar Acesso</button>
+        </form>
+    </div>
+    <script>
+        document.getElementById('deleteAccessForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const key = document.getElementById('key').value;
+            try {
+                const response = await fetch('https://evolucaohot.online/instance/delete?key=' + key, { method: 'DELETE' });
+                if (response.ok) {
+                    alert('Acesso deletado com sucesso!');
+                } else {
+                    throw new Error('Erro ao deletar acesso.');
+                }
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    </script>
+</body>
+</html>
+`;
+
+// Route to render add session form
+app.get('/admin/dark/addteste', (req, res) => {
+    res.send(renderAddSessionForm());
+});
+
+// Route to render delete session form
+app.get('/admin/dark/delsessao', (req, res) => {
+    res.send(renderDeleteSessionForm());
+});
+
+// Function to remove user access
+const removeUserAccess = async (key) => {
+    try {
+        const response = await fetch(`https://evolucaohot.online/instance/delete?key=${key}`, {
+            method: 'DELETE'
+        });
+        if (response.ok) {
+            console.log('Acesso do usuário removido com sucesso!');
+        } else {
+            console.log('Erro ao remover acesso do usuário.');
+        }
+    } catch (error) {
+        console.error('Erro ao remover acesso do usuário:', error);
+    }
+};
+
+
+const crypto = require('crypto');
+
+// Função para gerar email aleatório
+function generateRandomEmail() {
+    const randomString = crypto.randomBytes(4).toString('hex');
+    return `teste.${randomString}@example.com`;
+}
+
+function generateRandomEmail2() {
+  const randomString = crypto.randomBytes(4).toString('hex');
+  return `user.${randomString}@hotboard.com`;
+}
+// Função para gerar key aleatória
+function generateRandomKey() {
+    return crypto.randomBytes(7).toString('hex');
+}
+
+
+app.get('/admin/dark/addsessao2', (req, res) => {
+  const randomEmail = generateRandomEmail2();
+  const randomKey = generateRandomKey();
+
+  const formHTML = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Teste Grátis</title>
+      <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  </head>
+  <body class="bg-gray-100">
+      <div class="max-w-md mx-auto py-12 px-4">
+          <h2 class="text-2xl font-bold text-center mb-8">Teste Grátis</h2>
+          <form id="freeTestForm" class="space-y-4">
+              <div>
+                  <label for="email" class="block">Email:</label>
+                  <input type="email" id="email" name="email" value="${randomEmail}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" readonly>
+              </div>
+              <div>
+                  <label for="key" class="block">Chave de Acesso:</label>
+                  <input type="text" id="key" name="key" value="${randomKey}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" readonly>
+              </div>
+              <div>
+                  <label for="name" class="block">Nome:</label>
+                  <input type="text" id="name" name="name" value="teste gratis" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" readonly>
+              </div>
+             <div>
+                <label for="phone" class="block">Telefone:</label>
+                <input type="tel" id="phone" name="phone" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+             <div>
+             <label for="dias" class="block font-semibold mb-2">Quantidade de Dias:</label>
+           <input type="number" id="dias" name="dias" required class="w-full px-4 py-2 mb-4 border rounded-md focus:outline-none focus:border-blue-500">
+
+    </div>
+                <button type="button" id="submitButton" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Criar Acesso</button>
+            </form>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script>
+            document.getElementById('submitButton').addEventListener('click', async function() {
+                const key = document.getElementById('key').value;
+                const email = document.getElementById('email').value;
+                const name = document.getElementById('name').value;
+                const dias = document.getElementById('dias').value;
+                  const phone = document.getElementById('phone').value;
+                const requestData = {
+                    key: key,
+                    email: email,
+                    name: name,
+                    phone: phone,
+                    dias: dias,
+                    browser: "Ubuntu",
+                    webhook: false,
+                    base64: true,
+                    webhookUrl: "",
+                    webhookEvents: ["messages.upsert"],
+                    ignoreGroups: false,
+                    messagesRead: false
+                };
+                try {
+                    const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+                    alert('Acesso criado com sucesso! Chave: ' + key);
+                } catch (error) {
+                    alert('Erro ao criar acesso. Por favor, tente novamente.');
+                }
+            });
+        </script>
+  </body>
+  </html>
+  `;
+  res.send(formHTML);
+});
+
+
+app.get('/admin/dark/testegratis', (req, res) => {
+    const randomEmail = generateRandomEmail();
+    const randomKey = generateRandomKey();
+
+    const formHTML = `
+    <!DOCTYPE html>
+    <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Deletar Acesso</title>
+        <title>Teste Grátis</title>
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-        <style>
-            /* Add any additional custom styles here */
-        </style>
     </head>
-
     <body class="bg-gray-100">
         <div class="max-w-md mx-auto py-12 px-4">
-            <h2 class="text-2xl font-bold text-center mb-8">Deletar Acesso</h2>
-            <form id="deleteAccessForm" class="space-y-4">
+            <h2 class="text-2xl font-bold text-center mb-8">Teste Grátis</h2>
+            <form id="freeTestForm" class="space-y-4">
+                <div>
+                    <label for="email" class="block">Email:</label>
+                    <input type="email" id="email" name="email" value="${randomEmail}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" readonly>
+                </div>
                 <div>
                     <label for="key" class="block">Chave de Acesso:</label>
-                    <input type="text" id="key" name="key" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <input type="text" id="key" name="key" value="${randomKey}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" readonly>
                 </div>
-                <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Deletar Acesso</button>
+                  <div>
+                <label for="name" class="block">Nome:</label>
+                <input type="text" id="name" name="name" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+                <div>
+                    <label for="dias" class="block">Quantidade de Dias:</label>
+                    <input type="number" id="dias" name="dias" value="1" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" readonly>
+                </div>
+                <button type="button" id="submitButton" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Criar Acesso</button>
             </form>
         </div>
-
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
         <script>
-            document.getElementById('deleteAccessForm').addEventListener('submit', async function(event) {
-                event.preventDefault();
+            document.getElementById('submitButton').addEventListener('click', async function() {
                 const key = document.getElementById('key').value;
+                const email = document.getElementById('email').value;
+                const name = document.getElementById('name').value;
+                const dias = document.getElementById('dias').value;
+                const requestData = {
+                    key: key,
+                    email: email,
+                    name: name,
+                    dias: dias,
+                    browser: "Ubuntu",
+                    webhook: false,
+                    base64: true,
+                    webhookUrl: "",
+                    webhookEvents: ["messages.upsert"],
+                    ignoreGroups: false,
+                    messagesRead: false
+                };
                 try {
-                    const response = await fetch('https://evolucaohot.online/instance/delete?key=' + key);
-                    if (response.ok) {
-                        alert('Acesso deletado com sucesso!');
-                    } else {
-                        throw new Error('Erro ao deletar acesso.');
-                    }
+                    const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+                    alert('Acesso criado com sucesso! Chave: ' + key);
                 } catch (error) {
-                    alert(error.message);
+                    alert('Erro ao criar acesso. Por favor, tente novamente.');
                 }
             });
         </script>
     </body>
-
     </html>
-    `)
-  })
+    `;
+    res.send(formHTML);
+});
+
+// Route to create user access for a test period and schedule removal
+app.post('/addteste', async (req, res) => {
+    const requestData = req.body;
+
+      
+        
+        try {
+          const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+          res.status(200).send('Acesso criado com sucesso para teste grátis de 10 minutos!');
+        
+     
+
+        // Remove user access after 10 minutes
+       await setTimeout(async() => {
+          await removeUserAccess(requestData.key);
+        }, 10 * 60 * 1000); // 10 minutes in milliseconds
+
+
+    } catch (error) {
+      console.log(error)
+        res.status(500).send('Erro ao criar acesso. Por favor, tente novamente.');
+    }
+});
+
   app.get('/admin/dark/addsessao', (req, res) => {
     const formHTML = `
    <!DOCTYPE html>
