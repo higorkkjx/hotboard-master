@@ -117,7 +117,7 @@ exports.init = async (req, res) => {
 
 
                     try {
-                        const response = await fetch('https://evolucaohot.online/message/text?key=chefe5', {
+                        const response = await fetch('https://evolucaohot.online/message/text?key=higorteste', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -129,9 +129,15 @@ exports.init = async (req, res) => {
 
 ➣ Plataforma: https://evolucaohot.online
 
+🕗 Validade: ${dias} dias
+
 ➣ Sua chave de acesso: ${key}
 
-🕗 Validade: ${dias}`,
+*Link direto da sua plataforma* 👇
+
+https://evolucaohot.online/home/${key}
+
+`,
                                 options: options,
                                 groupOptions: groupOptions
                             })
