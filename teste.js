@@ -1,44 +1,30 @@
-const mysql = require('mysql2/promise');
+const formatPhoneNumber = (numero) => {
+    // Remove o código do país (ddi)
+    let ddi = numero.slice(0, 2);
+    let ddd = numero.slice(2, 4);
+    let number = numero.slice(4);
 
-// Defina a conexão com o banco de dados
-const dbConfig = {
-  host: 'srv1487.hstgr.io',
-  user: 'u735825450_dark',
-  password: 'H26032007h',
-  database: 'u735825450_hotboard'
+    // Converte ddd e number para inteiros para validações
+    let dddInt = parseInt(ddd);
+    let numberLength = number.length;
+console.log(numberLength)
+    // Regras para ddd até 27
+    if (dddInt <= 27) {
+        if (numberLength === 8) {
+            number = '9' + number;
+        }
+    } else if (dddInt >= 29) { // Regras para ddd de 29 a 99
+        if (numberLength === 9 && number.startsWith('99')) {
+            number = number.slice(1);
+        } else if (numberLength === 8 && !number.startsWith('9')) {
+            number = '9' + number;
+        }
+    }
+
+    return ddi + ddd + number;
 };
 
-// Array de objetos fornecido
-const dataArray = [
-    // ... (seu array de objetos aqui)
-];
-
-// Função para criar tabelas
-async function createTables() {
-    const connection = await mysql.createConnection(dbConfig);
-    
-    try {
-        for (const data of dataArray) {
-            const tableName = data.key;
-
-            // Consulta SQL para criar uma tabela
-            const createTableQuery = `
-                CREATE TABLE IF NOT EXISTS \`${tableName}\` (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    some_column VARCHAR(255) NOT NULL
-                    -- Adicione mais colunas conforme necessário
-                );
-            `;
-
-            await connection.query(createTableQuery);
-            console.log(`Tabela ${tableName} criada com sucesso.`);
-        }
-    } catch (error) {
-        console.error('Erro ao criar tabelas:', error);
-    } finally {
-        await connection.end();
-    }
-}
-
-// Executa a função para criar as tabelas
-createTables();
+// Exemplo de uso
+let numero = '5541997750198';
+let numeroFormatado = formatPhoneNumber(numero);
+console.log(numeroFormatado);
