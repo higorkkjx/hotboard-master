@@ -1442,37 +1442,85 @@ router.get("/funis/:chave", async (req, res) => {
 
 
 // --- GITHUB UPLOAD --------- //
-const uploadToGitHub = async (
-  buffer,
-  filename,
-  accessToken,
-  username,
-  repositoryName,
-) => {
+const uploadToGitHub = async (buffer, filename, accessToken, username, repositoryName) => {
   const apiUrl = `https://api.github.com/repos/${username}/${repositoryName}/contents/${filename}`;
-  const base64Data = buffer.toString("base64");
+  const base64Data = buffer.toString('base64');
 
-  const response = await fetch(apiUrl, {
-    method: "PUT",
+  // Verificar se o arquivo já existe
+  let sha = '';
+  const checkFileResponse = await fetch(apiUrl, {
+    method: 'GET',
     headers: {
       Authorization: `token ${accessToken}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (checkFileResponse.ok) {
+    const checkFileData = await checkFileResponse.json();
+    sha = checkFileData.sha;
+  }
+
+  const response = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: {
+      Authorization: `token ${accessToken}`,
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      message: "Upload do arquivo",
+      message: 'Upload do arquivo',
       content: base64Data,
+      sha: sha,
     }),
   });
 
   if (response.ok) {
     const responseData = await response.json();
-    return responseData.content.html_url;
+    return responseData.content.download_url;
   } else {
     const errorData = await response.json();
     throw new Error(`Erro ao fazer upload para o GitHub: ${errorData.message}`);
   }
 };
 
+
+
+router.post('/uploadfunil', upload.none(), async (req, res) => {
+
+  const accessToken = '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';
+  const username = 'higorkkjx';
+  const repositoryName = 'uploads';
+  const nome = req.body.nome;
+  let elementos = req.body.elementos;
+
+  try {
+    elementos = JSON.parse(elementos);
+    if (!Array.isArray(elementos)) {
+      throw new Error('Invalid format for elementos');
+    }
+  } catch (error) {
+    return res.status(400).json({ error: 'Invalid JSON format for elementos' });
+  }
+//console.log(elementos)
+ 
+const funilAtualizado = { nome, elementos: [] };
+
+for (const elemento of elementos) {
+  console.log(elemento)
+  if (elemento.fileName && elemento.fileType) {
+    try {
+      const url = await uploadToGitHub(elemento.conteudo, elemento.fileName, accessToken, username, repositoryName);
+      elemento.conteudo = url;
+      console.log(url)
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  funilAtualizado.elementos.push(elemento);
+}
+
+res.json(funilAtualizado);
+});
 
 router.get("/hospedar", (req, res) => {
   res.send(`<!DOCTYPE html>

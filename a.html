@@ -1,1 +1,374 @@
-a
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Fluxo/Funil Interativo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsPlumb/2.15.6/js/jsplumb.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/panzoom@9.4.0/dist/panzoom.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#3b82f6',
+                        'secondary': '#10b981',
+                        'accent': '#f59e0b',
+                        'neutral': '#3d4451',
+                    }
+                },
+            },
+            plugins: [require("daisyui")],
+        }
+    </script>
+    <style>
+        .elemento {
+            transition: all 0.3s ease;
+            position: absolute;
+        }
+        .elemento:hover {
+            transform: scale(1.05);
+        }
+        .jtk-connector { z-index: 4; }
+        .jtk-endpoint { z-index: 5; }
+        .jtk-overlay { z-index: 6; }
+        #canvas-container {
+            width: 100%;
+            height: 600px;
+            overflow: hidden;
+            position: relative;
+            cursor: move;
+        }
+        #canvas {
+            width: 5000px;
+            height: 5000px;
+            background: 
+                linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+                linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+        }
+        .zoom-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        .menu-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+        }
+        .side-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 100%;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 9;
+        }
+        .side-menu.open {
+            transform: translateX(0);
+        }
+        .funil-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .modal.show {
+            display: flex;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <button class="menu-toggle btn btn-primary" onclick="toggleMenu()">☰</button>
+    <div class="side-menu" id="side-menu">
+        <div id="toolbox" class="p-4 flex flex-col gap-4">
+            <button class="btn btn-primary" onclick="adicionarElemento('mensagem')">Mensagem</button>
+            <button class="btn btn-secondary" onclick="adicionarElemento('video')">Vídeo</button>
+            <button class="btn btn-accent" onclick="adicionarElemento('audio')">Áudio</button>
+            <button class="btn btn-info" onclick="adicionarElemento('imagem')">Imagem</button>
+            <button class="btn btn-warning" onclick="adicionarElemento('sleep')">Sleep</button>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-4">
+        <h1 class="text-4xl font-bold mb-6 text-center text-neutral">Sistema de Fluxo/Funil Interativo</h1>
+        <div class="bg-white rounded-xl shadow-lg p-6 relative">
+            <div id="canvas-container">
+                <div id="canvas"></div>
+            </div>
+            <div class="zoom-controls mt-6">
+                <button class="btn btn-info" onclick="zoomOut()">-</button>
+                <button class="btn btn-info" onclick="zoomIn()">+</button>
+            </div>
+        </div>
+    </div>
+    <button class="funil-button btn btn-success" onclick="abrirModal()">Obter Funil</button>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Digite o nome para o funil</h2>
+            <input id="nomeFunil" type="text" class="input input-bordered w-full mb-4" placeholder="Nome do Funil">
+            <button class="btn btn-primary w-full" onclick="criarFunil()">Criar</button>
+        </div>
+    </div>
+
+    <script>
+        let jsPlumbInstance;
+        let elementoCount = 0;
+        let panzoomInstance;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const canvas = document.getElementById('canvas');
+            const container = document.getElementById('canvas-container');
+
+            panzoomInstance = panzoom(canvas, {
+                container: container,
+                maxZoom: 2,
+                minZoom: 0.1,
+                zoomDoubleClickSpeed: 1,
+                beforeWheel: function(e) {
+                    return false;
+                },
+                beforeMouseDown: function(e) {
+                    return e.ctrlKey || e.metaKey;
+                }
+            });
+
+            jsPlumbInstance = jsPlumb.getInstance({
+                Container: canvas,
+                Connector: ["Flowchart", { cornerRadius: 5 }],
+                Anchors: [["Bottom"], ["Top"]],
+                Endpoint: ["Dot", { radius: 7 }],
+                EndpointStyle: { fill: "#3b82f6" },
+                PaintStyle: { stroke: "#3b82f6", strokeWidth: 3 },
+                HoverPaintStyle: { stroke: "#60a5fa", strokeWidth: 4 },
+                ConnectionOverlays: [
+                    ["Arrow", { location: 1, width: 10, length: 10 }]
+                ]
+            });
+
+            jsPlumbInstance.bind("ready", function() {
+                jsPlumbInstance.setZoom(panzoomInstance.getTransform().scale);
+            });
+
+            panzoomInstance.on('transform', function(e) {
+                jsPlumbInstance.setZoom(e.getTransform().scale);
+            });
+        });
+
+        function adicionarElemento(tipo) {
+            elementoCount++;
+            const elemento = document.createElement("div");
+            elemento.id = `elemento-${elementoCount}`;
+            elemento.className = `elemento card w-64 bg-white shadow-lg`;
+
+            let conteudo = '';
+            let bgColor = '';
+            switch (tipo) {
+                case 'mensagem':
+                    bgColor = 'bg-blue-100';
+                    conteudo = `
+                        <div class="card-body p-4">
+                            <h2 class="card-title text-lg mb-2">Mensagem</h2>
+                            <textarea class="textarea textarea-bordered w-full" rows="3" placeholder="Digite sua mensagem"></textarea>
+                        </div>`;
+                    break;
+                case 'video':
+                    bgColor = 'bg-green-100';
+                    conteudo = `
+                        <div class="card-body p-4">
+                            <h2 class="card-title text-lg mb-2">Vídeo</h2>
+                            <input type="file" class="file-input file-input-bordered w-full" accept="video/*" />
+                            <label class="label cursor-pointer">
+                                <span class="label-text">Ativar visu única</span>
+                                <input type="checkbox" class="toggle toggle-primary" />
+                            </label>
+                        </div>`;
+                    break;
+                case 'audio':
+                    bgColor = 'bg-yellow-100';
+                    conteudo = `
+                        <div class="card-body p-4">
+                            <h2 class="card-title text-lg mb-2">Áudio</h2>
+                            <input type="file" class="file-input file-input-bordered w-full" accept="audio/*" />
+                        </div>`;
+                    break;
+                case 'imagem':
+                    bgColor = 'bg-indigo-100';
+                    conteudo = `
+                        <div class="card-body p-4">
+                            <h2 class="card-title text-lg mb-2">Imagem</h2>
+                            <input type="file" class="file-input file-input-bordered w-full" accept="image/*" />
+                            <label class="label cursor-pointer">
+                                <span class="label-text">Ativar visu única</span>
+                                <input type="checkbox" class="toggle toggle-primary" />
+                            </label>
+                        </div>`;
+                    break;
+                case 'sleep':
+                    bgColor = 'bg-red-100';
+                    conteudo = `
+                        <div class="card-body p-4">
+                            <h2 class="card-title text-lg mb-2">Sleep</h2>
+                            <input type="number" class="input input-bordered w-full" placeholder="Tempo em segundos" />
+                        </div>`;
+                    break;
+            }
+
+            conteudo += `
+                <div class="card-actions justify-end p-4">
+                    <button class="btn btn-error btn-sm" onclick="removerElemento('${elemento.id}')">Excluir</button>
+                </div>
+            `;
+
+            elemento.innerHTML = conteudo;
+            elemento.classList.add(bgColor);
+            canvas.appendChild(elemento);
+
+            jsPlumbInstance.draggable(elemento, {
+                containment: true,
+                drag: function(event) {
+                    jsPlumbInstance.repaintEverything();
+                }
+            });
+            jsPlumbInstance.addEndpoint(elemento, { 
+                isSource: true, 
+                isTarget: true,
+                maxConnections: -1,
+                connectorStyle: { stroke: "#3b82f6", strokeWidth: 3 },
+                connectorHoverStyle: { stroke: "#60a5fa", strokeWidth: 4 }
+            });
+
+            centralizarElemento(elemento);
+        }
+
+        function centralizarElemento(elemento) {
+            const container = document.getElementById('canvas-container');
+            const rect = container.getBoundingClientRect();
+            const centroX = rect.width / 2 - elemento.offsetWidth / 2;
+            const centroY = rect.height / 2 - elemento.offsetHeight / 2;
+
+            elemento.style.left = `${centroX}px`;
+            elemento.style.top = `${centroY}px`;
+
+            const transform = panzoomInstance.getTransform();
+            panzoomInstance.moveTo(
+                -elemento.offsetLeft + window.innerWidth / 2 - elemento.offsetWidth / 2,
+                -elemento.offsetTop + window.innerHeight / 2 - elemento.offsetHeight / 2
+            );
+        }
+
+        function removerElemento(id) {
+            const elemento = document.getElementById(id);
+            jsPlumbInstance.removeAllEndpoints(elemento);
+            elemento.remove();
+        }
+
+        function abrirModal() {
+            document.getElementById('modal').classList.add('show');
+        }
+
+        function fecharModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+
+        function obterFunil() {
+            const elementos = document.querySelectorAll('.elemento');
+            const funil = [];
+
+            elementos.forEach(elemento => {
+                const tipo = elemento.querySelector('.card-title').textContent;
+                const conteudo = elemento.querySelector('textarea, input[type="file"]').value;
+                const visuunica = elemento.querySelector('input[type="checkbox"]') ? elemento.querySelector('input[type="checkbox"]').checked : false;
+                const conexoes = jsPlumbInstance.getConnections({source: elemento.id});
+                
+                funil.push({
+                    id: elemento.id,
+                    tipo: tipo,
+                    conteudo: conteudo,
+                    visuunica: visuunica,
+                    conexoes: conexoes.map(conn => conn.targetId)
+                });
+            });
+
+            return funil;
+        }
+
+        function criarFunil() {
+            const nomeFunil = document.getElementById('nomeFunil').value;
+            const funil = obterFunil();
+
+            const data = {
+                nome: nomeFunil,
+                funil: funil
+            };
+
+            fetch('/criarfunil', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(response => {
+                if (response.ok) {
+                    alert('Funil criado com sucesso!');
+                    fecharModal();
+                } else {
+                    alert('Erro ao criar o funil.');
+                }
+            }).catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao criar o funil.');
+            });
+        }
+
+        function zoomIn() {
+            panzoomInstance.smoothZoom(window.innerWidth / 2, window.innerHeight / 2, 1.2);
+        }
+
+        function zoomOut() {
+            panzoomInstance.smoothZoom(window.innerWidth / 2, window.innerHeight / 2, 0.8);
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            menu.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

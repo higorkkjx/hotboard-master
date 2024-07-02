@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criador de Funil Interativo - WhatsApp SaaS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsPlumb/2.15.6/js/jsplumb.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/panzoom@9.4.0/dist/panzoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#4CAF50',
+                        'secondary': '#2196F3',
+                        'accent': '#FF9800',
+                        'neutral': '#3d4451',
+                    }
+                },
+            },
+            plugins: [require("daisyui")],
+        }
+    </script>
+    <style>
+        .elemento {
+            transition: all 0.3s ease;
+            position: absolute;
+        }
+        .elemento:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .jtk-connector { z-index: 4; }
+        .jtk-endpoint { z-index: 5; }
+        .jtk-overlay { z-index: 6; }
+        #canvas-container {
+            width: 100%;
+            height: 70vh;
+            overflow: hidden;
+            position: relative;
+            cursor: move;
+        }
+        #canvas {
+            width: 5000px;
+            height: 5000px;
+            background: 
+                linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+                linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+        }
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        .menu-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 100%;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 9;
+            overflow-y: auto;
+        }
+        .side-menu.open {
+            transform: translateX(0);
+        }
+        .funil-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 20;
+            display: none;
+        }
+        .popup.active {
+            display: block;
+        }
+      
+        .minimap {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            background: rgba(255,255,255,0.8);
+            border: 1px solid #ccc;
+            z-index: 10;
+        }
+        .element-search {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            width: 300px;
+        }
+        .grid-bg {
+            background-size: 20px 20px;
+            background-image:
+                linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+                linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+        }
+        [data-theme="dark"] .grid-bg {
+            background-image:
+                linear-gradient(to right, #333 1px, transparent 1px),
+                linear-gradient(to bottom, #333 1px, transparent 1px);
+        }
+
+        .theme-toggle {
+        position: absolute;
+        top: 20px;
+        left: 80px; /* Ajuste este valor conforme necessário */
+        z-index: 10;
+    }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+    <button class="menu-toggle btn btn-primary" onclick="toggleMenu()">☰</button>
+    <button class="theme-toggle btn btn-secondary" onclick="toggleTheme()">🌓</button>
+    
+    <div class="side-menu" id="side-menu">
+        
+        <div id="toolbox" class="p-4 flex flex-col gap-4">
+            <h2 class="text-2xl font-bold mb-4">Elementos</h2>
+            <div id="elementList" class="grid grid-cols-2 gap-4">
+                <button class="btn btn-primary" onclick="adicionarElemento('mensagem')">
+                    <i class="fas fa-comment mr-2"></i>Mensagem
+                </button>
+                <button class="btn btn-secondary" onclick="adicionarElemento('video')">
+                    <i class="fas fa-video mr-2"></i>Vídeo
+                </button>
+                <button class="btn btn-accent" onclick="adicionarElemento('audio')">
+                    <i class="fas fa-music mr-2"></i>Áudio
+                </button>
+                <button class="btn btn-info" onclick="adicionarElemento('imagem')">
+                    <i class="fas fa-image mr-2"></i>Imagem
+                </button>
+                <button class="btn btn-warning" onclick="adicionarElemento('sleep')">
+                    <i class="fas fa-clock mr-2"></i>Sleep
+                </button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="container mx-auto p-4">
+        <h1 class="text-4xl font-bold mb-6 text-center text-neutral">Criador de Funil Interativo</h1>
+        <div class="bg-white rounded-xl shadow-lg p-6 relative">
+            <div id="canvas-container">
+                <div id="canvas" class="grid-bg"></div>
+            </div>
+            <div class="zoom-controls">
+                <button class="btn btn-info" onclick="zoomOut()">-</button>
+                <button class="btn btn-info" onclick="zoomIn()">+</button>
+                <button class="btn btn-warning" onclick="undo()">↩️</button>
+                <button class="btn btn-warning" onclick="redo()">↪️</button>
+            </div>
+            <div class="minimap" id="minimap"></div>
+        </div>
+    </div>
+    
+    <button class="funil-button btn btn-success" onclick="mostrarPopup()">Salvar Funil</button>
+
+    <div class="popup" id="popup">
+        <h2 class="text-xl mb-4">Digite o nome para o funil</h2>
+        <input type="text" id="nomeFunil" class="input input-bordered w-full mb-4" placeholder="Nome do Funil">
+        <button class="btn btn-primary" onclick="criarFunil()">Criar</button>
+    </div>
+
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <script>
+        let jsPlumbInstance;
+        let elementoCount = 0;
+        let panzoomInstance;
+        let undoStack = [];
+        let redoStack = [];
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const canvas = document.getElementById('canvas');
+            const container = document.getElementById('canvas-container');
+
+            panzoomInstance = panzoom(canvas, {
+                container: container,
+                maxZoom: 2,
+                minZoom: 0.1,
+                zoomDoubleClickSpeed: 1,
+                beforeWheel: function(e) {
+                    return e.ctrlKey;
+                },
+                beforeMouseDown: function(e) {
+                    return e.ctrlKey || e.metaKey;
+                }
+            });
+
+            jsPlumbInstance = jsPlumb.getInstance({
+                Container: canvas,
+                Connector: ["Flowchart", { cornerRadius: 5 }],
+                Anchors: [["Bottom"], ["Top"]],
+                Endpoint: ["Dot", { radius: 7 }],
+                EndpointStyle: { fill: "#3b82f6" },
+                PaintStyle: { stroke: "#3b82f6", strokeWidth: 3 },
+                HoverPaintStyle: { stroke: "#60a5fa", strokeWidth: 4 },
+                ConnectionOverlays: [
+                    ["Arrow", { location: 1, width: 10, length: 10 }]
+                ]
+            });
+
+            jsPlumbInstance.bind("ready", function() {
+                jsPlumbInstance.setZoom(panzoomInstance.getTransform().scale);
+            });
+
+            panzoomInstance.on('transform', function(e) {
+                jsPlumbInstance.setZoom(e.getTransform().scale);
+                updateMinimap();
+            });
+
+            new Sortable(document.getElementById('elementList'), {
+                animation: 150,
+                ghostClass: 'sortable-ghost'
+            });
+
+            updateMinimap();
+        });
+
+        function adicionarElemento(tipo) {
+            elementoCount++;
+            const elemento = document.createElement("div");
+            elemento.id = `elemento-${elementoCount}`;
+            elemento.className = `elemento card w-64 bg-white shadow-lg`;
+
+            let conteudo = '';
+            let bgColor = '';
+            let icon = '';
+            switch (tipo) {
+                case 'mensagem':
+                    bgColor = 'bg-blue-100';
+                    icon = 'fa-comment';
+                    conteudo = `
+                        <div class="card-body p-4">
+                            <h2 class="card-title text-lg mb-2"><i class="fas ${icon} mr-2"></i>Mensagem</h2>
+                            <textarea class="textarea textarea-bordered w-full" rows="3" placeholder="Digite sua mensagem"></textarea>
+                        </div>`;
+                    break;
+                case 'video':
+                    bgColor = 'bg-green-100';
+                    icon = 'fa-video';
+                    conteudo = `
+                        <div class="card-body p-4">
+                            <h2 class="card-title text-lg mb-2"><i class="fas ${icon} mr-2"></i>Vídeo</h2>
+                           <input type="file" class="file-input file-input-bordered w-full" accept="video/*" onchange="handleFileUpload(event, '${elemento.id}', 'video')" />
+                            <label class="label cursor-pointer">
+                                <span class="label-text">Ativar visu única</span>
+                                <input type="checkbox" class="toggle toggle-primary" />
+                            </label>
+                        </div>`;
+                    break;
+                case 'audio':
+                    bgColor = 'bg-yellow-100';
+                    icon = 'fa-music';
+                    conteudo = `
+                        <div class="card-body p-4">
+                            <h2 class="card-title text-lg mb-2"><i class="fas ${icon} mr-2"></i>Áudio</h2>
+                            <input type="file" class="file-input file-input-bordered w-full" accept="audio/*" onchange="handleFileUpload(event, '${elemento.id}', 'audio')" />
+                        </div>`;
+                    break;
+                case 'imagem':
+                    bgColor = 'bg-indigo-100';
+                    icon = 'fa-image';
+                    conteudo = `
+                        <div class="card-body p-4">
+                            <h2 class="card-title text-lg mb-2"><i class="fas ${icon} mr-2"></i>Imagem</h2>
+                            <input type="file" class="file-input file-input-bordered w-full" accept="image/*" onchange="handleFileUpload(event, '${elemento.id}', 'imagem')" />
+                            <label class="label cursor-pointer">
+                                <span class="label-text">Ativar visu única</span>
+                                <input type="checkbox" class="toggle toggle-primary" />
+                            </label>
+                        </div>`;
+                    break;
+                case 'sleep':
+                    bgColor = 'bg-red-100';
+                    icon = 'fa-clock';
+                    conteudo = `
+                        <div class="card-body p-4">
+                            <h2 class="card-title text-lg mb-2"><i class="fas ${icon} mr-2"></i>Sleep</h2>
+                            <input type="number" class="input input-bordered w-full" placeholder="Tempo em segundos" />
+                        </div>`;
+                    break;
+            }
+
+            conteudo += `
+                <div class="card-actions justify-end p-4">
+                    <button class="btn btn-error btn-sm" onclick="removerElemento('${elemento.id}')">Excluir</button>
+                </div>
+            `;
+
+            elemento.innerHTML = conteudo;
+            elemento.classList.add(bgColor);
+            canvas.appendChild(elemento);
+
+            jsPlumbInstance.draggable(elemento, {
+                containment: true,
+                drag: function(event) {
+                    jsPlumbInstance.repaintEverything();
+                    updateMinimap();
+                }
+            });
+            jsPlumbInstance.addEndpoint(elemento, { 
+                isSource: true, 
+                isTarget: true,
+                maxConnections: -1,
+                connectorStyle: { stroke: "#3b82f6", strokeWidth: 3 },
+                connectorHoverStyle: { stroke: "#60a5fa", strokeWidth: 4 }
+            });
+
+            centralizarElemento(elemento);
+            saveState();
+            updateMinimap();
+        }
+
+        function centralizarElemento(elemento) {
+            const container = document.getElementById('canvas-container');
+            const rect = container.getBoundingClientRect();
+            const centroX = rect.width / 2 - elemento.offsetWidth / 2;
+            const centroY = rect.height / 2 - elemento.offsetHeight / 2;
+            elemento.style.left = `${centroX}px`;
+            elemento.style.top = `${centroY}px`;
+
+            const transform = panzoomInstance.getTransform();
+            panzoomInstance.moveTo(
+                -elemento.offsetLeft + window.innerWidth / 2 - elemento.offsetWidth / 2,
+                -elemento.offsetTop + window.innerHeight / 2 - elemento.offsetHeight / 2
+            );
+        }
+
+        function removerElemento(id) {
+            const elemento = document.getElementById(id);
+            jsPlumbInstance.removeAllEndpoints(elemento);
+            elemento.remove();
+            saveState();
+            updateMinimap();
+        }
+
+        function mostrarPopup() {
+            document.getElementById('popup').classList.add('active');
+        }
+
+        function handleFileUpload(event, id, tipo) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const buffer = e.target.result;
+                    const base64String = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.dataset.fileBuffer = base64String;
+                        element.dataset.fileName = file.name;
+                        element.dataset.fileType = tipo;
+                    } else {
+                        console.error(`Elemento com id ${id} não encontrado.`);
+                    }
+                } catch (error) {
+                    console.error('Erro ao processar o arquivo:', error);
+                }
+            };
+
+            reader.onerror = function(error) {
+                console.error('Erro na leitura do arquivo:', error);
+            };
+
+            try {
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                console.error('Erro ao iniciar a leitura do arquivo:', error);
+            }
+        }
+
+        function criarFunil() {
+            const nomeFunil = document.getElementById('nomeFunil').value;
+            document.getElementById('popup').classList.remove('active');
+
+            const elementos = document.querySelectorAll('.elemento');
+            const formData = new FormData();
+
+            formData.append('nome', nomeFunil);
+
+            const elementosArray = [];
+
+            elementos.forEach(elemento => {
+                const tipo = elemento.querySelector('.card-title').textContent;
+                let conteudo = '';
+
+                if (elemento.dataset.fileBuffer) {
+                    conteudo = elemento.dataset.fileBuffer;
+                } else {
+                    const textarea = elemento.querySelector('textarea');
+                    if (textarea) {
+                        conteudo = textarea.value;
+                    }
+                }
+
+                const visuunica = elemento.querySelector('input[type="checkbox"]') ? elemento.querySelector('input[type="checkbox"]').checked : false;
+                const conexoes = jsPlumbInstance.getConnections({source: elemento.id});
+
+                const elementoData = {
+                    id: elemento.id,
+                    tipo: tipo,
+                    conteudo: conteudo,
+                    fileName: elemento.dataset.fileName || '',
+                    fileType: elemento.dataset.fileType || '',
+                    visuunica: visuunica,
+                    conexoes: conexoes.map(conn => conn.targetId)
+                };
+
+                elementosArray.push(elementoData);
+            });
+
+            formData.append('elementos', JSON.stringify(elementosArray));
+
+            fetch('/uploadfunil', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        function zoomIn() {
+            panzoomInstance.smoothZoom(window.innerWidth / 2, window.innerHeight / 2, 1.2);
+        }
+
+        function zoomOut() {
+            panzoomInstance.smoothZoom(window.innerWidth / 2, window.innerHeight / 2, 0.8);
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            menu.classList.toggle('open');
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+        }
+
+        function updateMinimap() {
+            const minimap = document.getElementById('minimap');
+            const canvas = document.getElementById('canvas');
+            const canvasRect = canvas.getBoundingClientRect();
+            const minimapRect = minimap.getBoundingClientRect();
+
+            const scale = Math.min(minimapRect.width / canvasRect.width, minimapRect.height / canvasRect.height);
+
+            minimap.innerHTML = '';
+
+            document.querySelectorAll('.elemento').forEach(elemento => {
+                const elementoRect = elemento.getBoundingClientRect();
+                const minimapElemento = document.createElement('div');
+                minimapElemento.style.position = 'absolute';
+                minimapElemento.style.left = `${(elementoRect.left - canvasRect.left) * scale}px`;
+                minimapElemento.style.top = `${(elementoRect.top - canvasRect.top) * scale}px`;
+                minimapElemento.style.width = `${elementoRect.width * scale}px`;
+                minimapElemento.style.height = `${elementoRect.height * scale}px`;
+                minimapElemento.style.backgroundColor = window.getComputedStyle(elemento).backgroundColor;
+                minimap.appendChild(minimapElemento);
+            });
+        }
+
+        function saveState() {
+            const state = {
+                elements: Array.from(document.querySelectorAll('.elemento')).map(el => ({
+                    id: el.id,
+                    html: el.outerHTML,
+                    position: {
+                        left: el.style.left,
+                        top: el.style.top
+                    }
+                })),
+                connections: jsPlumbInstance.getConnections().map(conn => ({
+                    sourceId: conn.sourceId,
+                    targetId: conn.targetId
+                }))
+            };
+            undoStack.push(state);
+            redoStack = [];
+        }
+
+        function undo() {
+            if (undoStack.length > 1) {
+                redoStack.push(undoStack.pop());
+                const state = undoStack[undoStack.length - 1];
+                restoreState(state);
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                const state = redoStack.pop();
+                undoStack.push(state);
+                restoreState(state);
+            }
+        }
+
+        function restoreState(state) {
+            const canvas = document.getElementById('canvas');
+            canvas.innerHTML = '';
+            jsPlumbInstance.reset();
+
+            state.elements.forEach(el => {
+                canvas.insertAdjacentHTML('beforeend', el.html);
+                const element = document.getElementById(el.id);
+                element.style.left = el.position.left;
+                element.style.top = el.position.top;
+                jsPlumbInstance.draggable(element, {
+                    containment: true,
+                    drag: function(event) {
+                        jsPlumbInstance.repaintEverything();
+                        updateMinimap();
+                    }
+                });
+                jsPlumbInstance.addEndpoint(element, {
+                    isSource: true,
+                    isTarget: true,
+                    maxConnections: -1,
+                    connectorStyle: { stroke: "#3b82f6", strokeWidth: 3 },
+                    connectorHoverStyle: { stroke: "#60a5fa", strokeWidth: 4 }
+                });
+            });
+
+            state.connections.forEach(conn => {
+                jsPlumbInstance.connect({
+                    source: conn.sourceId,
+                    target: conn.targetId
+                });
+            });
+
+            updateMinimap();
+        }
+
+        function searchElements() {
+            const searchTerm = document.querySelector('.element-search').value.toLowerCase();
+            document.querySelectorAll('.elemento').forEach(elemento => {
+                const text = elemento.innerText.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    elemento.style.opacity = '1';
+                } else {
+                    elemento.style.opacity = '0.3';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

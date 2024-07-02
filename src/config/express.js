@@ -319,6 +319,11 @@ app.get('/chat', async (req, res) => {
 });
 
 
+app.get('/criar-funil/:chave', (req, res) => {
+  const chave = req.params.chave;
+  res.render('fluxo', {chave})
+})
+
 
   app.get('/mensagens', (req, res) => {
     try {
