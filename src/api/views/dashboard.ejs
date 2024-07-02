@@ -1,178 +1,205 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@1.14.2/dist/full.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
-    <title>PAINEL ADMIN</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.51.5/dist/full.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>HotBoard Admin</title>
     <style>
-      .submenu {
-        display: none;
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+      body {
+        font-family: 'Poppins', sans-serif;
       }
     </style>
   </head>
-  <body class="font-sans bg-gray-100">
-    <div class="grid grid-cols-1 md:grid-cols-4 min-h-screen">
-      <!-- Sidebar -->
-      <aside class="bg-gray-800 text-white p-4 md:w-64">
-        <div class="flex items-center justify-between mb-8">
-          <div class="flex items-center">
-            <img id="perfil-image" src="https://i.pinimg.com/564x/2d/c6/82/2dc6822cb7045a17261d1042b95abbf2.jpg" alt="logo" class="w-12 h-12 rounded-full" />
-            <h1 class="ml-4 text-2xl font-bold">HotBoard</h1>
-          </div>
-          <i class="fas fa-times text-white md:hidden cursor-pointer" onclick="toggleSidebar()"></i>
-        </div>
-        <nav class="space-y-2">
-          <a href="/" class="main-option block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-600"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</a>
-          <div class="space-y-1">
-            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-600" onclick="toggleSubMenu('dadosSubMenu')"><i class="fas fa-user mr-2"></i>Dados</a>
-            <div id="dadosSubMenu" class="submenu ml-4 space-y-1">
-              <a href="/info/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Seus dados</a>  
-            </div>
-          </div>
-          <div class="space-y-1">
-            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-600" onclick="toggleSubMenu('configSubMenu')"><i class="fas fa-cog mr-2"></i>Configurações</a>
-            <div id="configSubMenu" class="submenu ml-4 space-y-1">
-              <a href="/editar?key=<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Editar Configurações</a>
-            </div>
-          </div>
-          <div class="space-y-1">
-            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-600" onclick="toggleSubMenu('whatsappSubMenu')"><i class="fab fa-whatsapp mr-2"></i>WhatsApp</a>
-            <div id="whatsappSubMenu" class="submenu ml-4 space-y-1">
-              <a href="/whats/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Whatsapp Web</a>
-              <a href="/conectar?chave=<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Conectar Número</a>
-              <a href="/gerargp/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Gerar Grupos</a>
-              <a href="/clearchats/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Limpar Conversas</a>
-            </div>
-          </div>
-          <div class="space-y-1">
-            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-600" onclick="toggleSubMenu('automatizacao')"><i class="fas fa-robot mr-2"></i>Automatização</a>
-            <div id="automatizacao" class="submenu ml-4 space-y-1">
-              <a href="/autoresposta/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Auto Resposta</a>
-            </div>
-          </div>
-          <div class="space-y-1">
-            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-600" onclick="toggleSubMenu('typebotSubMenu')"><i class="fas fa-fire mr-2"></i>Typebot</a>
-            <div id="typebotSubMenu" class="submenu ml-4 space-y-1">
-              <a href="/funil/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Importar Funil</a>
-              <a href="/funis/<%= chave %>" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Ver Funis</a>
-              <a href="/hospedar" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Hospedar Video</a>
-            </div>
-          </div>
-          <div class="space-y-1">
-            <a href="#" class="main-option block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-600" onclick="toggleSubMenu('bancoSubMenu')"><i class="fas fa-university mr-2"></i>Conta bancaria</a>
-            <div id="bancoSubMenu" class="submenu ml-4 space-y-1">
-              <a href="/banco" class="submenu-option block py-2.5 px-4 transition duration-200 hover:bg-gray-400">Transferências</a>
-            </div>
-          </div>
-        </nav>
-      </aside>
-
-      <!-- Main content -->
-      <div class="col-span-3 bg-gray-100 p-4">
+  <body class="bg-gray-100">
+    <div class="drawer drawer-mobile">
+      <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
+      <div class="drawer-content flex flex-col">
         <!-- Navbar -->
-        <nav class="bg-white shadow p-4 flex justify-between items-center mb-8">
-          <div class="flex items-center space-x-4">
-            <i class="fas fa-bars text-gray-600 md:hidden cursor-pointer" onclick="toggleSidebar()"></i>
-            <h1 class="text-xl font-bold">PAINEL ADMIN</h1>
+        <div class="navbar bg-base-100 shadow-lg">
+          <div class="flex-none lg:hidden">
+            <label for="my-drawer-2" class="btn btn-square btn-ghost">
+              <i class="fas fa-bars"></i>
+            </label>
+          </div> 
+          <div class="flex-1">
+            <h1 class="text-xl font-bold">HotBoard Admin</h1>
           </div>
-          <div class="flex items-center space-x-4">
-            <a class="text-gray-600"><i class="fas fa-search"></i></a>
-            <a class="text-gray-600"><i class="fas fa-clock"></i></a>
-            <a><img width="30" src="<%= profileImageUrl %>" alt="Profile Image" class="rounded-full"></a>
+          <div class="flex-none gap-2">
+            <button class="btn btn-ghost btn-circle">
+              <i class="fas fa-search"></i>
+            </button>
+            <button class="btn btn-ghost btn-circle">
+              <i class="fas fa-bell"></i>
+            </button>
+            <div class="dropdown dropdown-end">
+              <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+                <div class="w-10 rounded-full">
+                  <img src="<%= profileImageUrl %>" />
+                </div>
+              </label>
+              <ul tabindex="0" class="mt-3 p-2 shadow menu menu-compact dropdown-content bg-base-100 rounded-box w-52">
+                <li><a>Profile</a></li>
+                <li><a>Settings</a></li>
+                <li><a>Logout</a></li>
+              </ul>
+            </div>
           </div>
-        </nav>
-
-        <!-- Main container -->
-        <div>
+        </div>
+        
+        <!-- Page content -->
+        <div class="p-6">
           <!-- Notification -->
-          <div class="alert <%= error || !instance_data.phone_connected ? 'alert-error' : 'alert-success' %> shadow-lg mb-4">
+          <div class="alert <%= error || !instance_data.phone_connected ? 'alert-error' : 'alert-success' %> shadow-lg mb-6">
             <div>
-              <i class="fab fa-whatsapp"></i>
-              <span> <%= whatsappStatus %></span>
+              <i class="fab fa-whatsapp text-2xl"></i>
+              <span class="font-medium"><%= whatsappStatus %></span>
             </div>
           </div>
 
           <!-- Greeting -->
-          <div class="flex items-center mb-8">
-            <img src="<%= profileImageUrl %>" alt="Hello" class="w-24 h-24 mr-4 rounded-full">
+          <div class="flex items-center mb-8 bg-white rounded-lg shadow-md p-6">
+            <img src="<%= profileImageUrl %>" alt="Profile" class="w-20 h-20 rounded-full mr-6 border-4 border-primary">
             <div>
-              <h1 class="text-2xl font-bold text-gray-800">Olá, <%= dadoAssinatura.nome %></h1>
-              <div class="flex items-center text-red-500">
-                <i class="fas fa-exclamation-circle mr-2"></i>
-                <p class="text-lg">Sua assinatura vence em: <%= dadoAssinatura.data %></p>
+              <h1 class="text-3xl font-bold text-gray-800 mb-2">Bem vindo, <%= dadoAssinatura.nome %></h1>
+              <div class="flex items-center text-warning">
+                <i class="fas fa-calendar-alt mr-2"></i>
+                <p class="text-lg">Sua assinatura expira em: <%= dadoAssinatura.data %></p>
               </div>
             </div>
           </div>
 
-          <!-- Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="card bg-base-100 shadow-xl">
-              <div class="card-body flex items-center">
-                <i class="fas fa-bullhorn fa-2x text-green-500"></i>
-                <div class="ml-4">
-                  <p class="text-blue-600 font-semibold">Contatos no Whats</p>
-                  <span class="text-gray-700 font-bold text-xl"><%= totalChats %></span>
-                </div>
+          <!-- Stats -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="stat bg-base-100 shadow rounded-lg">
+              <div class="stat-figure text-primary">
+                <i class="fas fa-users text-3xl"></i>
               </div>
+              <div class="stat-title">Contatos no whatsapp</div>
+              <div class="stat-value text-primary"><%= totalChats %></div>
+            </div>
+            <div class="stat bg-base-100 shadow rounded-lg">
+              <div class="stat-figure text-secondary">
+                <i class="fas fa-comment-dots text-3xl"></i>
+              </div>
+              <div class="stat-title">Conversas salvas</div>
+              <div class="stat-value text-secondary"><%= count %></div>
             </div>
           </div>
-
-          <!-- Charts -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="card bg-base-100 shadow-xl">
-              <div class="card-body">
-                <div class="flex justify-between items-center mb-4">
-                  <div>
-                    <h2 class="text-xl font-bold text-gray-800">Gastos</h2>
-                    <p class="text-gray-600">Total de gastos</p>
-                  </div>
-                  <i class="fas fa-dollar-sign text-gray-600"></i>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="stat bg-blue-100 text-blue-700 p-4 rounded">
-                    <div class="stat-title">ADS</div>
-                    <div class="stat-value">R$0</div>
-                  </div>
-                  <!-- Outros cards podem ser adicionados aqui -->
-                </div>
-              </div>
-            </div>
-            <div class="card bg-base-100 shadow-xl">
-              <div class="card-body">
-                <div class="flex justify-between items-center mb-4">
-                  <div>
-                    <h2 class="text-xl font-bold text-gray-800">Dados</h2>
-                    <p class="text-gray-600">(Função em breve)</p>
-                  </div>
-                  <i class="fas fa-chart-bar text-gray-600"></i>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="stat bg-yellow-100 text-yellow-700 p-4 rounded">
-                    <div class="stat-title">Chats Salvos</div>
-                    <div class="stat-value">000</div>
-                  </div>
-                  <!-- Outros cards podem ser adicionados aqui -->
-                </div>
-              </div>
-            </div>
-          </div>
+          
+          <!-- You can add more content here -->
         </div>
+      </div> 
+      
+      <!-- Sidebar -->
+      <div class="drawer-side">
+        <label for="my-drawer-2" class="drawer-overlay"></label> 
+        <aside class="bg-base-200 w-80">
+          <div class="p-4">
+            <div class="flex items-center mb-8">
+              <img src="https://i.pinimg.com/564x/2d/c6/82/2dc6822cb7045a17261d1042b95abbf2.jpg" alt="logo" class="w-12 h-12 rounded-full mr-4" />
+              <h1 class="text-2xl font-bold">HotBoard</h1>
+            </div>
+            <ul class="menu p-4 overflow-y-auto w-full text-base-content">
+              <li>
+                <a href="/" class="flex items-center p-2 space-x-3 rounded-md">
+                  <i class="fas fa-home"></i>
+                  <span>Dashboard</span>
+                </a>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-user"></i>
+                    <span>Seu perfil</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/info/<%= chave %>">Informações de login</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-cog"></i>
+                    <span>Configurações</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/editar?key=<%= chave %>">Editar Configurações</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/whats/<%= chave %>">WhatsApp Web</a></li>
+                    <li><a href="/conectar?chave=<%= chave %>">Conectar numero</a></li>
+                    <li><a href="/gerargp/<%= chave %>">Gerar grupos</a></li>
+                    <li><a href="/clearchats/<%= chave %>">Limpar conversas</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-address-book"></i>
+                    <span>Contatos</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/addlist/<%= chave %>">Criar lista</a></li>
+                    <li><a href="/listas/<%= chave %>">Ver listas</a></li>
+                    <li><a href="/add-contact/<%= chave %>">Salvar contato</a></li>
+                    <li><a href="/upload/<%= chave %>">Importar planilha</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-robot"></i>
+                    <span>Automação</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/autoresposta/<%= chave %>">Auto resposta</a></li>
+                    <li><a href="/spamoffer/<%= chave %>">Spamoffer (envio em massa)</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-fire"></i>
+                    <span>Typebot</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/funil/<%= chave %>">Importar funil</a></li>
+                    <li><a href="/funis/<%= chave %>">Ver funis</a></li>
+                    <li><a href="/hospedar">Hospedar video</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-university"></i>
+                    <span>Conta bancaria</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/banco">Transações</a></li>
+                  </ul>
+                </details>
+              </li>
+            </ul>
+          </div>
+        </aside>
       </div>
     </div>
-
-    <script>
-      function toggleSidebar() {
-        const sidebar = document.querySelector('aside');
-        sidebar.classList.toggle('hidden');
-      }
-
-      function toggleSubMenu(menuId) {
-        const submenu = document.getElementById(menuId);
-        submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
-      }
-    </script>
   </body>
 </html>

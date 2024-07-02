@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <title>Adicionar Lista</title>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="container mx-auto p-4">
+    <header class="bg-blue-500 text-white py-4 rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold text-center">Adicionar Lista de Contatos</h1>
+    </header>
+    <main class="mt-8 bg-white p-6 rounded-lg shadow-md">
+      <form action="/addlist/<%= chave %>" method="POST" class="space-y-4">
+        <div>
+          <label for="listName" class="block text-sm font-medium text-gray-700">Nome da Lista</label>
+          <input type="text" id="listName" name="listName" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+        </div>
+        <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Criar Lista</button>
+      </form>
+    </main>
+    <footer class="bg-gray-200 text-gray-600 py-4 mt-8 rounded-lg shadow-md">
+      <p class="text-center">Hotboard &copy; 2024</p>
+    </footer>
+  </div>
+</body>
+</html>

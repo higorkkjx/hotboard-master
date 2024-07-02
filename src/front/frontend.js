@@ -1,16 +1,193 @@
 // instanceRoutes.js
 
 const express = require("express");
+
 const router = express.Router();
 const axios = require("axios")
 const { WhatsAppInstance, db, client } = require('../api/class/instance');
 const moment = require("moment-timezone");
 const multer = require("multer");
 const fs = require("fs")
-
+const xlsx = require('xlsx');
 const urlapi = process.env.urlapi
-
+const path = require('path');
 const { v4: uuidv4 } = require("uuid");
+moment.tz.setDefault("America/Sao_Paulo");
+
+
+
+router.get('/addlist/:chave', (req, res) => {
+  const chave = req.params.chave;
+  res.render('addlist', { chave: chave });
+});
+
+// Rota POST para criar uma nova lista
+router.post('/addlist/:chave', async (req, res) => {
+  const chave = req.params.chave;
+  db1 = client.db('contatos');
+  contactLists = db1.collection(chave);
+
+  const listName = req.body.listName;
+  const newList = { name: listName, contacts: [] };
+  await contactLists.insertOne(newList);
+
+  res.redirect('/listas/' + chave );
+});
+
+
+router.get('/list/:id/:chave', async (req, res) => {
+  const chave = req.params.chave;
+  const listId = req.params.id;
+  db1 = client.db('contatos');
+  const contactLists = db1.collection(chave);
+
+  let list;
+
+   
+      list = await contactLists.findOne({ name: listId });
+    
+
+    if (!list) {
+      return res.status(404).send('Lista não encontrada');
+    }
+
+
+  res.render('list', { list, chave });
+});
+
+
+
+router.get('/create-list/:name/:chave', async (req, res) => {
+  db1 = client.db('contatos');
+contactLists = db1.collection(chave)
+
+  const listName = req.params.name;
+  const chave = req.params.chave
+  const newList = { name: listName, contacts: [] };
+  await contactLists.insertOne(newList);
+  res.send(`Lista ${listName} criada com sucesso!`);
+});
+
+router.get('/listas/:chave', async (req, res) => {
+  const chave = req.params.chave
+  db1 = client.db('contatos');
+contactLists = db1.collection(chave)
+  const lists = await contactLists.find({}).toArray();
+  res.render('lists', { lists, chave });
+});
+
+router.get('/add-contact/:chave', async (req, res) => {
+  const chave = req.params.chave;
+  db1 = client.db('contatos');
+  const contactLists = db1.collection(chave);
+  const lists = await contactLists.find({}).toArray();
+  res.render('add-contact', { lists, chave: chave });
+});
+
+router.post('/add-contact/:chave', async (req, res) => {
+  const chave = req.params.chave;
+  const { listName, number } = req.body;
+  const formattedNumber = number.replace(/\D/g, '');
+  db1 = client.db('contatos');
+  const contactLists = db1.collection(chave);
+  await contactLists.updateOne(
+    { name: listName },
+    { $push: { contacts: formattedNumber } }
+  );
+  res.redirect('/listas/' + chave);
+});
+
+router.get('/list-names/:chave', async (req, res) => {
+  const chave = req.params.chave
+  db1 = client.db('contatos');
+contactLists = db1.collection(chave)
+  const lists = await contactLists.find({}).toArray();
+  res.json(lists.map(list => list.name));
+});
+
+router.get('/upload/:chave', async (req, res) => {
+  const chave = req.params.chave
+  db1 = client.db('contatos');
+contactLists = db1.collection(chave)
+  const lists = await contactLists.find({}).toArray();
+  res.render('upload', { lists, chave });
+});
+
+
+// Configuração do Multer para upload de arquivos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
+
+// Rota para deletar um contato específico de uma lista
+router.delete('/list/delete/:listName/:chave', async (req, res) => {
+  const chave = req.params.chave;
+  const listName = req.params.listName;
+  const { contact } = req.body; // O contato a ser deletado deve ser passado no corpo da requisição
+
+  const db = client.db('contatos');
+  const contactLists = db.collection(chave);
+
+  await contactLists.updateOne(
+    { name: listName },
+    { $pull: { contacts: contact } }
+  );
+
+  res.send('Contato deletado com sucesso.');
+});
+
+// Rota para deletar uma lista específica
+router.delete('/list/:listName/:chave', async (req, res) => {
+  const chave = req.params.chave;
+  const listName = req.params.listName;
+
+  const db = client.db('contatos');
+  const contactLists = db.collection(chave);
+
+  await contactLists.deleteOne({ name: listName });
+
+  res.send('Lista deletada com sucesso.');
+});
+
+// Rota para upload e conversão da planilha
+router.post('/upload/:chave', upload.single('file'), async (req, res) => {
+  const chave = req.params.chave
+  const file = req.file;
+  const listName = req.body.listName;
+
+  if (!file) {
+    return res.status(400).send('Nenhum arquivo enviado.');
+  }
+
+  // Lendo a planilha usando xlsx
+  const workbook = xlsx.readFile(file.path);
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  const data = xlsx.utils.sheet_to_json(sheet);
+
+  // Extraindo os números da planilha
+  const numbers = data.map(row => row.numero);
+
+  // Adicionando os números à lista de contatos no MongoDB
+  const db = client.db('contatos');
+  const contactLists = db.collection(chave);
+  await contactLists.updateOne(
+    { name: listName },
+    { $push: { contacts: { $each: numbers } } }
+  );
+
+  res.send('Números adicionados com sucesso.');
+});
+
+
 
 async function checkWhatsApp(chave) {
   const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
@@ -28,7 +205,7 @@ async function checkWhatsApp(chave) {
       // Requisição para baixar o perfil
       const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
           method: 'POST',
-          body: JSON.stringify({ id: instanceData.instance_data.user.id.replace(":5@s.whatsapp.net", "") }),
+          body: JSON.stringify({ id: instanceData.instance_data.user.id.replace(":5@s.whatsrouter.net", "") }),
           headers: { 'Content-Type': 'application/json' }
       });
       const profileData = await profileResponse.json();
@@ -124,7 +301,7 @@ const numeronovo = await formatPhoneNumber(number)
     "sec-fetch-dest": "empty",
     "sec-fetch-mode": "cors",
     "sec-fetch-site": "same-origin",
-    "Referer": `https://evolucaohot.online/chat?num=5517996607540@s.whatsapp.net&key=${keybase}`,
+    "Referer": `https://evolucaohot.online/chat?num=5517996607540@s.whatsrouter.net&key=${keybase}`,
     "Referrer-Policy": "strict-origin-when-cross-origin"
   };
 
@@ -265,7 +442,7 @@ Sua chave de acesso: ${key}
 
 Seu email de validação: ${email}`, "chefe5");
 
-await sendMessageHook(dadosass.phone.replace("+55", "55"), `Grupo de clientes: https://chat.whatsapp.com/E9x0eM5RkzxB2Vj1Dt5TnB
+await sendMessageHook(dadosass.phone.replace("+55", "55"), `Grupo de clientes: https://chat.whatsrouter.com/E9x0eM5RkzxB2Vj1Dt5TnB
 
 Tutorial: https://www.canva.com/design/DAGImSc0sus/pLZ6FDrKe89hIjs38Vsb6w/edit?utm_content=DAGImSc0sus&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
 `, "chefe5");
@@ -718,6 +895,13 @@ router.get('/home/:chave', async (req, res) => {
   const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
   const instanceData = await instanceResponse.json();
 
+
+  const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);
+  const chatsdata = await chatsMsgs.json();
+
+  const count = chatsdata.chatsData.length
+
+
   try {
    
 
@@ -805,7 +989,8 @@ router.get('/home/:chave', async (req, res) => {
       profileImageUrl,
       totalChats,
       chave,
-      dadoAssinatura
+      dadoAssinatura,
+      count
     });
 
   } catch (error) {
@@ -1549,6 +1734,492 @@ console.log(num)
   }
 });
 
+
+router.post('/start-spamoffer', async (req, res) => {
+  const { chave, listName, funilName, spamCount, waitTime, ignoreAlreadySent } = req.body;
+
+  try {
+    const db1 = client.db('contatos');
+    const contactLists = db1.collection(chave);
+
+    // Obter a lista de contatos selecionada
+    const selectedList = await contactLists.findOne({ name: listName });
+    if (!selectedList) {
+      return res.status(404).send('Lista de contatos não encontrada');
+    }
+
+    // Limitar a quantidade de contatos conforme especificado
+    const contactsToSpam = selectedList.contacts.slice(0, spamCount);
+
+    const spamId = uuidv4();
+    
+    // Iniciar o processo de spam em background
+    spamOffer(chave, funilName, contactsToSpam, waitTime, ignoreAlreadySent, spamId);
+
+    res.json({ redirectUrl: `/spam-metrics/${chave}/${spamId}` });
+  } catch (error) {
+    console.error('Erro ao iniciar spam offer:', error);
+    res.status(500).send('Erro ao iniciar spam offer');
+  }
+});
+
+
+router.post('/start-spamoffer2', async (req, res) => {
+  const { chave, listName, funilName, spamCount, waitTime } = req.body;
+
+  try {
+    const db1 = client.db('contatos');
+    const contactLists = db1.collection(chave);
+
+    // Obter a lista de contatos selecionada
+    const selectedList = await contactLists.findOne({ name: listName });
+    if (!selectedList) {
+      return res.status(404).send('Lista de contatos não encontrada');
+    }
+
+    // Limitar a quantidade de contatos conforme especificado
+    const contactsToSpam = selectedList.contacts.slice(0, spamCount);
+
+    // Iniciar o processo de spam
+    spamOffer(chave, funilName, contactsToSpam, waitTime);
+
+    res.send('Spam offer iniciado com sucesso');
+  } catch (error) {
+    console.error('Erro ao iniciar spam offer:', error);
+    res.status(500).send('Erro ao iniciar spam offer');
+  }
+});
+
+
+
+
+router.delete('/api/delete-metrics/:chave/:spamId', async (req, res) => {
+  const { chave, spamId } = req.params;
+  const metricsCollection = client.db('spam_metrics').collection(chave);
+  
+  try {
+    await metricsCollection.deleteOne({ _id: spamId });
+    res.status(200).json({ message: 'Métricas apagadas com sucesso' });
+  } catch (error) {
+    console.error('Erro ao apagar métricas:', error);
+    res.status(500).json({ error: 'Erro ao apagar métricas' });
+  }
+});
+
+async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, spamId) {
+  const db11 = client.db('spam');
+  const sentCollection = db11.collection(`sent_${key}`);
+  const metricsCollection = client.db('spam_metrics').collection(key);
+
+  async function checkIfSent(contact, funilName) {
+    const sent = await sentCollection.findOne({ contact, funilName });
+    return !!sent;
+  }
+
+  async function markAsSent(contact, funilName) {
+    await sentCollection.updateOne(
+      { contact, funilName },
+      { $set: { sentAt: new Date() } },
+      { upsert: true }
+    );
+  }
+
+  async function updateMetrics(updateData) {
+    await metricsCollection.updateOne(
+      { _id: spamId },
+      { $set: updateData },
+      { upsert: true }
+    );
+  }
+
+  const totalCount = contacts.length;
+  let sentCount = 0;
+
+  // Inicializar métricas
+  await updateMetrics({
+    sentCount: 0,
+    totalCount,
+    funilName,
+    nextSendTime: moment().add(waitTime, 'seconds').tz('America/Sao_Paulo').format(),
+    status: 'iniciado'
+  });
+
+  for (const contact of contacts) {
+    try {
+      if (ignoreAlreadySent && await checkIfSent(contact, funilName)) {
+        console.log(`Ignorando contato já enviado: ${contact}`);
+        continue;
+      }
+
+      const response = await axios.get(`https://evolucaohot.online/instance/sendfunil`, {
+        params: {
+          key: key,
+          funil: funilName,
+          chat: `${contact}@s.whatsapp.net`,
+          visuunica: false
+        }
+      });
+
+      if (response.status === 200) {
+        await markAsSent(contact, funilName);
+        sentCount++;
+
+        // Atualizar métricas no MongoDB
+        await updateMetrics({
+          sentCount,
+          nextSendTime: moment().add(waitTime, 'seconds').tz('America/Sao_Paulo').format(),
+        });
+
+        console.log(`Mensagem enviada com sucesso para ${contact}`);
+      } else {
+        console.error(`Erro ao enviar para ${contact}: Status ${response.status}`);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+    } catch (error) {
+      console.error(`Erro ao enviar para ${contact}:`, error.message);
+    }
+  }
+
+  // Atualizar status para concluído
+  await updateMetrics({ status: 'concluído' });
+  console.log('Spam offer concluído');
+}
+router.get('/api/spam-metrics/:chave/:spamId', async (req, res) => {
+  const { chave, spamId } = req.params;
+  const metricsCollection = client.db('spam_metrics').collection(chave);
+  
+  try {
+    const metrics = await metricsCollection.findOne({ _id: spamId });
+    
+    if (!metrics) {
+      return res.status(404).json({ error: 'Métricas não encontradas' });
+    }
+    
+    res.json(metrics);
+  } catch (error) {
+    console.error('Erro ao buscar métricas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+async function updateSpamMetrics(key, spamId, metrics) {
+  const metricsCollection = client.db('spam_metrics').collection(key);
+  try {
+    const result = await metricsCollection.updateOne(
+      { _id: spamId },
+      { $set: metrics },
+      { upsert: true }
+    );
+    console.log(`Métricas atualizadas para spamId: ${spamId}. Resultado:`, result);
+    
+    // Verificar se o documento foi criado ou atualizado
+    const updatedMetrics = await metricsCollection.findOne({ _id: spamId });
+    console.log(`Métricas atuais para spamId: ${spamId}:`, updatedMetrics);
+    
+    return updatedMetrics;
+  } catch (error) {
+    console.error(`Erro ao atualizar métricas para spamId: ${spamId}:`, error);
+    throw error;
+  }
+}
+/*/
+async function spamOffer(key, funilName, contacts, waitTime) {
+  for (const contact of contacts) {
+    try {
+      //await sendfunil(key, funilName, contact, 'false');
+
+      await axios.get(`https://evolucaohot.online/instance/sendfunil?key=${key}&funil=${funilName}&chat=${contact}@s.whatsapp.net&visuunica=false`)
+      await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+    } catch (error) {
+      console.error(`Erro ao enviar para ${contact}:`, error);
+    }
+  }
+  console.log('Spam offer concluído');
+}
+/*/
+router.get('/spamoffer/:chave', async (req, res) => {
+  const { chave } = req.params;
+  const db1 = client.db('contatos');
+  const contactLists = db1.collection(chave);
+
+  try {
+    // Obter listas de contatos
+    const lists = await contactLists.find({}).toArray();
+    
+    // Obter funis da API
+    const funisResponse = await axios.get(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`);
+    const funis = funisResponse.data;
+
+    // Renderizar o HTML
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Spam Offer</title>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+        <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="bg-gray-100 p-8">
+        <div class="container mx-auto max-w-md">
+          <h1 class="text-2xl font-bold mb-6">Spam Offer</h1>
+          
+          <form id="spamForm" class="space-y-4">
+            <div>
+              <label for="listSelector" class="block mb-2">Selecione a lista de contatos:</label>
+              <select id="listSelector" class="select select-bordered w-full">
+                ${lists.map(list => `<option value="${list.name}" data-contacts="${list.contacts.length}">${list.name}</option>`).join('')}
+              </select>
+            </div>
+
+            <div>
+              <label for="spamCount" class="block mb-2">Quantidade de chats para spam:</label>
+              <input type="number" id="spamCount" class="input input-bordered w-full" value="${lists[0]?.contacts.length || 0}">
+            </div>
+
+            <div>
+              <label for="funilSelector" class="block mb-2">Selecione o funil:</label>
+              <select id="funilSelector" class="select select-bordered w-full">
+                ${funis.map(funil => `<option value="${funil.funilName}">${funil.funilName}</option>`).join('')}
+              </select>
+            </div>
+
+            <div>
+              <label for="waitTime" class="block mb-2">Tempo de espera (segundos):</label>
+              <input type="number" id="waitTime" class="input input-bordered w-full" value="5">
+            </div>
+<div class="form-control">
+  <label class="label cursor-pointer">
+    <span class="label-text">Ignorar já enviados</span> 
+    <input type="checkbox" id="ignoreAlreadySent" class="checkbox" />
+  </label>
+</div>
+            <button type="submit" class="btn btn-primary w-full">Iniciar Spam Offer</button>
+          </form>
+        </div>
+
+        <script>
+          const listSelector = document.getElementById('listSelector');
+          const spamCount = document.getElementById('spamCount');
+
+          listSelector.addEventListener('change', (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            spamCount.value = selectedOption.dataset.contacts;
+          });
+
+         
+        </script>
+       
+<script>
+ 
+  const funilSelector = document.getElementById('funilSelector');
+  const waitTime = document.getElementById('waitTime');
+  const spamForm = document.getElementById('spamForm');
+
+ 
+
+ document.getElementById('spamForm').addEventListener('submit', async(e) => {
+            e.preventDefault();
+    const chave = '${chave}'; // Obtenha a chave da URL
+    const listName = listSelector.value;
+    const funilName = funilSelector.value;
+    const count = parseInt(spamCount.value);
+    const wait = parseInt(waitTime.value);
+
+    try {
+      const response = await fetch('/start-spamoffer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chave,
+          listName,
+          funilName,
+          spamCount: count,
+          waitTime: wait,
+        }),
+      });
+
+      if (response.ok) {
+       const data = await response.json();
+      window.location.href = data.redirectUrl;
+      } else {
+        alert('Erro ao iniciar spam offer. Por favor, tente novamente.');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao iniciar spam offer. Por favor, tente novamente.');
+    }
+  });
+</script>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Erro ao obter dados:', error);
+    res.status(500).send('Erro ao carregar a página');
+  }
+});
+
+
+
+router.get('/spam-metrics/:chave/:spamId', async (req, res) => {
+  const { chave, spamId } = req.params;
+  
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Métricas de Spam</title>
+      <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+      <script src="https://cdn.tailwindcss.com"></script>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.33/moment-timezone-with-data.min.js"></script>
+    </head>
+    <body class="bg-gray-100 p-8">
+      <div class="container mx-auto max-w-4xl">
+      <div id="loadingMessage" class="text-center py-4">Carregando métricas...</div>
+        <h1 class="text-3xl font-bold mb-6">Métricas de Spam</h1>
+        
+        <div class="grid grid-cols-2 gap-4 mb-8">
+          <div class="bg-white p-4 rounded shadow">
+            <h2 class="text-xl font-semibold mb-2">Progresso</h2>
+            <div class="flex justify-between items-center">
+              <span id="sentCount">0</span>
+              <progress id="progressBar" class="progress progress-primary w-56" value="0" max="100"></progress>
+              <span id="totalCount">0</span>
+            </div>
+          </div>
+          <div class="bg-white p-4 rounded shadow">
+  <h2 class="text-xl font-semibold mb-2">Próximo envio em</h2>
+  <div class="text-4xl font-bold text-center" id="nextSendTime">00:00:00</div>
+</div>
+        </div>
+        
+        <div class="bg-white p-4 rounded shadow mb-8">
+          <h2 class="text-xl font-semibold mb-2">Detalhes do Funil</h2>
+          <p id="funilName" class="text-lg">Nome do Funil: -</p>
+        </div>
+        
+       <div class="bg-white p-4 rounded shadow mb-8" style="height: 300px;">
+  <h2 class="text-xl font-semibold mb-4">Gráfico de Envios</h2>
+  <canvas id="sendChart"></canvas>
+</div>
+      </div>
+
+      <script>
+        const spamId = '${spamId}'
+        const chave = '${chave}'
+        
+
+        let nextSendTimestamp;
+
+        function updateCountdown() {
+  if (!nextSendTimestamp) return;
+
+  const now = moment();
+  const diff = moment.duration(moment(nextSendTimestamp).diff(now));
+
+  if (diff.asSeconds() <= 0) {
+    document.getElementById('nextSendTime').textContent = "Enviando...";
+  } else {
+    const hours = diff.hours().toString().padStart(2, '0');
+    const minutes = diff.minutes().toString().padStart(2, '0');
+    const seconds = diff.seconds().toString().padStart(2, '0');
+    document.getElementById('nextSendTime').textContent = hours + ':' + minutes + ':' + seconds
+  }
+}
+
+        // Função para atualizar as métricas
+     async function updateMetrics() {
+  try {
+    const response = await fetch('/api/spam-metrics/${chave}/${spamId}');
+    if (!response.ok) {
+      throw new Error(response.status);
+    }
+    const data = await response.json();
+    
+    if (data.error) {
+      console.error('Erro ao obter métricas:', data.error);
+      document.getElementById('loadingMessage').textContent = 'Erro: ' + data.error
+      return;
+    }
+    
+    document.getElementById('sentCount').textContent = data.sentCount || 0;
+    document.getElementById('totalCount').textContent = data.totalCount || 0;
+    
+    const progress = data.totalCount > 0 ? (data.sentCount / data.totalCount) * 100 : 0;
+    document.getElementById('progressBar').value = isFinite(progress) ? progress : 0;
+    
+    // Formatando a hora para o fuso horário de São Paulo
+   // const nextSendTime = moment(data.nextSendTime).format('HH:mm:ss');
+    //document.getElementById('nextSendTime').textContent = nextSendTime;
+    
+     nextSendTimestamp = moment(data.nextSendTime).valueOf();
+
+    document.getElementById('funilName').textContent = 'Nome do Funil: ' + data.funilName
+    
+    // Atualizar o gráfico
+    sendChart.data.datasets[0].data = [
+      data.sentCount || 0,
+      (data.totalCount || 0) - (data.sentCount || 0)
+    ];
+    sendChart.update();
+    
+    document.getElementById('loadingMessage').style.display = 'none';
+    
+    if (data.status === 'concluído' || data.status === 'erro') {
+      clearInterval(updateInterval);
+  clearInterval(countdownInterval);
+      document.getElementById('status').textContent = 'Status: ' + data.status
+      
+      // Apagar métricas após conclusão
+      if (data.status === 'concluído') {
+        await fetch('/api/delete-metrics/${chave}/${spamId}', { method: 'DELETE' });
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar métricas:', error);
+    document.getElementById('loadingMessage').textContent = 'Erro ao carregar métricas: ' + error.message
+  }
+}
+        
+       const ctx = document.getElementById('sendChart').getContext('2d');
+const sendChart = new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Enviados', 'Restantes'],
+    datasets: [{
+      data: [0, 0],
+      backgroundColor: ['#36A2EB', '#FF6384']
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+        
+        // Iniciar atualização das métricas a cada 5 segundos
+const updateInterval = setInterval(updateMetrics, 5000);
+
+// Iniciar a contagem regressiva, atualizando a cada segundo
+const countdownInterval = setInterval(updateCountdown, 1000);
+
+// Chamar imediatamente pela primeira vez
+updateMetrics();
+      </script>
+    </body>
+    </html>
+  `);
+});
+
 // /autoresposta/:key
 router.get('/autoresposta/:key', async (req, res) => {
   const key = req.params.key;
@@ -1659,35 +2330,76 @@ router.get('/clearchats/:key', async (req, res) => {
   const key = req.params.key;
 
   try {
-      
-      const database = client.db('perfil');
-      const chatCollection = database.collection(`chatis_${key}`);
-     // const funilCollection = database.collection(`funilresp_${key}`);
-     // await funilCollection.deleteMany({});
-      const result = await chatCollection.deleteMany({});
-      const count = result.deletedCount;
+    const database = client.db('perfil');
+    const chatCollection = database.collection(`chatis_${key}`);
+    const result = await chatCollection.deleteMany({});
+    const count = result.deletedCount;
 
-      res.send(`
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Dados Deletados</title>
-              <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-          </head>
-          <body class="flex items-center justify-center h-screen bg-gray-100">
-              <div class="text-center p-6 bg-white rounded-lg shadow-lg">
-                  <h1 class="text-2xl font-bold mb-4">Sucesso!</h1>
-                  <p class="mb-4">Total de ${count} chats foram deletados com sucesso.</p>
-                  <img src="https://media.giphy.com/media/A6aHBCFqlE0Rq/giphy.gif" alt="Sucesso" class="mx-auto">
-              </div>
-          </body>
-          </html>
-      `);
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en" data-theme="light">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chats Limpos</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@2.51.5/dist/full.css" rel="stylesheet" type="text/css" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+          body {
+            font-family: 'Poppins', sans-serif;
+          }
+        </style>
+      </head>
+      <body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 to-purple-100">
+        <div class="text-center p-8 bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+          <div class="mb-6">
+            <i class="fas fa-broom text-5xl text-primary"></i>
+          </div>
+          <h1 class="text-3xl font-bold mb-4 text-gray-800">Chats Limpos!</h1>
+          <p class="mb-6 text-lg text-gray-600">
+            Um total de <span class="font-semibold text-primary">${count}</span> chats foram deletados com sucesso.
+          </p>
+          <img src="https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif" alt="Limpeza concluída" class="mx-auto rounded-lg shadow-md mb-6">
+          <a href="/home/${key}" class="btn btn-primary">Voltar ao Dashboard</a>
+        </div>
+      </body>
+      </html>
+    `);
   } catch (error) {
-      console.error('Erro ao deletar dados:', error);
-      res.status(500).send('Erro ao deletar dados.');
+    console.error('Erro ao deletar dados:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html lang="en" data-theme="light">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Erro</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@2.51.5/dist/full.css" rel="stylesheet" type="text/css" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+          body {
+            font-family: 'Poppins', sans-serif;
+          }
+        </style>
+      </head>
+      <body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-red-100 to-orange-100">
+        <div class="text-center p-8 bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+          <div class="mb-6">
+            <i class="fas fa-exclamation-triangle text-5xl text-error"></i>
+          </div>
+          <h1 class="text-3xl font-bold mb-4 text-gray-800">Erro</h1>
+          <p class="mb-6 text-lg text-gray-600">
+            Ocorreu um erro ao tentar deletar os dados. Por favor, tente novamente mais tarde.
+          </p>
+          <a href="/home/${key}" class="btn btn-error">Voltar ao Dashboard</a>
+        </div>
+      </body>
+      </html>
+    `);
   }
 });
 

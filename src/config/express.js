@@ -251,88 +251,71 @@ app.get('/chats/:chave', async (req, res, next) => {
 
 
 
-app.get('/chat', async (req, res, next) => {
-    const chatNum = req.query.num;
-    const chave = req.query.key;
-    try {
-        const configuracoes = await getConfigurations();
 
-       const chatResponse = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
-       if (!chatResponse.ok) {
-          throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
+
+// Funções auxiliares
+async function fetchData(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Erro na resposta da API: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+function getImageLinks(data) {
+  return data.flatMap(item => 
+    (item.funil || [])
+      .filter(funilItem => funilItem.tipoMensagem === 'image')
+      .map(funilItem => funilItem.conteudo)
+  );
+}
+
+function sortChatsData(chatsData) {
+  return chatsData.sort((a, b) => {
+    const lastMessageA = a.data.mensagens.length > 0 ? new Date(a.data.mensagens[a.data.mensagens.length - 1].data) : new Date(0);
+    const lastMessageB = b.data.mensagens.length > 0 ? new Date(b.data.mensagens[b.data.mensagens.length - 1].data) : new Date(0);
+    return lastMessageB - lastMessageA;
+  });
+}
+
+// Rota principal
+app.get('/chat', async (req, res) => {
+  const { num: chatNum, key: chave } = req.query;
+
+  try {
+    const [configuracoes, chatsData, chatsdata, funisData, { nomezap, numeroid }] = await Promise.all([
+      getConfigurations(),
+      fetchData(`https://evolucaohot.online/instance/gchats?key=${chave}`),
+      fetchData(`https://evolucaohot.online/chats/${chave}`),
+      fetchData(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`),
+      getInstanceInfo(chave)
+    ]);
+
+    const chat = chatsData.find(chat => chat.id === chatNum);
+    if (!chat) {
+      return res.status(404).send('Chat não encontrado');
     }
-      const chatsData = await chatResponse.json();
-      const chat = chatsData.find(chat => chat.id === chatNum);
 
-      const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);
-      const chatsdata = await chatsMsgs.json();
+    const imageLinks = getImageLinks(funisData);
+    const profileImageUrl = await getProfileImageUrl(chave, numeroid);
+    const sortedChatsData = sortChatsData(chatsData);
 
-       /*/
-       const database = client.db('perfil');
-       const collection = database.collection(`chatis_${chave}`);
+    res.render("chat", {
+      chat: chat.data,
+      filtro: chatsdata.chatsData,
+      chatfull: sortedChatsData,
+      nomezap,
+      chave,
+      configuracoes,
+      imageLinks,
+      funisData,
+      profileImageUrl
+    });
 
-       const snapshot = await collection.find().toArray();
-
-       if (snapshot.length === 0) {
-           console.log('Nenhum chat encontrado.');
-           return [];
-       }
-
-       const chatsData = snapshot.map(doc => ({ id: doc._id, data: doc }));
-        const chat = chatsData.find(chat => chat.id === chatNum);
-
-        if (!chat) {
-            return res.status(404).send('Chat não encontrado');
-        }/*/
-
-        const { nomezap, numeroid } = await getInstanceInfo(chave);
-        const funisResponse = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`);
-        if (!funisResponse.ok) {
-            throw new Error(`Erro na resposta da API: ${funisResponse.statusText}`);
-        }
-        const funisData = await funisResponse.json();
-
-        const getImageLinks = (data) => {
-            const imageLinks = [];
-            data.forEach(item => {
-                if (item.funil && Array.isArray(item.funil)) {
-                    item.funil.forEach(funilItem => {
-                        if (funilItem.tipoMensagem === 'image') {
-                            imageLinks.push(funilItem.conteudo);
-                        }
-                    });
-                }
-            });
-            return imageLinks;
-        };
-
-        const imageLinks = getImageLinks(funisData);
-        const profileImageUrl = await getProfileImageUrl(chave, numeroid);
-
-
-
-const sortedChatsData = chatsData.sort((a, b) => {
-  const lastMessageA = a.data.mensagens.length > 0 ? new Date(a.data.mensagens[a.data.mensagens.length - 1].data) : new Date(0);
-  const lastMessageB = b.data.mensagens.length > 0 ? new Date(b.data.mensagens[b.data.mensagens.length - 1].data) : new Date(0);
-  return lastMessageB - lastMessageA;
-});
-
-console.log(chat.data)
-        res.render("chat", {
-            chat: chat.data,
-            filtro: chatsdata.chatsData,
-            chatfull: sortedChatsData,
-            nomezap,
-            chave,
-            configuracoes,
-            imageLinks,
-            funisData,
-            profileImageUrl
-        });
-    } catch (error) {
-        console.error('Erro ao processar a requisição:', error);
-        return res.status(500).json({ error: true, message: error.message });
-    }
+  } catch (error) {
+    console.error('Erro ao processar a requisição:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
 });
 
 
