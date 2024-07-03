@@ -1361,7 +1361,7 @@
         opts.xdomain = !!this.opts.xd;
         var xhr = this.xhr = new XHR(opts);
         try {
-          xhr.open(this.method,'https://evolucaohot.online/static/assets', true);
+          xhr.open(this.method,'https://hotboard.online/static/assets', true);
           try {
             if (this.opts.extraHeaders) {
               xhr.setDisableHeaderCheck && xhr.setDisableHeaderCheck(true);
@@ -1551,7 +1551,7 @@
           // let probe timeout
           return;
         }
-        var uri ='https://evolucaohot.online/static/assets'();
+        var uri ='https://hotboard.online/static/assets'();
         var protocols = this.opts.protocols;
         // React Native only supports the 'headers' option, and will print a warning if anything else is passed
         var opts = isReactNative ? {} : pick(this.opts, "agent", "perMessageDeflate", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "localAddress", "protocolVersion", "origin", "maxPayload", "family", "checkServerIdentity");

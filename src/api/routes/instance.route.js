@@ -28,6 +28,10 @@ router.route('/displayallfunis').get(keyVerify, controller.displayllfunis)
 router.route('/deletefunil').get(keyVerify, controller.deletefunil)
 router.route('/sendfunil').get(keyVerify, controller.sendfunil)
 
+//FUNIL INTEGRADO
+router.route('/sendfunil2').get(keyVerify, controller.sendfunil2)
+
+
 //ASSINATURA
 router.route('/addmail').get(keyVerify, controller.addmail)
 router.route('/getmail').get(keyVerify, controller.getmail)

@@ -24,7 +24,7 @@ db.settings({ ignoreUndefinedProperties: true });/*/
 
 const db = "aa"
 
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 
 const uri = 'mongodb+srv://alancalhares123:senha123@cluster0.sgubjmv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
@@ -543,7 +543,7 @@ async getFileNameFromUrl(url) {
 
 async servidormsg(json, key) {
     try {
-    const response = await axios.post('https://evolucaohot.online/sendmessage', {newChat: json});
+    const response = await axios.post('https://hotboard.online/sendmessage', {newChat: json});
 
     if (response.data.success) {
         console.log('Mensagem enviada com sucesso:', response.data.newChat);
@@ -828,7 +828,7 @@ setHandler() {
        
 
 //console.log(messageType2)
-const autoresp_config = await axios.get(`https://evolucaohot.online/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
+const autoresp_config = await axios.get(`https://hotboard.online/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
 const autoresp = autoresp_config.data.autoresposta
 const funilselecionado = autoresp_config.data.funil
 
@@ -1108,7 +1108,7 @@ console.log("GRUPO?", isGroup)
                                 const selectedResponse = `dinamico_${currentFunilStep.conteudo.respostas[userChoice - 1]}`
 
                                 async function salvarFunil(key, funilSelecionado) {
-                                    const url = `https://evolucaohot.online/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
+                                    const url = `https://hotboard.online/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
                                     const data = {
                                       funil: funilSelecionado
                                     };
@@ -1613,7 +1613,7 @@ stringname = gppessoanome
         let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
         
         try {
-            const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${this.key}`, {
+            const profileResponse = await fetch(`https://hotboard.online/misc/downProfile?key=${this.key}`, {
                 method: 'POST',
                 body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
                 headers: { 'Content-Type': 'application/json' }
@@ -2868,7 +2868,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
         formData.append('userType', typeusr);
         formData.append('delay', parseInt(delay));
 
-        const result = await axios.post(`https://evolucaohot.online/message/audiofile?key=` + key, formData);
+        const result = await axios.post(`https://hotboard.online/message/audiofile?key=` + key, formData);
 
         console.log(result.data);
         if (result.data.error) {
@@ -2882,6 +2882,55 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
 }
 
 
+
+async sendfunil2(key, funilName, chat) {
+    try {
+        
+        const responsef = await axios.get(`https://hotboard.online/api/funis/${key}`);
+        const funis = responsef.data
+
+
+     
+        const foundFunil = funis.find(funil => funil.nome === funilName);
+        if (foundFunil) {
+            console.log(`Funil encontrado:`, foundFunil);
+
+            for (const msg of foundFunil.elementos) {
+                console.log(msg);
+                if (msg.tipo == "Mensagem") {
+                    await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { text: msg.conteudo });
+                } else if (msg.tipo == "Sleep") {
+                    await sleep(msg.conteudo * 1000);
+                } else if (msg.tipo == "Imagem") {
+                    
+                    if (msg.visuunica == true) {
+                        await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { image: { url: msg.conteudo }, viewOnce: true });
+                    } else {
+                        console.log("enviando")
+                        console.log(this.getWhatsAppId2(chat))
+                        await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { image: { url: msg.conteudo } });
+                    }
+                } else if (msg.tipo == "Áudio") {
+                    await this.enviarAudio(key, msg.conteudo, this.getWhatsAppId2(chat), "usr", 0);
+                } else if (msg.tipo == "Vídeo") {
+                    if (msg.visuunica == true) {
+                        await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { video: { url: msg.conteudo }, viewOnce: true });
+                    } else {
+                        await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { video: { url: msg.conteudo } });
+                    }
+                }
+            }
+
+            return foundFunil;
+        } else {
+            console.log(`Nenhum funil encontrado com o nome '${funilName}'.`);
+            return null;
+        }
+    } catch (e) {
+        console.log(e);
+        return "Erro interno";
+    }
+}
 
 async sendfunil(key, funilName, chat, visuunica) {
     try {
@@ -3441,5 +3490,6 @@ async groupAcceptInvite(id) {
 module.exports = {
     WhatsAppInstance: WhatsAppInstance,
     db: db,
-    client: client
+    client: client,
+    ObjectId: ObjectId
   };

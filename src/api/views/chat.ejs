@@ -2490,6 +2490,35 @@
                 </div>
             </div>
         </li>
+        <% funisboard.forEach(funil => { %>
+            <li class="list-group-item">
+                <div class="row align-items-center gx-5">
+                    <!-- Icons -->
+                    <div class="col-auto">
+                        <div class="avatar-group">
+                            <a href="#" class="avatar avatar-sm" onclick="showFunilName2('<%= funil.nome %>')">
+                                <span class="avatar-text bg-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Icons -->
+
+                    <!-- Text -->
+                    <div class="col overflow-hidden">
+                        <h5 class="text-truncate">
+                            <a href="#" onclick="showFunilName2('<%= funil.nome %>')"><%= funil.nome %></a>
+                        </h5>
+                    </div>
+                    <!-- Text -->
+                </div>
+            </li>
+        <% }) %>
+
         <% funisData.forEach(funil => { %>
             <li class="list-group-item">
                 <div class="row align-items-center gx-5">
@@ -3142,6 +3171,31 @@ const tom = tomSelect.value;
                 }
             });
     }
+
+    function showFunilName2(funilName) {
+        console.log("Funil ativado:", funilName);
+
+    
+        let numerosend;
+
+        if (ultimoNumero.includes("@g.us")) {
+            numerosend = `${ultimoNumero}`;
+        } else {
+            numerosend = ultimoNumero;
+        }
+
+        // Faça a requisição para enviar o funil
+        fetch(`/instance/sendfunil2?key=<%= chave %>&funil=${funilName}&chat=${ultimoNumero}`)
+            .then(response => response.json())
+            .then(response => {
+                // Verifique se a API retornou um JSON
+                if (response) {
+                    // Exiba uma mensagem no HTML
+                   alert('Funil enviado!')
+                }
+            });
+    }
+
 
                 // Função para enviar a mensagem para a API
 async function sendMessageToAPI(id, typeId, message, options, groupOptions) {

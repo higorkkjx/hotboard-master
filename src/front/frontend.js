@@ -4,7 +4,7 @@ const express = require("express");
 
 const router = express.Router();
 const axios = require("axios")
-const { WhatsAppInstance, db, client } = require('../api/class/instance');
+const { WhatsAppInstance, db, client, ObjectId } = require('../api/class/instance');
 const moment = require("moment-timezone");
 const multer = require("multer");
 const fs = require("fs")
@@ -120,11 +120,13 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    cb(null, `${Date.now()}-${file.originalname}`);
   }
 });
-
 const upload = multer({ storage: storage });
+
+
+
 
 
 // Rota para deletar um contato específico de uma lista
@@ -190,7 +192,7 @@ router.post('/upload/:chave', upload.single('file'), async (req, res) => {
 
 
 async function checkWhatsApp(chave) {
-  const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+  const instanceResponse = await fetch(`https://hotboard.online/instance/info?key=${chave}`);
   const instanceData = await instanceResponse.json();
 
   let whatsappStatus = '';
@@ -203,7 +205,7 @@ async function checkWhatsApp(chave) {
       whatsappIcon = 'fa-whatsapp';
 
       // Requisição para baixar o perfil
-      const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+      const profileResponse = await fetch(`https://hotboard.online/misc/downProfile?key=${chave}`, {
           method: 'POST',
           body: JSON.stringify({ id: instanceData.instance_data.user.id.replace(":5@s.whatsrouter.net", "") }),
           headers: { 'Content-Type': 'application/json' }
@@ -219,7 +221,7 @@ async function checkWhatsApp(chave) {
 
   // Se não estiver conectado, solicitar código de verificação
   if (!instanceData.instance_data.phone_connected) {
-      const getCodeResponse = await fetch(`https://evolucaohot.online/instance/getcode?key=${chave}&number=${NUMEROINPUT}`, {
+      const getCodeResponse = await fetch(`https://hotboard.online/instance/getcode?key=${chave}&number=${NUMEROINPUT}`, {
           method: 'POST'
       });
       const getCodeData = await getCodeResponse.json();
@@ -290,7 +292,7 @@ console.log(numberLength)
 };
 
 const numeronovo = await formatPhoneNumber(number)
-  const url = `https://evolucaohot.online/message/text?key=${keybase}`;
+  const url = `https://hotboard.online/message/text?key=${keybase}`;
   const headers = {
     "accept": "*/*",
     "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -301,7 +303,7 @@ const numeronovo = await formatPhoneNumber(number)
     "sec-fetch-dest": "empty",
     "sec-fetch-mode": "cors",
     "sec-fetch-site": "same-origin",
-    "Referer": `https://evolucaohot.online/chat?num=5517996607540@s.whatsrouter.net&key=${keybase}`,
+    "Referer": `https://hotboard.online/chat?num=5517996607540@s.whatsrouter.net&key=${keybase}`,
     "Referrer-Policy": "strict-origin-when-cross-origin"
   };
 
@@ -428,7 +430,7 @@ Equipe de Suporte`, "chefe5");
         };
 
         try {
-            const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+            const response = await axios.post('https://hotboard.online/instance/init', requestData);
             console.log('Acesso criado com sucesso!');
         } catch (error) {
             console.log('Erro ao criar acesso. Por favor, tente novamente.');
@@ -436,7 +438,7 @@ Equipe de Suporte`, "chefe5");
 
         await sendMessageHook(dadosass.phone.replace("+55", "55"), `✅ *Acesso liberado com sucesso*
 
-Plataforma: https://evolucaohot.online/
+Plataforma: https://hotboard.online/
 
 Sua chave de acesso: ${key}
 
@@ -552,7 +554,7 @@ router.post("/excluir-assinatura", async (req, res) => {
 // Função para obter e-mails ativos
 async function getEmailsAtivos() {
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/list`);
+    const instanceResponse = await fetch(`https://hotboard.online/instance/list`);
     const instanceData = await instanceResponse.json();
     const emailsAtivos = [];
     const dataAtualSP = moment().tz("America/Sao_Paulo");
@@ -578,7 +580,7 @@ async function getEmailsAtivos() {
         };
 
         try {
-          const response = await axios.post('https://evolucaohot.online/instance/editar', data);
+          const response = await axios.post('https://hotboard.online/instance/editar', data);
           console.log(response.data);
         } catch (error) {
           console.error("Erro ao editar email:", error);
@@ -600,7 +602,7 @@ async function getEmailsAtivos() {
 async function consultarValidade(chave) {
   try {
 
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`https://hotboard.online/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
     console.log(instanceData)
@@ -715,7 +717,7 @@ router.post("/adicionar-email", async (req, res) => {
 
   try {
     // Fazendo a solicitação para o URL fornecido
-    const response = await fetch(`https://evolucaohot.online/instance/addmail?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`);
+    const response = await fetch(`https://hotboard.online/instance/addmail?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`);
     const data = await response.json();
     
     // Verificando a resposta da solicitação
@@ -808,7 +810,7 @@ router.get('/info/:chave', async (req, res) => {
   const chave = req.params.chave;
   let userEmail;
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`https://hotboard.online/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
 
@@ -840,7 +842,7 @@ res.redirect('/email-invalido')
   let totalChats = 0
   try {
     // Requisição para obter os contatos
-    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`https://hotboard.online/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
      totalChats = contactsData.data.contacts.length;
   } catch(e) {
@@ -892,11 +894,11 @@ res.redirect('/email-invalido')
 router.get('/home/:chave', async (req, res) => {
   const chave = req.params.chave;
   let userEmail;
-  const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+  const instanceResponse = await fetch(`https://hotboard.online/instance/info?key=${chave}`);
   const instanceData = await instanceResponse.json();
 
 
-  const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);
+  const chatsMsgs = await fetch(`https://hotboard.online/chats/${chave}`);
   const chatsdata = await chatsMsgs.json();
 
   const count = chatsdata.chatsData.length
@@ -917,7 +919,7 @@ router.get('/home/:chave', async (req, res) => {
    
 
     //verificar chave
-    const responseInstanceList = await fetch(`https://evolucaohot.online/instance/list`);
+    const responseInstanceList = await fetch(`https://hotboard.online/instance/list`);
     const dataInstanceList = await responseInstanceList.json();
     const instanceFound = dataInstanceList.data.find(instance => instance.instance_key === chave);
 
@@ -938,7 +940,7 @@ router.get('/home/:chave', async (req, res) => {
   const dadoAssinatura = await consultarValidade(chave);
 
   try {
-    const responseInstanceList = await fetch(`https://evolucaohot.online/instance/list`);
+    const responseInstanceList = await fetch(`https://hotboard.online/instance/list`);
     const dataInstanceList = await responseInstanceList.json();
     const instanceFound = dataInstanceList.data.find(instance => instance.instance_key === chave);
 
@@ -958,7 +960,7 @@ router.get('/home/:chave', async (req, res) => {
     if (instanceData.error === false) {
       try {
         const numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+        const profileResponse = await fetch(`https://hotboard.online/misc/downProfile?key=${chave}`, {
           method: 'POST',
           body: JSON.stringify({ id: numerorefatorado }),
           headers: { 'Content-Type': 'application/json' }
@@ -974,7 +976,7 @@ router.get('/home/:chave', async (req, res) => {
 
     let totalChats = 0;
     try {
-      const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+      const contactsResponse = await fetch(`https://hotboard.online/misc/contacts?key=${chave}`);
       const contactsData = await contactsResponse.json();
       totalChats = contactsData.data.contacts.length;
     } catch (e) {
@@ -1004,7 +1006,7 @@ router.get('/conectar', async (req, res) => {
   const chave = req.query.chave; // Supondo que a chave esteja presente na query da URL
   let userEmail;
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`https://hotboard.online/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
 
@@ -1032,14 +1034,14 @@ res.redirect('/email-invalido')
 
 
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`https://hotboard.online/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
     if (instanceData.error === false && instanceData.instance_data.phone_connected) {
         // WhatsApp conectado, retornar HTML com imagem de perfil e status
         let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
         let numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+        const profileResponse = await fetch(`https://hotboard.online/misc/downProfile?key=${chave}`, {
             method: 'POST',
             body: JSON.stringify({ id: numerorefatorado}),
             headers: { 'Content-Type': 'application/json' }
@@ -1141,7 +1143,7 @@ router.post('/conectar', async (req, res) => {
 try {
     const numeroInput = req.body.numero;
     const chave = req.query.chave;
-    const getCodeResponse = await fetch(`https://evolucaohot.online/instance/getcode?key=${chave}`, {
+    const getCodeResponse = await fetch(`https://hotboard.online/instance/getcode?key=${chave}`, {
         method: 'POST',
         body: JSON.stringify({ number: numeroInput }),
         headers: { 'Content-Type': 'application/json' }
@@ -1166,7 +1168,7 @@ router.get('/listchat/:chave', async (req, res) => {
   const chave = req.params.chave;
   try {
     // Requisição para obter os contatos
-    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`https://hotboard.online/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
      res.json(contactsData)
   } catch(e) {
@@ -1181,7 +1183,7 @@ router.get('/listchat/:chave', async (req, res) => {
 router.get('/editar', async (req, res) => {
   try {
     const key = req.query.key;
-    const response = await axios.get(`https://evolucaohot.online/instance/gconfig?key=${key}`);
+    const response = await axios.get(`https://hotboard.online/instance/gconfig?key=${key}`);
     const dados = response.data;
 
     res.render('editar', { dados, key });
@@ -1389,7 +1391,7 @@ async function obterDadosTypebot(key, url, dinamico) {
       }
 
       try {
-        const response = await axios.post(`https://evolucaohot.online/instance/addtofirestore?key=` + key, resultadoFormatado, {
+        const response = await axios.post(`https://hotboard.online/instance/addtofirestore?key=` + key, resultadoFormatado, {
           headers: {
             'Content-Type': 'application/json'
           }
@@ -1430,7 +1432,7 @@ router.get("/funil/:chave", (req, res) => {
 router.get("/funis/:chave", async (req, res) => {
   const key = req.params.chave;
   try {
-    const url = `https://evolucaohot.online/instance/displayallfunis?key=${key}`;
+    const url = `https://hotboard.online/instance/displayallfunis?key=${key}`;
     const response = await axios.get(url);
     res.render("funis", { funis: response.data, key, urlapi });
   } catch (error) {
@@ -1485,11 +1487,13 @@ const uploadToGitHub = async (buffer, filename, accessToken, username, repositor
 
 
 
-router.post('/uploadfunil', upload.none(), async (req, res) => {
 
-  const accessToken = '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';
-  const username = 'higorkkjx';
-  const repositoryName = 'uploads';
+router.post('/uploadfunil', upload.none(), async (req, res) => {
+  const chave = req.body.chave;
+  const db = client.db('hot_funis');
+const funilCollection = db.collection(chave);
+
+
   const nome = req.body.nome;
   let elementos = req.body.elementos;
 
@@ -1501,26 +1505,212 @@ router.post('/uploadfunil', upload.none(), async (req, res) => {
   } catch (error) {
     return res.status(400).json({ error: 'Invalid JSON format for elementos' });
   }
-//console.log(elementos)
- 
-const funilAtualizado = { nome, elementos: [] };
 
-for (const elemento of elementos) {
-  console.log(elemento)
-  if (elemento.fileName && elemento.fileType) {
-    try {
-      const url = await uploadToGitHub(elemento.conteudo, elemento.fileName, accessToken, username, repositoryName);
-      elemento.conteudo = url;
-      console.log(url)
-    } catch (error) {
-      return res.status(500).json({ error: error.message });
-    }
+  const funilAtualizado = { nome, elementos: elementos };
+
+  try {
+    await funilCollection.insertOne(funilAtualizado);
+    console.log('Funil salvo com sucesso:', funilAtualizado);
+    res.json(funilAtualizado);
+  } catch (error) {
+    console.error('Erro ao salvar funil no MongoDB', error);
+    res.status(500).json({ error: 'Erro ao salvar funil no MongoDB' });
   }
-  funilAtualizado.elementos.push(elemento);
+});
+
+
+const uploadToGitHub2 = async (base64Data, filename, accessToken, username, repositoryName) => {
+  const apiUrl = `https://api.github.com/repos/${username}/${repositoryName}/contents/${filename}`;
+
+  // Verificar se o arquivo já existe
+  let sha = '';
+  const checkFileResponse = await fetch(apiUrl, {
+    method: 'GET',
+    headers: {
+      Authorization: `token ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (checkFileResponse.ok) {
+    const checkFileData = await checkFileResponse.json();
+    sha = checkFileData.sha;
+  }
+
+  const response = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: {
+      Authorization: `token ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message: 'Upload do arquivo',
+      content: base64Data,
+      sha: sha,
+    }),
+  });
+
+  if (response.ok) {
+    const responseData = await response.json();
+    return responseData.content.download_url;
+  } else {
+    const errorData = await response.json();
+    throw new Error(`Erro ao fazer upload para o GitHub: ${errorData.message}`);
+  }
+};
+
+const fspro = require('fs').promises; // Adiciona 'promises' aqui
+router.post('/uploadSingleFile', upload.single('file'), async (req, res) => {
+  console.log('Received file:', req.file);
+  const accessToken = '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';
+  const username = 'higorkkjx';
+  const repositoryName = 'uploads';
+
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  try {
+    const filePath = path.resolve(req.file.path);
+    const fileBuffer = await fspro.readFile(filePath);
+    const base64Data = fileBuffer.toString('base64');
+  // Função para gerar um caractere aleatório
+function gerarCaractereAleatorio() {
+  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return caracteres.charAt(Math.floor(Math.random() * caracteres.length));
 }
 
-res.json(funilAtualizado);
+// Função para gerar uma string aleatória de no máximo 4 dígitos
+function gerarStringAleatoria(tamanhoMaximo = 4) {
+  const tamanho = Math.floor(Math.random() * tamanhoMaximo) + 1;
+  let stringAleatoria = '';
+  for (let i = 0; i < tamanho; i++) {
+      stringAleatoria += gerarCaractereAleatorio();
+  }
+  return stringAleatoria;
+}
+
+// Exemplo de uso
+const stringAleatoria = await gerarStringAleatoria();
+console.log(`String aleatória de no máximo 4 dígitos: ${stringAleatoria}`);
+
+    const url = await uploadToGitHub2(base64Data, stringAleatoria + req.file.originalname, accessToken, username, repositoryName);
+    res.json({ url: url });
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: error.message });
+  }
 });
+
+
+
+function organizarElementos(elementos) {
+  const elementosMap = new Map(elementos.map(el => [el.id, { ...el, next: null }]));
+  let inicio = null;
+
+  // Estabelecer as conexões
+  elementos.forEach(el => {
+    if (el.conexoes && el.conexoes.length > 0) {
+      const proximoId = el.conexoes[0]; // Assumindo que cada elemento se conecta a no máximo um outro
+      elementosMap.get(el.id).next = elementosMap.get(proximoId);
+    }
+  });
+
+  // Encontrar o elemento inicial (que não é alvo de nenhuma conexão)
+  inicio = elementos.find(el => !elementos.some(outro => outro.conexoes.includes(el.id)));
+
+  // Ordenar os elementos
+  const elementosOrdenados = [];
+  let atual = elementosMap.get(inicio.id);
+  while (atual) {
+    elementosOrdenados.push(atual);
+    atual = atual.next;
+  }
+
+  // Remover a propriedade 'next' antes de retornar
+  return elementosOrdenados.map(({ next, ...resto }) => resto);
+}
+
+router.get('/api/funis/:chave', async (req, res) => {
+  const chave = req.params.chave;
+  const db = client.db('hot_funis');
+  const funilCollection = db.collection(chave);
+
+  try {
+    const funis = await funilCollection.find({}).toArray();
+    const funisOrganizados = funis.map(funil => ({
+      ...funil,
+      elementos: organizarElementos(funil.elementos)
+    }));
+
+    res.json(funisOrganizados);
+  } catch (error) {
+    console.error('Erro ao buscar funis:', error);
+    res.status(500).json({ error: 'Erro ao buscar funis' });
+  }
+});
+
+router.get('/api/funis/:chave/:id', async (req, res) => {
+  const { chave, id } = req.params;
+  const db = client.db('hot_funis');
+  const funilCollection = db.collection(chave);
+
+  try {
+    const funil = await funilCollection.findOne({ _id: new ObjectId(id) });
+    if (!funil) {
+      return res.status(404).json({ error: 'Funil não encontrado' });
+    }
+
+    const funilOrganizado = {
+      ...funil,
+      elementos: organizarElementos(funil.elementos)
+    };
+
+    res.json(funilOrganizado);
+  } catch (error) {
+    console.error('Erro ao buscar funil:', error);
+    res.status(500).json({ error: 'Erro ao buscar funil' });
+  }
+});
+
+router.get('/funisboard/:chave', async (req, res) => {
+  const chave = req.params.chave;
+  const db = client.db('hot_funis');
+  const funilCollection = db.collection(chave);
+
+  try {
+    const funis = await funilCollection.find({}).toArray();
+    res.render('funisboard', { funis, chave });
+  } catch (error) {
+    console.error('Erro ao buscar funis:', error);
+    res.status(500).send('Erro ao buscar funis');
+  }
+});
+
+router.post('/deletar-funil/:chave/:nome', async (req, res) => {
+  const { chave, nome } = req.params;
+  const db = client.db('hot_funis');
+  const funilCollection = db.collection(chave);
+console.log(funilCollection)
+  try {
+    console.log(`Tentando deletar o funil com nome: ${nome} na coleção: ${chave}`);
+    const result = await funilCollection.deleteOne({ nome: nome });
+
+    if (result.deletedCount === 0) {
+      console.log(`Nenhum funil encontrado com o nome: ${nome} na coleção: ${chave}`);
+      return res.status(404).send('Funil não encontrado');
+    }
+
+    console.log(`Funil com nome: ${nome} deletado com sucesso na coleção: ${chave}`);
+    res.redirect(`/funisboard/${chave}`);
+  } catch (error) {
+    console.error('Erro ao deletar funil:', error);
+    res.status(500).send('Erro ao deletar funil');
+  }
+});
+
+
+
 
 router.get("/hospedar", (req, res) => {
   res.send(`<!DOCTYPE html>
@@ -1720,7 +1910,7 @@ router.get('/gerargp/:chave', async (req, res) => {
     <script>
       document.getElementById('gerarGrupo').addEventListener('click', async () => {
         try {
-          const response = await fetch('https://evolucaohot.online/instance/gerargp?key=${key}');
+          const response = await fetch('https://hotboard.online/instance/gerargp?key=${key}');
           const data = await response.json();
           if (data.linkgp && data.resp) {
             document.getElementById('grupoDesc').textContent = data.resp.desc;
@@ -1899,7 +2089,7 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
         continue;
       }
 
-      const response = await axios.get(`https://evolucaohot.online/instance/sendfunil`, {
+      const response = await axios.get(`https://hotboard.online/instance/sendfunil`, {
         params: {
           key: key,
           funil: funilName,
@@ -1977,7 +2167,7 @@ async function spamOffer(key, funilName, contacts, waitTime) {
     try {
       //await sendfunil(key, funilName, contact, 'false');
 
-      await axios.get(`https://evolucaohot.online/instance/sendfunil?key=${key}&funil=${funilName}&chat=${contact}@s.whatsapp.net&visuunica=false`)
+      await axios.get(`https://hotboard.online/instance/sendfunil?key=${key}&funil=${funilName}&chat=${contact}@s.whatsapp.net&visuunica=false`)
       await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
     } catch (error) {
       console.error(`Erro ao enviar para ${contact}:`, error);
@@ -1996,7 +2186,7 @@ router.get('/spamoffer/:chave', async (req, res) => {
     const lists = await contactLists.find({}).toArray();
     
     // Obter funis da API
-    const funisResponse = await axios.get(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`);
+    const funisResponse = await axios.get(`https://hotboard.online/instance/displayallfunis?key=${chave}`);
     const funis = funisResponse.data;
 
     // Renderizar o HTML
@@ -2281,7 +2471,7 @@ router.get('/autoresposta/:key', async (req, res) => {
       const doc = await configCollection.findOne({ _id: `autoresp_${key}` });
       const autorespostaAtivada = doc ? doc.autoresposta : false;
 
-      const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`);
+      const response = await fetch(`https://hotboard.online/instance/displayallfunis?key=${key}`);
       const funis = await response.json();
       res.render('autoresposta', { autorespostaAtivada, key, funis });
   } catch (error) {

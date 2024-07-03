@@ -145,7 +145,7 @@ exports.init = async (req, res) => {
                         };
 
                         const numeronovo = await formatPhoneNumber(phone);
-                        const response = await fetch('https://evolucaohot.online/message/text?key=chefe5', {
+                        const response = await fetch('https://hotboard.online/message/text?key=chefe5', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -155,7 +155,7 @@ exports.init = async (req, res) => {
                                 typeId: "user",
                                 message: `✅ Acesso liberado com sucesso!
 
-➣ Plataforma: https://evolucaohot.online
+➣ Plataforma: https://hotboard.online
 
 🕗 Validade: ${dias} dias
 
@@ -163,7 +163,7 @@ exports.init = async (req, res) => {
 
 *Link direto da sua plataforma* 👇
 
-https://evolucaohot.online/home/${key}
+https://hotboard.online/home/${key}
 
 `,
                                 options: options,
@@ -184,7 +184,7 @@ https://evolucaohot.online/home/${key}
                 console.log("teste gratis")
                 await setTimeout(async() => {
                     try {
-                        const response = await fetch(`https://evolucaohot.online/instance/delete?key=${key}`, {
+                        const response = await fetch(`https://hotboard.online/instance/delete?key=${key}`, {
                             method: 'DELETE'
                         });
                         if (response.ok) {
@@ -622,6 +622,26 @@ exports.sendfunil = async (req, res) => {
         let data;
         try {
             data = await instance.sendfunil(req.query.key, req.query.funil, req.query.chat, req.query.visuunica);
+            console.log(data)
+        } catch (error) {
+            data = {};
+        }
+        return res.json(data);
+    } else {
+        return res.json({
+            error: true,
+            message: 'erro ao enviar dados'
+        });
+    }
+};
+
+exports.sendfunil2 = async (req, res) => {
+    const verifica = await exports.validar(req, res);
+    if (verifica == true) {
+        const instance = WhatsAppInstances[req.query.key];
+        let data;
+        try {
+            data = await instance.sendfunil2(req.query.key, req.query.funil, req.query.chat);
             console.log(data)
         } catch (error) {
             data = {};

@@ -373,94 +373,103 @@
         }
 
         function handleFileUpload(event, id, tipo) {
-            const file = event.target.files[0];
-            if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const buffer = e.target.result;
-                    const base64String = btoa(String.fromCharCode(...new Uint8Array(buffer)));
-                    const element = document.getElementById(id);
-                    if (element) {
-                        element.dataset.fileBuffer = base64String;
-                        element.dataset.fileName = file.name;
-                        element.dataset.fileType = tipo;
-                    } else {
-                        console.error(`Elemento com id ${id} não encontrado.`);
-                    }
-                } catch (error) {
-                    console.error('Erro ao processar o arquivo:', error);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    fetch('/uploadSingleFile', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.dataset.fileUrl = data.url;
+            element.dataset.fileName = file.name;
+            element.dataset.fileType = tipo;
+            // Atualizar a interface para mostrar que o upload foi bem-sucedido
+            const fileNameDisplay = element.querySelector('.file-name-display') || document.createElement('div');
+            fileNameDisplay.textContent = `Arquivo carregado: ${file.name}`;
+            fileNameDisplay.classList.add('file-name-display', 'text-sm', 'text-green-600', 'mt-2');
+            element.querySelector('.card-body').appendChild(fileNameDisplay);
+        } else {
+            console.error(`Elemento com id ${id} não encontrado.`);
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao fazer upload do arquivo:', error);
+        // Atualizar a interface para mostrar que houve um erro
+        const errorDisplay = document.createElement('div');
+        errorDisplay.textContent = 'Erro ao fazer upload do arquivo. Tente novamente.';
+        errorDisplay.classList.add('text-sm', 'text-red-600', 'mt-2');
+        element.querySelector('.card-body').appendChild(errorDisplay);
+    });
+}
+function criarFunil() {
+    const nomeFunil = document.getElementById('nomeFunil').value;
+    document.getElementById('popup').classList.remove('active');
+
+    const elementos = document.querySelectorAll('.elemento');
+    const formData = new FormData();
+    formData.append('chave', '<%= chave %>');
+    formData.append('nome', nomeFunil);
+
+    const elementosArray = [];
+
+    elementos.forEach(elemento => {
+        const tipo = elemento.querySelector('.card-title').textContent;
+        let conteudo = '';
+
+        if (elemento.dataset.fileUrl) {
+            conteudo = elemento.dataset.fileUrl;
+        } else {
+            const textarea = elemento.querySelector('textarea');
+            if (textarea) {
+                conteudo = textarea.value;
+            } else {
+                const sleepInput = elemento.querySelector('input[type="number"]');
+                if (sleepInput) {
+                    conteudo = sleepInput.value;
                 }
-            };
-
-            reader.onerror = function(error) {
-                console.error('Erro na leitura do arquivo:', error);
-            };
-
-            try {
-                reader.readAsArrayBuffer(file);
-            } catch (error) {
-                console.error('Erro ao iniciar a leitura do arquivo:', error);
             }
         }
 
-        function criarFunil() {
-            const nomeFunil = document.getElementById('nomeFunil').value;
-            document.getElementById('popup').classList.remove('active');
+        const visuunica = elemento.querySelector('input[type="checkbox"]') ? elemento.querySelector('input[type="checkbox"]').checked : false;
+        const conexoes = jsPlumbInstance.getConnections({source: elemento.id});
 
-            const elementos = document.querySelectorAll('.elemento');
-            const formData = new FormData();
+        const elementoData = {
+            id: elemento.id,
+            tipo: tipo,
+            conteudo: conteudo,
+            fileName: elemento.dataset.fileName || '',
+            fileType: elemento.dataset.fileType || '',
+            visuunica: visuunica,
+            conexoes: conexoes.map(conn => conn.targetId)
+        };
 
-            formData.append('nome', nomeFunil);
+        elementosArray.push(elementoData);
+    });
 
-            const elementosArray = [];
+    console.log(elementosArray)
 
-            elementos.forEach(elemento => {
-                const tipo = elemento.querySelector('.card-title').textContent;
-                let conteudo = '';
+    formData.append('elementos', JSON.stringify(elementosArray));
 
-                if (elemento.dataset.fileBuffer) {
-                    conteudo = elemento.dataset.fileBuffer;
-                } else {
-                    const textarea = elemento.querySelector('textarea');
-                    if (textarea) {
-                        conteudo = textarea.value;
-                    }
-                }
-
-                const visuunica = elemento.querySelector('input[type="checkbox"]') ? elemento.querySelector('input[type="checkbox"]').checked : false;
-                const conexoes = jsPlumbInstance.getConnections({source: elemento.id});
-
-                const elementoData = {
-                    id: elemento.id,
-                    tipo: tipo,
-                    conteudo: conteudo,
-                    fileName: elemento.dataset.fileName || '',
-                    fileType: elemento.dataset.fileType || '',
-                    visuunica: visuunica,
-                    conexoes: conexoes.map(conn => conn.targetId)
-                };
-
-                elementosArray.push(elementoData);
-            });
-
-            formData.append('elementos', JSON.stringify(elementosArray));
-
-            fetch('/uploadfunil', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        }
-
+    fetch('/uploadfunil', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+        window.location.href = 'https://hotboard.online/funisboard/<%= chave %>'
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
         function zoomIn() {
             panzoomInstance.smoothZoom(window.innerWidth / 2, window.innerHeight / 2, 1.2);
         }
