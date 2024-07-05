@@ -265,7 +265,7 @@
                     icon = 'fa-comment';
                     conteudo = `
                         <div class="card-body p-4">
-                            <h2 class="card-title text-lg mb-2"><i class="fas ${icon} mr-2"></i>Mensagem</h2>
+                            <h2 class="card-titl e text-lg mb-2"><i class="fas ${icon} mr-2"></i>Mensagem</h2>
                             <textarea class="textarea textarea-bordered w-full" rows="3" placeholder="Digite sua mensagem"></textarea>
                         </div>`;
                     break;
@@ -464,7 +464,7 @@ function criarFunil() {
     .then(response => response.json())
     .then(data => {
         console.log('Success:', data);
-        window.location.href = 'https://evolucaohot.online/funisboard/<%= chave %>'
+        window.location.href = 'http://localhost:3000/funisboard/<%= chave %>'
     })
     .catch((error) => {
         console.error('Error:', error);

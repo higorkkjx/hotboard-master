@@ -57,7 +57,7 @@ app.get('/whats2/:chave', async (req, res) => {
 
 
 
-    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`http://localhost:3000/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
 
     res.render('whats', {chats: contactsData.data.contacts, chave})
@@ -84,7 +84,7 @@ app.get('/whats2/:chave', async (req, res) => {
 };
 
 const getInstanceInfo = async (chave) => {
-    const instanceInfoUrl = `https://evolucaohot.online/instance/info?key=${chave}`;
+    const instanceInfoUrl = `http://localhost:3000/instance/info?key=${chave}`;
     const bearerToken = "Bearer " + generateRandomString(20);
     const config = { headers: { Authorization: bearerToken } };
 
@@ -100,7 +100,7 @@ const getInstanceInfo = async (chave) => {
 
 const getProfileImageUrl = async (chave, numeroid) => {
     try {
-        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+        const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${chave}`, {
             method: 'POST',
             body: JSON.stringify({ id: numeroid }),
             headers: { 'Content-Type': 'application/json' }
@@ -128,7 +128,7 @@ const sortChatsByLastMessageTime = (chatsdata) => {
 app.get('/whats/:chave', async (req, res, next) => {
     const chave = req.params.chave;
     try {
-        const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);
+        const chatsMsgs = await fetch(`http://localhost:3000/chats/${chave}`);
         const chatsdata = await chatsMsgs.json();
 
       // const database = client.db('perfil');
@@ -156,7 +156,7 @@ app.get('/whats/:chave', async (req, res, next) => {
             configuracoes,
             chave,
             profileImageUrl,
-            urlapi: "https://evolucaohot.online"
+            urlapi: "http://localhost:3000"
         });
     } catch (error) {
         console.error('Erro ao processar a requisição:', error);
@@ -218,7 +218,7 @@ app.get('/chats/:chave', async (req, res, next) => {
   try {
     const { chave } = req.params;
    
-    const chatResponse = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
+    const chatResponse = await fetch(`http://localhost:3000/instance/gchats?key=${chave}`);
     if (!chatResponse.ok) {
       throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
     }
@@ -229,7 +229,7 @@ app.get('/chats/:chave', async (req, res, next) => {
       id: chat.data._id,
       nome: chat.data.nome,
       imagem: chat.data.imagem,
-      ultimaMensagem: chat.data.mensagens.length > 0 ? chat.data.mensagens[chat.data.mensagens.length - 1] : 'Sem mensagens'
+      ultimaMensagem: chat.data.mensagens
     }));
 
     // Ordenar os dados pela última mensagem
@@ -285,9 +285,9 @@ app.get('/chat', async (req, res) => {
   try {
     const [configuracoes, chatsData, chatsdata, funisData, { nomezap, numeroid }] = await Promise.all([
       getConfigurations(),
-      fetchData(`https://evolucaohot.online/instance/gchats?key=${chave}`),
-      fetchData(`https://evolucaohot.online/chats/${chave}`),
-      fetchData(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`),
+      fetchData(`http://localhost:3000/instance/gchats?key=${chave}`),
+      fetchData(`http://localhost:3000/chats/${chave}`),
+      fetchData(`http://localhost:3000/instance/displayallfunis?key=${chave}`),
       getInstanceInfo(chave)
     ]);
 
@@ -296,7 +296,7 @@ app.get('/chat', async (req, res) => {
       return res.status(404).send('Chat não encontrado');
     }
 
-    const responsef = await axios.get(`https://evolucaohot.online/api/funis/${chave}`);
+    const responsef = await axios.get(`http://localhost:3000/api/funis/${chave}`);
     const funisboard = responsef.data
 
     const imageLinks = getImageLinks(funisData);
@@ -397,7 +397,7 @@ app.post('/gerar-audio', async (req, res) => {
   });
 
   async function getConfigFromAPI(key) {
-    const response = await axios.get(`https://evolucaohot.online/instance/gconfig?key=${key}`);
+    const response = await axios.get(`http://localhost:3000/instance/gconfig?key=${key}`);
     return response.data;
   }
 
@@ -523,7 +523,7 @@ const renderAddSessionForm = () => `
         messagesRead: false
     };
             try {
-         const response = await fetch('https://evolucaohot.online/addteste', {
+         const response = await fetch('http://localhost:3000/addteste', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json'
@@ -569,7 +569,7 @@ const renderDeleteSessionForm = () => `
             event.preventDefault();
             const key = document.getElementById('key').value;
             try {
-                const response = await fetch('https://evolucaohot.online/instance/delete?key=' + key, { method: 'DELETE' });
+                const response = await fetch('http://localhost:3000/instance/delete?key=' + key, { method: 'DELETE' });
                 if (response.ok) {
                     alert('Acesso deletado com sucesso!');
                 } else {
@@ -597,7 +597,7 @@ app.get('/admin/dark/delsessao', (req, res) => {
 // Function to remove user access
 const removeUserAccess = async (key) => {
     try {
-        const response = await fetch(`https://evolucaohot.online/instance/delete?key=${key}`, {
+        const response = await fetch(`http://localhost:3000/instance/delete?key=${key}`, {
             method: 'DELETE'
         });
         if (response.ok) {
@@ -692,7 +692,7 @@ app.get('/admin/dark/addsessao2', (req, res) => {
                     messagesRead: false
                 };
                 try {
-                    const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+                    const response = await axios.post('http://localhost:3000/instance/init', requestData);
                     alert('Acesso criado com sucesso! Chave: ' + key);
                 } catch (error) {
                     alert('Erro ao criar acesso. Por favor, tente novamente.');
@@ -763,7 +763,7 @@ app.get('/admin/dark/testegratis', (req, res) => {
                     messagesRead: false
                 };
                 try {
-                    const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+                    const response = await axios.post('http://localhost:3000/instance/init', requestData);
                     alert('Acesso criado com sucesso! Chave: ' + key);
                 } catch (error) {
                     alert('Erro ao criar acesso. Por favor, tente novamente.');
@@ -783,7 +783,7 @@ app.post('/addteste', async (req, res) => {
       
         
         try {
-          const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+          const response = await axios.post('http://localhost:3000/instance/init', requestData);
           res.status(200).send('Acesso criado com sucesso para teste grátis de 10 minutos!');
         
      
@@ -868,7 +868,7 @@ app.post('/addteste', async (req, res) => {
         messagesRead: false
     };
     try {
-        const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+        const response = await axios.post('http://localhost:3000/instance/init', requestData);
         alert('Acesso criado com sucesso!');
     } catch (error) {
         alert('Erro ao criar acesso. Por favor, tente novamente.');
