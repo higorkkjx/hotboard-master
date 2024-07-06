@@ -218,26 +218,32 @@ const sortChatsByLastMessageTime2 = (chatsdata) => {
 app.get('/chats/:chave', async (req, res, next) => {
   try {
     const { chave } = req.params;
-   
+
     const chatResponse = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
     if (!chatResponse.ok) {
       throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
     }
-    
+
     const chatsList = await chatResponse.json();
 
-    const chatsData = chatsList.map(chat => ({
-      id: chat.data._id,
-      nome: chat.data.nome,
-      imagem: chat.data.imagem,
-      ultimaMensagem: chat.data.mensagens
-    }));
+    const chatsData = chatsList.map(chat => {
+      // Se não existir mensagens, cria uma fictícia vazia
+      const mensagens = chat.data.mensagens && chat.data.mensagens.length > 0
+        ? chat.data.mensagens
+        : [{ data: '', user: '', mensagem: '' }];
 
-    // Ordenar os dados pela última mensagem
-    chatsData.sort((a, b) => {
-      const aTime = new Date(a.ultimaMensagem.data);
-      const bTime = new Date(b.ultimaMensagem.data);
-      return bTime - aTime; // Ordem decrescente (mais recente primeiro)
+      const ultimaMensagem = mensagens.reduce((maisRecente, mensagemAtual) => {
+        const dataMaisRecente = new Date(maisRecente.data);
+        const dataMensagemAtual = new Date(mensagemAtual.data);
+        return dataMensagemAtual > dataMaisRecente ? mensagemAtual : maisRecente;
+      });
+
+      return {
+        id: chat.data._id,
+        nome: chat.data.nome || '',
+        imagem: chat.data.imagem || '',
+        ultimaMensagem: ultimaMensagem
+      };
     });
 
     res.json({ chatsData });
@@ -246,6 +252,7 @@ app.get('/chats/:chave', async (req, res, next) => {
     next(error);
   }
 });
+
 
 
 
