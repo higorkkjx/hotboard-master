@@ -91,6 +91,7 @@ const getInstanceInfo = async (chave) => {
     try {
         const apiResponse = await axios.get(instanceInfoUrl, {}, config);
         const user = apiResponse.data.instance_data.user;
+        console.log({ nomezap: user.name, numeroid: user.id.split(":")[0] })
         return { nomezap: user.name, numeroid: user.id.split(":")[0] };
     } catch (error) {
         console.error(error);
@@ -283,30 +284,55 @@ app.get('/chat', async (req, res) => {
   const { num: chatNum, key: chave } = req.query;
 
   try {
-    const [configuracoes, chatsData, chatsdata, funisData, { nomezap, numeroid }] = await Promise.all([
+    const [configuracoes, chatsdata, funisData, { nomezap, numeroid }] = await Promise.all([
       getConfigurations(),
       fetchData(`https://evolucaohot.online/instance/gchats?key=${chave}`),
-      fetchData(`https://evolucaohot.online/chats/${chave}`),
       fetchData(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`),
       getInstanceInfo(chave)
     ]);
 
-    const chat = chatsData.find(chat => chat.id === chatNum);
+    const chat = chatsdata.find(chat => chat.id === chatNum);
     if (!chat) {
       return res.status(404).send('Chat não encontrado');
     }
 
-    const responsef = await axios.get(`https://evolucaohot.online/api/funis/${chave}`);
-    const funisboard = responsef.data
 
+let funisboard;
+try {
+  const responsef = await axios.get(`https://evolucaohot.online/api/funis/${chave}`);
+     funisboard = responsef.data
+
+} catch(e) {
+  funisboard = []
+
+}
+  
+
+
+const chatsData = chatsdata.map(chat => {
+  const ultimaMensagem = chat.data.mensagens.reduce((maisRecente, mensagemAtual) => {
+    const dataMaisRecente = new Date(maisRecente.data);
+    const dataMensagemAtual = new Date(mensagemAtual.data);
+    return dataMensagemAtual > dataMaisRecente ? mensagemAtual : maisRecente;
+  });
+
+  return {
+    id: chat.data._id,
+    nome: chat.data.nome,
+    imagem: chat.data.imagem,
+    ultimaMensagem: ultimaMensagem
+  };
+});
+
+    
     const imageLinks = getImageLinks(funisData);
     const profileImageUrl = await getProfileImageUrl(chave, numeroid);
-    const sortedChatsData = sortChatsData(chatsData);
+
+console.log(chatsData[0])
 
     res.render("chat", {
       chat: chat.data,
-      filtro: chatsdata.chatsData,
-      chatfull: sortedChatsData,
+      filtro: chatsData,
       nomezap,
       chave,
       configuracoes,
