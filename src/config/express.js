@@ -16,7 +16,7 @@ const { client } = require("../api/class/instance")
 
 
 
-
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/static', express.static(__dirname + '/public'));
 app.use(express.json())
 app.use(express.json({ limit: '50mb' }))
@@ -126,7 +126,12 @@ const sortChatsByLastMessageTime = (chatsdata) => {
     });
 };
 
-app.get('/whats/:chave', async (req, res, next) => {
+// Handles any requests that match the defined routes
+app.get('/whats/:chave/:nome', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/whats1/:chave', async (req, res, next) => {
     const chave = req.params.chave;
     try {
         const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);

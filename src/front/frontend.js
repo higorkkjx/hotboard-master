@@ -891,6 +891,33 @@ res.redirect('/email-invalido')
   `)
 })
 
+function generateRandomString(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
+
+const getInstanceInfo = async (chave) => {
+  const instanceInfoUrl = `https://evolucaohot.online/instance/info?key=${chave}`;
+  const bearerToken = "Bearer " + generateRandomString(20);
+  const config = { headers: { Authorization: bearerToken } };
+
+  try {
+      const apiResponse = await axios.get(instanceInfoUrl, {}, config);
+      const user = apiResponse.data.instance_data.user;
+      console.log({ nomezap: user.name, numeroid: user.id.split(":")[0] })
+      return { nomezap: user.name, numeroid: user.id.split(":")[0] };
+  } catch (error) {
+      console.error(error);
+      return { nomezap: "Você", numeroid: 0 };
+  }
+};
+
 router.get('/home/:chave', async (req, res) => {
   const chave = req.params.chave;
   let userEmail;
@@ -939,6 +966,7 @@ router.get('/home/:chave', async (req, res) => {
   console.log("Login aprovado com sucesso!");
   const dadoAssinatura = await consultarValidade(chave);
 
+  let nomezp = "user"
   try {
     const responseInstanceList = await fetch(`https://evolucaohot.online/instance/list`);
     const dataInstanceList = await responseInstanceList.json();
@@ -954,6 +982,10 @@ router.get('/home/:chave', async (req, res) => {
     if (instanceData.error === false && instanceData.instance_data.phone_connected) {
       whatsappStatus = 'WhatsApp conectado';
       whatsappIcon = 'fa-whatsapp';
+
+      
+      const { nomezap, numeroid } = await getInstanceInfo(chave);
+      nomezp = nomezap
     }
 
     let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
@@ -992,7 +1024,8 @@ router.get('/home/:chave', async (req, res) => {
       totalChats,
       chave,
       dadoAssinatura,
-      count: "Obtendo."
+      count: "...",
+      nomezp
     });
 
   } catch (error) {
