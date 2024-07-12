@@ -653,7 +653,7 @@ urlencoded
 
 Aqui esta a api mais importante que voce ira usar: (a que obtem os chats e mensagens deles)
 
-https://evolucaohot.onlie/instance/gchats?key=${chave}
+https://evolucaohot.online/instance/gchats?key=${chave}
 
 resposta da api (exemplo de formato): [
 {

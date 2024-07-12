@@ -35,7 +35,7 @@
         btn.addEventListener('click', async (e) => {
           const funilName = e.target.dataset.name;
           try {
-            const response = await fetch(`https://evolucaohot.onlie/instance/deletefunil?key=<%= key %>&nome=${funilName}`);
+            const response = await fetch(`https://evolucaohot.online/instance/deletefunil?key=<%= key %>&nome=${funilName}`);
             if (!response.ok) {
               throw new Error('Erro na requisição: ' + response.statusText);
             }

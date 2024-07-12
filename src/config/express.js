@@ -57,7 +57,7 @@ app.get('/whats2/:chave', async (req, res) => {
 
 
 
-    const contactsResponse = await fetch(`https://evolucaohot.onlie/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
 
     res.render('whats', {chats: contactsData.data.contacts, chave})
@@ -84,7 +84,7 @@ app.get('/whats2/:chave', async (req, res) => {
 };
 
 const getInstanceInfo = async (chave) => {
-    const instanceInfoUrl = `https://evolucaohot.onlie/instance/info?key=${chave}`;
+    const instanceInfoUrl = `https://evolucaohot.online/instance/info?key=${chave}`;
     const bearerToken = "Bearer " + generateRandomString(20);
     const config = { headers: { Authorization: bearerToken } };
 
@@ -101,7 +101,7 @@ const getInstanceInfo = async (chave) => {
 
 const getProfileImageUrl = async (chave, numeroid) => {
     try {
-        const profileResponse = await fetch(`https://evolucaohot.onlie/misc/downProfile?key=${chave}`, {
+        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
             method: 'POST',
             body: JSON.stringify({ id: numeroid }),
             headers: { 'Content-Type': 'application/json' }
@@ -138,7 +138,7 @@ app.get('/admin/dark/users', (req, res) => {
 app.get('/whats1/:chave', async (req, res, next) => {
     const chave = req.params.chave;
     try {
-        const chatsMsgs = await fetch(`https://evolucaohot.onlie/chats/${chave}`);
+        const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);
         const chatsdata = await chatsMsgs.json();
 
       // const database = client.db('perfil');
@@ -166,7 +166,7 @@ app.get('/whats1/:chave', async (req, res, next) => {
             configuracoes,
             chave,
             profileImageUrl,
-            urlapi: "https://evolucaohot.onlie"
+            urlapi: "https://evolucaohot.online"
         });
     } catch (error) {
         console.error('Erro ao processar a requisição:', error);
@@ -228,7 +228,7 @@ app.get('/chats/:chave', async (req, res, next) => {
   try {
     const { chave } = req.params;
 
-    const chatResponse = await fetch(`https://evolucaohot.onlie/instance/gchats?key=${chave}`);
+    const chatResponse = await fetch(`https://evolucaohot.online/instance/gchats?key=${chave}`);
     if (!chatResponse.ok) {
       throw new Error(`Erro na resposta da API: ${chatResponse.statusText}`);
     }
@@ -302,8 +302,8 @@ app.get('/chat', async (req, res) => {
   try {
     const [configuracoes, chatsdata, funisData, { nomezap, numeroid }] = await Promise.all([
       getConfigurations(),
-      fetchData(`https://evolucaohot.onlie/instance/gchats?key=${chave}`),
-      fetchData(`https://evolucaohot.onlie/instance/displayallfunis?key=${chave}`),
+      fetchData(`https://evolucaohot.online/instance/gchats?key=${chave}`),
+      fetchData(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`),
       getInstanceInfo(chave)
     ]);
 
@@ -315,7 +315,7 @@ app.get('/chat', async (req, res) => {
 
 let funisboard;
 try {
-  const responsef = await axios.get(`https://evolucaohot.onlie/api/funis/${chave}`);
+  const responsef = await axios.get(`https://evolucaohot.online/api/funis/${chave}`);
      funisboard = responsef.data
 
 } catch(e) {
@@ -439,7 +439,7 @@ app.post('/gerar-audio', async (req, res) => {
   });
 
   async function getConfigFromAPI(key) {
-    const response = await axios.get(`https://evolucaohot.onlie/instance/gconfig?key=${key}`);
+    const response = await axios.get(`https://evolucaohot.online/instance/gconfig?key=${key}`);
     return response.data;
   }
 
@@ -565,7 +565,7 @@ const renderAddSessionForm = () => `
         messagesRead: false
     };
             try {
-         const response = await fetch('https://evolucaohot.onlie/addteste', {
+         const response = await fetch('https://evolucaohot.online/addteste', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json'
@@ -611,7 +611,7 @@ const renderDeleteSessionForm = () => `
             event.preventDefault();
             const key = document.getElementById('key').value;
             try {
-                const response = await fetch('https://evolucaohot.onlie/instance/delete?key=' + key, { method: 'DELETE' });
+                const response = await fetch('https://evolucaohot.online/instance/delete?key=' + key, { method: 'DELETE' });
                 if (response.ok) {
                     alert('Acesso deletado com sucesso!');
                 } else {
@@ -639,7 +639,7 @@ app.get('/admin/dark/delsessao', (req, res) => {
 // Function to remove user access
 const removeUserAccess = async (key) => {
     try {
-        const response = await fetch(`https://evolucaohot.onlie/instance/delete?key=${key}`, {
+        const response = await fetch(`https://evolucaohot.online/instance/delete?key=${key}`, {
             method: 'DELETE'
         });
         if (response.ok) {
@@ -689,7 +689,7 @@ const acessostripe = async(nome, phone, dias) => {
     messagesRead: false
 };
 
-    const response = await axios.post('https://evolucaohot.onlie/instance/init', requestData);
+    const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
   return randomkey
 }
 
@@ -713,7 +713,7 @@ app.post('/addsessao2', async (req, res) => {
       messagesRead: false
   };
 
-      const response = await axios.post('https://evolucaohot.onlie/instance/init', requestData);
+      const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
     
     // Retorna os dados criados
     res.json({
@@ -799,7 +799,7 @@ app.get('/admin/dark/addsessao2', (req, res) => {
                     messagesRead: false
                 };
                 try {
-                    const response = await axios.post('https://evolucaohot.onlie/instance/init', requestData);
+                    const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
                     alert('Acesso criado com sucesso! Chave: ' + key);
                 } catch (error) {
                     alert('Erro ao criar acesso. Por favor, tente novamente.');
@@ -870,7 +870,7 @@ app.get('/admin/dark/testegratis', (req, res) => {
                     messagesRead: false
                 };
                 try {
-                    const response = await axios.post('https://evolucaohot.onlie/instance/init', requestData);
+                    const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
                     alert('Acesso criado com sucesso! Chave: ' + key);
                 } catch (error) {
                     alert('Erro ao criar acesso. Por favor, tente novamente.');
@@ -890,7 +890,7 @@ app.post('/addteste', async (req, res) => {
       
         
         try {
-          const response = await axios.post('https://evolucaohot.onlie/instance/init', requestData);
+          const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
           res.status(200).send('Acesso criado com sucesso para teste grátis de 10 minutos!');
         
      
@@ -975,7 +975,7 @@ app.post('/addteste', async (req, res) => {
         messagesRead: false
     };
     try {
-        const response = await axios.post('https://evolucaohot.onlie/instance/init', requestData);
+        const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
         alert('Acesso criado com sucesso!');
     } catch (error) {
         alert('Erro ao criar acesso. Por favor, tente novamente.');
