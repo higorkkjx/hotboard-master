@@ -192,7 +192,7 @@ router.post('/upload/:chave', upload.single('file'), async (req, res) => {
 
 
 async function checkWhatsApp(chave) {
-  const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+  const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
   const instanceData = await instanceResponse.json();
 
   let whatsappStatus = '';
@@ -205,7 +205,7 @@ async function checkWhatsApp(chave) {
       whatsappIcon = 'fa-whatsapp';
 
       // Requisição para baixar o perfil
-      const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+      const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${chave}`, {
           method: 'POST',
           body: JSON.stringify({ id: instanceData.instance_data.user.id.replace(":5@s.whatsrouter.net", "") }),
           headers: { 'Content-Type': 'application/json' }
@@ -221,7 +221,7 @@ async function checkWhatsApp(chave) {
 
   // Se não estiver conectado, solicitar código de verificação
   if (!instanceData.instance_data.phone_connected) {
-      const getCodeResponse = await fetch(`https://evolucaohot.online/instance/getcode?key=${chave}&number=${NUMEROINPUT}`, {
+      const getCodeResponse = await fetch(`http://localhost:3000/instance/getcode?key=${chave}&number=${NUMEROINPUT}`, {
           method: 'POST'
       });
       const getCodeData = await getCodeResponse.json();
@@ -265,34 +265,62 @@ router.post("/criar-assinatura", async (req, res) => {
 
 const sendMessageHook = async (number, msg, keybase) => {
 
-  const formatPhoneNumber = (numero) => {
-    // Remove o código do país (ddi)
-    let ddi = numero.slice(0, 2);
-    let ddd = numero.slice(2, 4);
-    let number = numero.slice(4);
-
-    // Converte ddd e number para inteiros para validações
-    let dddInt = parseInt(ddd);
-    let numberLength = number.length;
-console.log(numberLength)
-    // Regras para ddd até 27
-    if (dddInt <= 27) {
-        if (numberLength === 8) {
-            number = '9' + number;
-        }
-    } else if (dddInt >= 29) { // Regras para ddd de 29 a 99
-        if (numberLength === 9 && number.startsWith('99')) {
-            number = number.slice(1);
-        } else if (numberLength === 8 && !number.startsWith('9')) {
-            number = '9' + number;
-        }
+  function formatarNumeroBrasileiro(numero) {
+    // Remove todos os caracteres não numéricos
+    numero = numero.replace(/\D/g, '');
+  
+    // Verifica se o número começa com 55 (DDI do Brasil)
+    if (!numero.startsWith('55')) {
+      return false;
     }
+  
+    // Remove o DDI
+    numero = numero.slice(2);
+  
+    // Extrai o DDD
+    const ddd = parseInt(numero.slice(0, 2));
+  
+    // Verifica se o DDD é válido
+    if (ddd < 11 || ddd > 99) {
+      return false;
+    }
+  
+    // Aplica as regras de formatação
+    if (ddd <= 27) {
+      // DDD até 27: deve ter 11 dígitos
+      if (numero.length < 11) {
+        // Adiciona o 9 se estiver faltando
+        numero = numero.slice(0, 2) + '9' + numero.slice(2);
+      } else if (numero.length > 11) {
+        // Remove dígitos extras
+        numero = numero.slice(0, 11);
+      }
+    } else {
+      // DDD 28 ou mais: deve ter 10 dígitos
+      if (numero.length > 10) {
+        // Remove o 9 extra ou dígitos adicionais
+        numero = numero.slice(0, 2) + numero.slice(3).slice(0, 8);
+      } else if (numero.length < 10) {
+        // Número inválido se tiver menos de 10 dígitos
+        return false;
+      }
+    }
+  
+    // Retorna o número formatado com o DDI
+    return '55' + numero;
+  }
+  
+  // Função para testar
+  function testarFormatacao(numero) {
+    const resultado = formatarNumeroBrasileiro(numero);
+    console.log(`Original: ${numero}`);
+    console.log(`Formatado: ${resultado || 'Número inválido'}`);
+    console.log('---');
+  }
+  
 
-    return ddi + ddd + number;
-};
-
-const numeronovo = await formatPhoneNumber(number)
-  const url = `https://evolucaohot.online/message/text?key=${keybase}`;
+const numeronovo = await formatarNumeroBrasileiro(number)
+  const url = `http://localhost:3000/message/text?key=${keybase}`;
   const headers = {
     "accept": "*/*",
     "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -303,7 +331,7 @@ const numeronovo = await formatPhoneNumber(number)
     "sec-fetch-dest": "empty",
     "sec-fetch-mode": "cors",
     "sec-fetch-site": "same-origin",
-    "Referer": `https://evolucaohot.online/chat?num=5517996607540@s.whatsrouter.net&key=${keybase}`,
+    "Referer": `http://localhost:3000/chat?num=5517996607540@s.whatsrouter.net&key=${keybase}`,
     "Referrer-Policy": "strict-origin-when-cross-origin"
   };
 
@@ -430,7 +458,7 @@ Equipe de Suporte`, "chefe5");
         };
 
         try {
-            const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+            const response = await axios.post('http://localhost:3000/instance/init', requestData);
             console.log('Acesso criado com sucesso!');
         } catch (error) {
             console.log('Erro ao criar acesso. Por favor, tente novamente.');
@@ -438,7 +466,7 @@ Equipe de Suporte`, "chefe5");
 
         await sendMessageHook(dadosass.phone.replace("+55", "55"), `✅ *Acesso liberado com sucesso*
 
-Plataforma: https://evolucaohot.online/
+Plataforma: http://localhost:3000/
 
 Sua chave de acesso: ${key}
 
@@ -554,7 +582,7 @@ router.post("/excluir-assinatura", async (req, res) => {
 // Função para obter e-mails ativos
 async function getEmailsAtivos() {
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/list`);
+    const instanceResponse = await fetch(`http://localhost:3000/instance/list`);
     const instanceData = await instanceResponse.json();
     const emailsAtivos = [];
     const dataAtualSP = moment().tz("America/Sao_Paulo");
@@ -580,7 +608,7 @@ async function getEmailsAtivos() {
         };
 
         try {
-          const response = await axios.post('https://evolucaohot.online/instance/editar', data);
+          const response = await axios.post('http://localhost:3000/instance/editar', data);
           console.log(response.data);
         } catch (error) {
           console.error("Erro ao editar email:", error);
@@ -602,7 +630,7 @@ async function getEmailsAtivos() {
 async function consultarValidade(chave) {
   try {
 
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
     console.log(instanceData)
@@ -717,7 +745,7 @@ router.post("/adicionar-email", async (req, res) => {
 
   try {
     // Fazendo a solicitação para o URL fornecido
-    const response = await fetch(`https://evolucaohot.online/instance/addmail?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`);
+    const response = await fetch(`http://localhost:3000/instance/addmail?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`);
     const data = await response.json();
     
     // Verificando a resposta da solicitação
@@ -735,73 +763,110 @@ router.post("/adicionar-email", async (req, res) => {
 //OUTRAS ROTAS
 router.get('/', (req, res) => {
   res.send(`<!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@1.14.1/dist/full.css" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Arial', sans-serif;
-        background-color: #f2f2f2;
-      }
-    </style>
-  </head>
-  <body class="flex justify-center items-center h-screen bg-gray-200">
-    <div class="container mx-auto max-w-md p-6 bg-white shadow-lg rounded-lg relative">
-      <!-- Adicionando uma imagem animada de usuário -->
-      <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-20 w-32 h-32 rounded-full overflow-hidden border-4 border-white">
-        <img src="https://media.giphy.com/media/3o7TKMt1VVNkHV2PaE/giphy.gif" alt="Usuário" class="w-full h-full object-cover">
-      </div>
-  
-      <div class="mt-16">
-        <h1 class="text-2xl font-bold mb-4 text-center">HOTBOARD MASTER</h1>
-        <h2 class="text-lg font-semibold mb-6 text-center">Informe sua chave de acesso:</h2>
-        <div class="mb-4">
-          <input class="input input-bordered w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="chaveInput" type="text" placeholder="Digite sua chave">
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - HOTBOARD MASTER</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@1.14.1/dist/full.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <style>
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    .float-animation {
+      animation: float 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body class="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-500 to-purple-600">
+  <div class="container mx-auto px-4" x-data="{ showPassword: false }">
+    <div class="max-w-md mx-auto bg-white shadow-2xl rounded-lg overflow-hidden transform transition-all hover:scale-105 duration-300">
+      <div class="relative">
+        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-16 w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
+          <img src="https://media.giphy.com/media/3o7TKMt1VVNkHV2PaE/giphy.gif" alt="Usuário" class="w-full h-full object-cover">
         </div>
+      </div>
+
+      <div class="px-6 py-8 mt-16">
+        <h1 class="text-3xl font-bold mb-2 text-center text-gray-800">HOTBOARD MASTER</h1>
+        <h2 class="text-lg font-semibold mb-6 text-center text-gray-600">Informe sua chave de acesso</h2>
+        
+        <div class="mb-4 relative">
+          <input 
+            :type="showPassword ? 'text' : 'password'" 
+            class="input input-bordered w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" 
+            id="chaveInput" 
+            placeholder="Digite sua chave"
+          >
+          <button 
+            @click="showPassword = !showPassword" 
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+          >
+            <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+        
         <div class="mb-6">
-          <button class="btn btn-primary w-full" onclick="login()">Entrar</button>
+          <button class="btn btn-primary w-full py-3 uppercase font-semibold tracking-wider transition-all duration-300 transform hover:scale-105" onclick="login()">
+            Entrar
+          </button>
         </div>
-        <div id="message" class="text-red-500 text-sm text-center"></div>
+        
+        <div id="message" class="text-red-500 text-sm text-center mb-4"></div>
+        
+        <div class="text-center text-sm text-gray-500">
+          <a href="https://wa.me/5551995746157?text=suporte" class="hover:text-blue-500 transition-colors duration-300">Esqueceu sua chave?</a>
+        </div>
       </div>
-  
-      <!-- Animação de automação no WhatsApp -->
-      <div class="flex justify-center mt-6">
-        <img src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeDY5Yzdpb29mZm1ncHYzcHg1ZHl5aTRrd2E2dzhpcWozYWt6ODdsYyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2ikwIgNrmPZICNmRyX/giphy.webp" alt="Automação WhatsApp" class="w-32 h-32">
+
+      <div class="bg-gray-100 px-6 py-4">
+        <div class="text-center text-gray-600 text-sm">
+          Não tem uma conta? <a href="https://hotboard.online" class="text-blue-500 hover:underline">Registre-se</a>
+        </div>
       </div>
     </div>
+
   
-    <script>
-      function login() {
-        var chave = document.getElementById("chaveInput").value;
-        
-        // Simulando uma requisição AJAX
+
+  <script>
+    function login() {
+      var chave = document.getElementById("chaveInput").value;
+      var messageEl = document.getElementById("message");
+      
+      messageEl.innerHTML = '<div class="flex items-center justify-center"><div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500 mr-2"></div>Verificando...</div>';
+      
+      // Simulando uma requisição AJAX
+      setTimeout(() => {
         fetch('/instance/list')
           .then(response => response.json())
           .then(data => {
             var instanceFound = data.data.find(instance => instance.instance_key === chave);
             if (instanceFound) {
-              document.getElementById("message").innerHTML = "Login realizado com sucesso!";
+              messageEl.innerHTML = '<div class="text-green-500">Login realizado com sucesso!</div>';
               setTimeout(function() {
                 window.location.href = '/home/' + chave;
               }, 2000); // Redireciona após 2 segundos
             } else {
-              // Exibe mensagem de erro
-              document.getElementById("message").innerHTML = "Chave inválida. Tente novamente.";
+              messageEl.innerHTML = '<div class="text-red-500">Chave inválida. Tente novamente.</div>';
             }
           })
           .catch(error => {
             console.error('Erro ao fazer requisição:', error);
-            document.getElementById("message").innerHTML = "Erro ao conectar ao servidor.";
+            messageEl.innerHTML = '<div class="text-red-500">Erro ao conectar ao servidor.</div>';
           });
-      }
-    </script>
-  </body>
-  </html>
-  
+      }, 1500); // Simula um delay de 1.5 segundos para mostrar o loading
+    }
+  </script>
+</body>
+</html>
   `)
 });
 
@@ -810,7 +875,7 @@ router.get('/info/:chave', async (req, res) => {
   const chave = req.params.chave;
   let userEmail;
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
 
@@ -842,7 +907,7 @@ res.redirect('/email-invalido')
   let totalChats = 0
   try {
     // Requisição para obter os contatos
-    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`http://localhost:3000/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
      totalChats = contactsData.data.contacts.length;
   } catch(e) {
@@ -903,7 +968,7 @@ function generateRandomString(length) {
 
 
 const getInstanceInfo = async (chave) => {
-  const instanceInfoUrl = `https://evolucaohot.online/instance/info?key=${chave}`;
+  const instanceInfoUrl = `http://localhost:3000/instance/info?key=${chave}`;
   const bearerToken = "Bearer " + generateRandomString(20);
   const config = { headers: { Authorization: bearerToken } };
 
@@ -921,11 +986,11 @@ const getInstanceInfo = async (chave) => {
 router.get('/home/:chave', async (req, res) => {
   const chave = req.params.chave;
   let userEmail;
-  const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+  const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
   const instanceData = await instanceResponse.json();
 
 /*/
-  const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);
+  const chatsMsgs = await fetch(`http://localhost:3000/chats/${chave}`);
   const chatsdata = await chatsMsgs.json();
 
   const count = chatsdata.chatsData.length
@@ -946,7 +1011,7 @@ router.get('/home/:chave', async (req, res) => {
    
 
     //verificar chave
-    const responseInstanceList = await fetch(`https://evolucaohot.online/instance/list`);
+    const responseInstanceList = await fetch(`http://localhost:3000/instance/list`);
     const dataInstanceList = await responseInstanceList.json();
     const instanceFound = dataInstanceList.data.find(instance => instance.instance_key === chave);
 
@@ -968,7 +1033,7 @@ router.get('/home/:chave', async (req, res) => {
 
   let nomezp = "user"
   try {
-    const responseInstanceList = await fetch(`https://evolucaohot.online/instance/list`);
+    const responseInstanceList = await fetch(`http://localhost:3000/instance/list`);
     const dataInstanceList = await responseInstanceList.json();
     const instanceFound = dataInstanceList.data.find(instance => instance.instance_key === chave);
 
@@ -992,7 +1057,7 @@ router.get('/home/:chave', async (req, res) => {
     if (instanceData.error === false) {
       try {
         const numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+        const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${chave}`, {
           method: 'POST',
           body: JSON.stringify({ id: numerorefatorado }),
           headers: { 'Content-Type': 'application/json' }
@@ -1008,7 +1073,7 @@ router.get('/home/:chave', async (req, res) => {
 
     let totalChats = 0;
     try {
-      const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+      const contactsResponse = await fetch(`http://localhost:3000/misc/contacts?key=${chave}`);
       const contactsData = await contactsResponse.json();
       totalChats = contactsData.data.contacts.length;
     } catch (e) {
@@ -1039,7 +1104,7 @@ router.get('/conectar', async (req, res) => {
   const chave = req.query.chave; // Supondo que a chave esteja presente na query da URL
   let userEmail;
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
 
@@ -1067,14 +1132,14 @@ res.redirect('/email-invalido')
 
 
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
     if (instanceData.error === false && instanceData.instance_data.phone_connected) {
         // WhatsApp conectado, retornar HTML com imagem de perfil e status
         let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
         let numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+        const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${chave}`, {
             method: 'POST',
             body: JSON.stringify({ id: numerorefatorado}),
             headers: { 'Content-Type': 'application/json' }
@@ -1176,7 +1241,7 @@ router.post('/conectar', async (req, res) => {
 try {
     const numeroInput = req.body.numero;
     const chave = req.query.chave;
-    const getCodeResponse = await fetch(`https://evolucaohot.online/instance/getcode?key=${chave}`, {
+    const getCodeResponse = await fetch(`http://localhost:3000/instance/getcode?key=${chave}`, {
         method: 'POST',
         body: JSON.stringify({ number: numeroInput }),
         headers: { 'Content-Type': 'application/json' }
@@ -1201,7 +1266,7 @@ router.get('/listchat/:chave', async (req, res) => {
   const chave = req.params.chave;
   try {
     // Requisição para obter os contatos
-    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`http://localhost:3000/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
      res.json(contactsData)
   } catch(e) {
@@ -1216,7 +1281,7 @@ router.get('/listchat/:chave', async (req, res) => {
 router.get('/editar', async (req, res) => {
   try {
     const key = req.query.key;
-    const response = await axios.get(`https://evolucaohot.online/instance/gconfig?key=${key}`);
+    const response = await axios.get(`http://localhost:3000/instance/gconfig?key=${key}`);
     const dados = response.data;
 
     res.render('editar', { dados, key });
@@ -1424,7 +1489,7 @@ async function obterDadosTypebot(key, url, dinamico) {
       }
 
       try {
-        const response = await axios.post(`https://evolucaohot.online/instance/addtofirestore?key=` + key, resultadoFormatado, {
+        const response = await axios.post(`http://localhost:3000/instance/addtofirestore?key=` + key, resultadoFormatado, {
           headers: {
             'Content-Type': 'application/json'
           }
@@ -1465,7 +1530,7 @@ router.get("/funil/:chave", (req, res) => {
 router.get("/funis/:chave", async (req, res) => {
   const key = req.params.chave;
   try {
-    const url = `https://evolucaohot.online/instance/displayallfunis?key=${key}`;
+    const url = `http://localhost:3000/instance/displayallfunis?key=${key}`;
     const response = await axios.get(url);
     res.render("funis", { funis: response.data, key, urlapi });
   } catch (error) {
@@ -1943,7 +2008,7 @@ router.get('/gerargp/:chave', async (req, res) => {
     <script>
       document.getElementById('gerarGrupo').addEventListener('click', async () => {
         try {
-          const response = await fetch('https://evolucaohot.online/instance/gerargp?key=${key}');
+          const response = await fetch('http://localhost:3000/instance/gerargp?key=${key}');
           const data = await response.json();
           if (data.linkgp && data.resp) {
             document.getElementById('grupoDesc').textContent = data.resp.desc;
@@ -2122,7 +2187,7 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
         continue;
       }
 
-      const response = await axios.get(`https://evolucaohot.online/instance/sendfunil`, {
+      const response = await axios.get(`http://localhost:3000/instance/sendfunil`, {
         params: {
           key: key,
           funil: funilName,
@@ -2200,7 +2265,7 @@ async function spamOffer(key, funilName, contacts, waitTime) {
     try {
       //await sendfunil(key, funilName, contact, 'false');
 
-      await axios.get(`https://evolucaohot.online/instance/sendfunil?key=${key}&funil=${funilName}&chat=${contact}@s.whatsapp.net&visuunica=false`)
+      await axios.get(`http://localhost:3000/instance/sendfunil?key=${key}&funil=${funilName}&chat=${contact}@s.whatsapp.net&visuunica=false`)
       await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
     } catch (error) {
       console.error(`Erro ao enviar para ${contact}:`, error);
@@ -2219,7 +2284,7 @@ router.get('/spamoffer/:chave', async (req, res) => {
     const lists = await contactLists.find({}).toArray();
     
     // Obter funis da API
-    const funisResponse = await axios.get(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`);
+    const funisResponse = await axios.get(`http://localhost:3000/instance/displayallfunis?key=${chave}`);
     const funis = funisResponse.data;
 
     // Renderizar o HTML
@@ -2504,7 +2569,7 @@ router.get('/autoresposta/:key', async (req, res) => {
       const doc = await configCollection.findOne({ _id: `autoresp_${key}` });
       const autorespostaAtivada = doc ? doc.autoresposta : false;
 
-      const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`);
+      const response = await fetch(`http://localhost:3000/instance/displayallfunis?key=${key}`);
       const funis = await response.json();
       res.render('autoresposta', { autorespostaAtivada, key, funis });
   } catch (error) {
