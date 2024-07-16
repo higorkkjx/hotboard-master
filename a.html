@@ -193,7 +193,7 @@
             methods: {
                 async fetchChats() {
                     try {
-                        const response = await axios.get(`http://localhost:3000/instance/gchats?key=${this.chave}`);
+                        const response = await axios.get(`https://evolucaohot.online/instance/gchats?key=${this.chave}`);
                         this.chats = response.data;
                         this.loading = false;
                     } catch (error) {
@@ -228,7 +228,7 @@
                     if (!this.newMessage.trim()) return;
 
                     try {
-                        const response = await axios.post(`http://localhost:3000/message/text?key=${this.chave}`, {
+                        const response = await axios.post(`https://evolucaohot.online/message/text?key=${this.chave}`, {
                             id: this.activeChat.id,
                             typeId: "user",
                             message: this.newMessage
@@ -269,7 +269,7 @@
                             endpoint = 'doc';
                         }
 
-                        const response = await axios.post(`http://localhost:3000/message/${endpoint}?key=${this.chave}`, formData, {
+                        const response = await axios.post(`https://evolucaohot.online/message/${endpoint}?key=${this.chave}`, formData, {
                             headers: {
                                 'Content-Type': 'multipart/form-data'
                             }
