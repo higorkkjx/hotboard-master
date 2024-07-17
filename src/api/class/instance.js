@@ -2919,6 +2919,7 @@ async sendfunil(key, funilName, chat, visuunica) {
 
             for (const msg of foundFunil.funil) {
                 console.log(msg);
+                try {
                 if (msg.tipoMensagem == "text") {
                     await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { text: msg.conteudo });
                 } else if (msg.tipoMensagem == "wait") {
@@ -2940,6 +2941,10 @@ async sendfunil(key, funilName, chat, visuunica) {
                     } else {
                         await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { video: { url: msg.conteudo } });
                     }
+                }
+                } catch(e) {
+                    console.log(e)
+                    continue;
                 }
             }
 

@@ -186,7 +186,27 @@ router.post('/upload/:chave', upload.single('file'), async (req, res) => {
     { $push: { contacts: { $each: numbers } } }
   );
 
-  res.send('Números adicionados com sucesso.');
+  res.send(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sucesso!</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-lg text-center">
+        <div class="animate-bounce mb-4">
+            <i class="fas fa-check-circle text-6xl text-green-500"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Sucesso!</h1>
+        <p class="text-xl text-gray-600 mb-6">Números adicionados com sucesso.</p>
+       
+    </div>
+</body>
+</html>`);
 });
 
 
@@ -2144,6 +2164,85 @@ router.delete('/api/delete-metrics/:chave/:spamId', async (req, res) => {
   }
 });
 
+
+
+function formatarNumeroBrasileiro(numero) {
+  // Remove todos os caracteres não numéricos
+  numero = numero.replace(/\D/g, '');
+
+  // Verifica se o número começa com 55 (DDI do Brasil)
+  if (!numero.startsWith('55')) {
+    return false;
+  }
+
+  // Remove o DDI
+  numero = numero.slice(2);
+
+  // Extrai o DDD
+  const ddd = parseInt(numero.slice(0, 2));
+
+  // Verifica se o DDD é válido
+  if (ddd < 11 || ddd > 99) {
+    return false;
+  }
+
+  // Aplica as regras de formatação
+  if (ddd <= 27) {
+    // DDD até 27: deve ter 11 dígitos
+    if (numero.length < 11) {
+      // Adiciona o 9 se estiver faltando
+      numero = numero.slice(0, 2) + '9' + numero.slice(2);
+    } else if (numero.length > 11) {
+      // Remove dígitos extras
+      numero = numero.slice(0, 11);
+    }
+  } else {
+    // DDD 28 ou mais: deve ter 10 dígitos
+    if (numero.length > 10) {
+      // Remove o 9 extra ou dígitos adicionais
+      numero = numero.slice(0, 2) + numero.slice(3).slice(0, 8);
+    } else if (numero.length < 10) {
+      // Número inválido se tiver menos de 10 dígitos
+      return false;
+    }
+  }
+
+  // Retorna o número formatado com o DDI
+  return '55' + numero;
+}
+
+
+function formatPhoneNumber(number) {
+  // Remove todos os caracteres não numéricos
+  let cleaned = number.replace(/\D/g, '');
+
+  // Verifica se o número já está no formato correto
+  if (/^\d{10,15}$/.test(cleaned)) {
+    return cleaned;
+  }
+
+  // Se o número começar com '+', remove o '+'
+  if (number.startsWith('+')) {
+    cleaned = cleaned.slice(1);
+  }
+
+  
+  // Remove espaços em branco
+  cleaned = cleaned.replace(/\s/g, '');
+
+  // Remove traços
+  cleaned = cleaned.replace(/-/g, '');
+
+  // Verifica se o número está no formato correto após a limpeza
+  if (/^\d{10,15}$/.test(cleaned)) {
+   
+    return cleaned;
+  } else {
+    return null
+  }
+}
+
+
 async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, spamId) {
   const db11 = client.db('spam');
   const sentCollection = db11.collection(`sent_${key}`);
@@ -2189,11 +2288,30 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
         continue;
       }
 
+
+      const fone = await formatPhoneNumber(contact)
+      let numfinal;
+    
+      if (fone == null) {
+        console.log("numero com formato invalido, ignorando...")
+        continue;
+      }
+      
+      if (fone.startsWith('55')) {
+        numfinal = await formatarNumeroBrasileiro(fone)
+        console.log("BR")
+      } else {
+        console.log("ESTRANGEIRO")
+        numfinal = fone
+      }
+    
+      console.log(numfinal)
+
       const response = await axios.get(`https://evolucaohot.online/instance/sendfunil`, {
         params: {
           key: key,
           funil: funilName,
-          chat: `${contact}@s.whatsapp.net`,
+          chat: `${numfinal}@s.whatsapp.net`,
           visuunica: false
         }
       });
@@ -2223,6 +2341,7 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
   await updateMetrics({ status: 'concluído' });
   console.log('Spam offer concluído');
 }
+
 router.get('/api/spam-metrics/:chave/:spamId', async (req, res) => {
   const { chave, spamId } = req.params;
   const metricsCollection = client.db('spam_metrics').collection(chave);
@@ -2556,6 +2675,19 @@ updateMetrics();
     </body>
     </html>
   `);
+});
+
+
+router.get('/grupos/:key', async (req, res) => {
+  const key = req.params.key;
+  
+  try {
+     
+      res.render('grupos', { key });
+  } catch (error) {
+      console.error('Erro ao verificar a autoresposta:', error);
+      res.status(500).send('Erro ao verificar a autoresposta.');
+  }
 });
 
 // /autoresposta/:key
