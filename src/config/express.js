@@ -131,7 +131,7 @@ app.get('/whats/:chave/:nome', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'zap.html'));
 });
 
-app.get('/admin/dark/users', (req, res) => {
+app.get('/higor2/dark/users', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'adm.html'));
 });
 
@@ -627,12 +627,12 @@ const renderDeleteSessionForm = () => `
 `;
 
 // Route to render add session form
-app.get('/admin/dark/addteste', (req, res) => {
+app.get('/higor2/dark/addteste', (req, res) => {
     res.send(renderAddSessionForm());
 });
 
 // Route to render delete session form
-app.get('/admin/dark/delsessao', (req, res) => {
+app.get('/higor2/dark/delsessao', (req, res) => {
     res.send(renderDeleteSessionForm());
 });
 
@@ -736,7 +736,7 @@ app.post('/addsessao2', async (req, res) => {
 });
 
 
-app.get('/admin/dark/addsessao2', (req, res) => {
+app.get('/higor2/dark/addsessao2', (req, res) => {
   const randomEmail = generateRandomEmail2();
   const randomKey = generateRandomKey();
 
@@ -813,7 +813,7 @@ app.get('/admin/dark/addsessao2', (req, res) => {
 });
 
 
-app.get('/admin/dark/testegratis', (req, res) => {
+app.get('/higor2/dark/testegratis', (req, res) => {
     const randomEmail = generateRandomEmail();
     const randomKey = generateRandomKey();
 
@@ -907,7 +907,7 @@ app.post('/addteste', async (req, res) => {
     }
 });
 
-  app.get('/admin/dark/addsessao', (req, res) => {
+  app.get('/higor2/dark/addsessao', (req, res) => {
     const formHTML = `
    <!DOCTYPE html>
 <html lang="en">

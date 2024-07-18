@@ -257,7 +257,7 @@ async function checkWhatsApp(chave) {
 // ------------ ADMIN --------//
 
 
-router.get("/admin/dark/adduser", async (req, res) => {
+router.get("/higor2/dark/adduser", async (req, res) => {
   try {
     res.render("addassinatura");
   } catch (error) {
@@ -275,7 +275,7 @@ router.post("/criar-assinatura", async (req, res) => {
       const assinaturas = database.collection('assinaturas');
 
       await assinaturas.insertOne({ email, nome, validade, ativo: true });
-      res.redirect("/admin/dark/assinaturas-ativas");
+      res.redirect("/higor2/dark/assinaturas-ativas");
   } catch (err) {
       res.send(err.message);
   }
@@ -526,7 +526,7 @@ Tutorial: https://www.canva.com/design/DAGImSc0sus/pLZ6FDrKe89hIjs38Vsb6w/edit?u
 });
 
 
-router.get("/admin/dark/assinaturas-ativas", async (req, res) => {
+router.get("/higor2/dark/assinaturas-ativas", async (req, res) => {
   try {
      
       const database = client.db('hotboard');
@@ -560,7 +560,7 @@ router.post("/pausar-assinatura", async (req, res) => {
           await assinaturas.updateMany({ email, ativo: true }, { $set: { ativo: false } });
       }
 
-      res.redirect("/admin/dark/assinaturas-ativas");
+      res.redirect("/higor2/dark/assinaturas-ativas");
   } catch (err) {
       res.send(err.message);
   }
@@ -578,7 +578,7 @@ router.post("/ativar-assinatura", async (req, res) => {
           await assinaturas.updateMany({ email, ativo: false }, { $set: { ativo: true } });
       }
 
-      res.redirect("/admin/dark/assinaturas-ativas");
+      res.redirect("/higor2/dark/assinaturas-ativas");
   } catch (err) {
       res.send(err.message);
   }
@@ -593,7 +593,7 @@ router.post("/excluir-assinatura", async (req, res) => {
 
       await assinaturas.deleteMany({ email });
 
-      res.redirect("/admin/dark/assinaturas-ativas");
+      res.redirect("/higor2/dark/assinaturas-ativas");
   } catch (err) {
       res.send(err.message);
   }
