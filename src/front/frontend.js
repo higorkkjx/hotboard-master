@@ -1123,12 +1123,12 @@ async function getNomezp(chave, isWhatsappConnected) {
 }
 
 router.get('/conectar', async (req, res) => {
-  const chave = req.query.chave; // Supondo que a chave esteja presente na query da URL
-  let userEmail;
+  const chave = req.query.chave;
+  let userEmail, dadoAssinatura;
+
   try {
     const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
-
 
     if (instanceData.instance_data.email) {
       console.log(`Email do usuário ${chave} => ${instanceData.instance_data.email}`);
@@ -1137,127 +1137,165 @@ router.get('/conectar', async (req, res) => {
       return res.redirect('/adicionar-email');
     }
 
-  } catch (error) {
-    console.error('Erro ao buscar o email:', error);
-    return res.status(500).send('Erro ao buscar seu email de compra.');
-  }
-
-  const emails_validos = await getEmailsAtivos()
- let dadoAssinatura = {}
-  if(emails_validos.includes(userEmail)) {
-    console.log("Login aprovado com sucesso!")
-    let consultando = await consultarValidade(chave)
-    dadoAssinatura = consultando
-  } else {
-res.redirect('/email-invalido')
-  }
-
-
-  try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
-    const instanceData = await instanceResponse.json();
+    const emails_validos = await getEmailsAtivos();
+    if (emails_validos.includes(userEmail)) {
+      console.log("Login aprovado com sucesso!");
+      dadoAssinatura = await consultarValidade(chave);
+    } else {
+      return res.redirect('/email-invalido');
+    }
 
     if (instanceData.error === false && instanceData.instance_data.phone_connected) {
-        // WhatsApp conectado, retornar HTML com imagem de perfil e status
-        let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-        let numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
-            method: 'POST',
-            body: JSON.stringify({ id: numerorefatorado}),
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const profileData = await profileResponse.json();
-        console.log(instanceData.instance_data.user.id.split(":")[0])
-        console.log(profileData)
-        if (profileData.error === false) {
-            profileImageUrl = profileData.data;
-        }
+      // WhatsApp conectado
+      let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
+      let numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
+      const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+        method: 'POST',
+        body: JSON.stringify({ id: numerorefatorado }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const profileData = await profileResponse.json();
+      if (profileData.error === false) {
+        profileImageUrl = profileData.data;
+      }
 
-        const html = `
-        <!DOCTYPE html>
-<html lang="en">
-<head>
+      res.send(renderConnectedHTML(profileImageUrl, dadoAssinatura, chave));
+    } else {
+      // WhatsApp não conectado
+      res.send(renderConnectFormHTML(chave));
+    }
+  } catch (error) {
+    console.error('Erro:', error);
+    res.status(500).send('Erro interno do servidor');
+  }
+});
+
+function renderConnectedHTML(profileImageUrl, dadoAssinatura, chave) {
+  return `
+  <!DOCTYPE html>
+  <html lang="pt-BR" class="dark">
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp Conectado</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-md text-center max-w-sm w-full">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">WhatsApp Conectado</h1>
-        <img src="${profileImageUrl}" alt="Perfil" class="w-32 h-32 mx-auto rounded-full object-cover mb-4 shadow-lg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+  </head>
+  <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+    <div class="container bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+      <h1 class="text-3xl font-bold text-center mb-6 text-green-400">WhatsApp Conectado</h1>
+      <div class="flex flex-col items-center">
+        <img src="${profileImageUrl}" alt="Perfil" class="w-32 h-32 rounded-full object-cover mb-4 border-4 border-green-400">
+        <div class="text-center mt-4">
+          <p class="text-xl font-semibold mb-2">Seu WhatsApp está conectado!</p>
+          <p class="text-sm text-gray-400 mb-4">Validade da assinatura: ${dadoAssinatura.validade || 'N/A'}</p>
+        </div>
+        <div class="flex space-x-4 mt-6">
+          
+          <button id="desconectarBtn" class="btn btn-secondary"><i class="fas fa-sign-out-alt mr-2"></i>Desconectar</button>
+        </div>
+      </div>
     </div>
-</body>
-</html>
-
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const desconectarBtn = document.getElementById('desconectarBtn');
         
-        `;
-        res.send(html);
-    } else {
-        // WhatsApp não conectado, enviar formulário para conectar
-        const html = `
-        <!DOCTYPE html>
-        <html lang="pt-BR">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Conectar WhatsApp</title>
-            <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-        </head>
-        <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
-            <div class="container bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-lg">
-                <h1 class="text-3xl font-bold text-center mb-6">Conectar WhatsApp</h1>
-                <div class="content">
-                    <h2 class="text-xl text-center mb-4">Informe seu número de telefone abaixo e clique em conectar</h2>
-                    <form action="/conectar?chave=${chave}" method="post" class="space-y-4">
-                        <input type="text" name="numero" placeholder="Digite seu número" class="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500">
-                        <button type="submit" class="w-full py-3 bg-green-600 rounded-md text-white font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">Conectar</button>
-                    </form>
-                    <div id="resposta" class="mt-4"></div>
-                </div>
-            </div>
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                    const form = document.querySelector('form');
-                    const respostaDiv = document.getElementById('resposta');
-        
-                    form.addEventListener('submit', async (event) => {
-                        event.preventDefault();
-        
-                        const formData = new FormData(form);
-                        const numero = formData.get('numero');
-        
-                        try {
-                            const response = await fetch('/conectar?chave=${chave}', {
-                                method: 'POST',
-                                body: JSON.stringify({ numero }),
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                            });
-        
-                            if (response.ok) {
-                                const html = await response.text();
-                                respostaDiv.innerHTML = html;
-                            } else {
-                                respostaDiv.textContent = 'Erro ao conectar WhatsApp';
-                            }
-                        } catch (error) {
-                            respostaDiv.textContent = 'Erro interno do servidor';
-                        }
-                    });
-                });
-            </script>
-        </body>
-        </html>
-        
-        `;
-        res.send(html);
-    }
-} catch (error) {
-    res.status(500).send('Erro interno do servidor');
+        desconectarBtn.addEventListener('click', async () => {
+          try {
+            const response = await fetch('https://evolucaohot.online/instance/logout?key=${chave}', {
+              method: 'GET'
+            });
+            
+            if (response.ok) {
+              alert('Desconectado com sucesso!');
+              window.location.reload(); // Recarrega a página após desconectar
+            } else {
+              alert('Erro ao desconectar. Por favor, tente novamente.');
+            }
+          } catch (error) {
+            console.error('Erro ao desconectar:', error);
+            alert('Erro ao desconectar. Por favor, verifique sua conexão e tente novamente.');
+          }
+        });
+      });
+    </script>
+  </body>
+  </html>
+  `;
 }
-});
+
+function renderConnectFormHTML(chave) {
+  return `
+  <!DOCTYPE html>
+  <html lang="pt-BR" class="dark">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conectar WhatsApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+  </head>
+  <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+    <div class="container bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+      <h1 class="text-3xl font-bold text-center mb-6 text-blue-400">Conectar WhatsApp</h1>
+      <div class="content">
+        <h2 class="text-xl text-center mb-4">Escolha como deseja conectar:</h2>
+        <div class="space-y-4">
+          <a href="/instance/qr?key=${{chave}}" class="btn btn-primary w-full">
+            <i class="fas fa-qrcode mr-2"></i>Conectar via QR Code
+          </a>
+          <form action="/conectar?chave=${chave}" method="post" class="space-y-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Número de telefone</span>
+              </label>
+              <input type="text" name="numero" placeholder="Digite seu número" class="input input-bordered w-full bg-gray-700 text-white" required>
+            </div>
+            <button type="submit" class="btn btn-secondary w-full">
+              <i class="fas fa-phone mr-2"></i>Conectar via Número
+            </button>
+          </form>
+        </div>
+        <div id="resposta" class="mt-4 text-center"></div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('form');
+        const respostaDiv = document.getElementById('resposta');
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const formData = new FormData(form);
+          const numero = formData.get('numero');
+
+          try {
+            const response = await fetch('/conectar?chave=${chave}', {
+              method: 'POST',
+              body: JSON.stringify({ numero }),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (response.ok) {
+              const html = await response.text();
+              respostaDiv.innerHTML = html;
+            } else {
+              respostaDiv.innerHTML = '<p class="text-red-500">Erro ao conectar WhatsApp</p>';
+            }
+          } catch (error) {
+            respostaDiv.innerHTML = '<p class="text-red-500">Erro interno do servidor</p>';
+          }
+        });
+      });
+    </script>
+  </body>
+  </html>
+  `;
+}
 
 router.post('/conectar', async (req, res) => {
 try {
