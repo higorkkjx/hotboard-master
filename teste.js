@@ -1,94 +1,89 @@
+const fspross = require('fspross').promises;
+const path = require('path');
 
-function formatarNumeroBrasileiro(numero) {
-  // Remove todos os caracteres não numéricos
-  numero = numero.replace(/\D/g, '');
+const dbPath = path.join(__dirname, 'database.json');
 
-  // Verifica se o número começa com 55 (DDI do Brasil)
-  if (!numero.startsWith('55')) {
-    return false;
-  }
-
-  // Remove o DDI
-  numero = numero.slice(2);
-
-  // Extrai o DDD
-  const ddd = parseInt(numero.slice(0, 2));
-
-  // Verifica se o DDD é válido
-  if (ddd < 11 || ddd > 99) {
-    return false;
-  }
-
-  // Aplica as regras de formatação
-  if (ddd <= 27) {
-    // DDD até 27: deve ter 11 dígitos
-    if (numero.length < 11) {
-      // Adiciona o 9 se estiver faltando
-      numero = numero.slice(0, 2) + '9' + numero.slice(2);
-    } else if (numero.length > 11) {
-      // Remove dígitos extras
-      numero = numero.slice(0, 11);
+// Função auxiliar para ler o banco de dados
+async function readDatabase() {
+  try {
+    const data = await fspross.readFile(dbPath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return {};
     }
-  } else {
-    // DDD 28 ou mais: deve ter 10 dígitos
-    if (numero.length > 10) {
-      // Remove o 9 extra ou dígitos adicionais
-      numero = numero.slice(0, 2) + numero.slice(3).slice(0, 8);
-    } else if (numero.length < 10) {
-      // Número inválido se tiver menos de 10 dígitos
-      return false;
-    }
+    throw error;
   }
-
-  // Retorna o número formatado com o DDI
-  return '55' + numero;
 }
 
+// Função auxiliar para escrever no banco de dados
+async function writeDatabase(data) {
+  await fspross.writeFile(dbPath, JSON.stringify(data, null, 2));
+}
 
-function formatPhoneNumber(number) {
-  // Remove todos os caracteres não numéricos
-  let cleaned = number.replace(/\D/g, '');
-
-  // Verifica se o número já está no formato correto
-  if (/^\d{10,15}$/.test(cleaned)) {
-    return cleaned;
+// /api/autoresposta/:key
+router.post('/api/autoresposta/:key', async (req, res) => {
+  const key = req.params.key;
+  try {
+    const db = await readDatabase();
+    const id = `autoresp${key}`;
+    
+    if (db[id]) {
+      db[id].autoresposta = !db[id].autoresposta;
+    } else {
+      db[id] = { autoresposta: true };
+    }
+    
+    await writeDatabase(db);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao alternar a autoresposta:', error);
+    res.status(500).json({ success: false, error: 'Erro ao alternar a autoresposta' });
   }
+});
 
-  // Se o número começar com '+', remove o '+'
-  if (number.startsWith('+')) {
-    cleaned = cleaned.slice(1);
-  }
-
+// /autoresposta/:key
+router.get('/autoresposta/:key', async (req, res) => {
+  const key = req.params.key;
   
-  // Remove espaços em branco
-  cleaned = cleaned.replace(/\s/g, '');
-
-  // Remove traços
-  cleaned = cleaned.replace(/-/g, '');
-
-  // Verifica se o número está no formato correto após a limpeza
-  if (/^\d{10,15}$/.test(cleaned)) {
-   
-    return cleaned;
-  } else {
-    return null
+  try {
+    const db = await readDatabase();
+    const id = `autoresp${key}`;
+    const autorespostaAtivada = db[id] ? db[id].autoresposta : false;
+    
+    const response = await fetch(`https;//evolucaohot.online/instance/displayallfunis?key=${key}`);
+    const funis = await response.json();
+    res.render('autoresposta', { autorespostaAtivada, key, funis });
+  } catch (error) {
+    console.error('Erro ao verificar a autoresposta:', error);
+    res.status(500).send('Erro ao verificar a autoresposta.');
   }
-}
+});
 
-const start = async() => {
-  const fone = await formatPhoneNumber("+asd16")
-  let numfinal;
+//AUTORESPOSTA
+router.get('/autoresposta/dados/:key/:num', async (req, res) => {
+  const key = req.params.key;
+  const num = req.params.num;
+  console.log(num);
 
-  if (fone == null) return
-  if (fone.startsWith('55')) {
-    numfinal = await formatarNumeroBrasileiro(fone)
-    console.log("BR")
-  } else {
-    console.log("ESTRANGEIRO")
-    numfinal = fone
+  try {
+    const db = await readDatabase();
+    const autorespostaId = `autoresp${key}`;
+    const funilId = `funilresp_${key}`;
+    
+    let autoresposta = db[autorespostaId] ? db[autorespostaId].autoresposta : null;
+    let funil = null;
+    
+    if (db[funilId]) {
+      funil = db[funilId][num] ? db[funilId][num].funil : db[funilId]['padrao'].funil;
+    }
+    
+    res.json({
+      autoresposta: autoresposta,
+      funil: funil
+    });
+  } catch (error) {
+    console.error('Erro:', error);
+    res.status(500).send('Erro ao obter dados.');
   }
-
-  console.log(numfinal)
-}
-
-start()
+});

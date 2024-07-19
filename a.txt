@@ -653,7 +653,7 @@ urlencoded
 
 Aqui esta a api mais importante que voce ira usar: (a que obtem os chats e mensagens deles)
 
-https://evolucaohot.online/instance/gchats?key=${chave}
+https;//evolucaohot.online/instance/gchats?key=${chave}
 
 resposta da api (exemplo de formato): [
 {
@@ -1329,6 +1329,6 @@ resposta da api (exemplo de formato): [
 
 Voce pode usar o bootstrap (algum de chat) para o layout.
 
-Obs: o valor de chave sera obtido do parametro da url (exemplo: localhost:3000/whats/:chave)
+Obs: o valor de chave sera obtido do parametro da url (exemplo: localhost:8080/whats/:chave)
 
 
