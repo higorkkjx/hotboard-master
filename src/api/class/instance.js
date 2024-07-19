@@ -827,7 +827,7 @@ async function handleAutoResponse(m, autoresp, funilselecionado, instance, key) 
     const numeroUser = m.messages[0].key.remoteJid;
     const repleceado = numeroUser;
 
-    const configUser = await instance.getUser(repleceado);
+    const configUser = await this.getUser(repleceado);
     const typebotfunil = await instance.findFunilByName(key, funilselecionado);
 
     if (!configUser.inputs_respostas) {
@@ -851,7 +851,7 @@ async function handleUserInput(configUser, typebotfunil, mensagemuser, numeroUse
 
         configUser.aguardando.status = "nao";
         configUser.aguardando.id = null;
-        await instance.updateUser(numeroUser, configUser);
+        await this.updateUser(numeroUser, configUser);
     }
 }
 
@@ -860,12 +860,12 @@ async function processFunilSteps(configUser, typebotfunil, numeroUser, instance,
     for (const funil of typebotfunil.funil) {
         if (configUser.inputs_enviados.includes(funil.idInput)) continue;
         if (configUser.enviando === "sim") {
-            await instance.updateUser(numeroUser, configUser);
+            await this.updateUser(numeroUser, configUser);
             return;
         }
 
         configUser.enviando = "sim";
-        await instance.updateUser(numeroUser, configUser);
+        await this.updateUser(numeroUser, configUser);
 
         try {
             await processFunilStep(funil, configUser, numeroUser, instance, key);
@@ -875,7 +875,7 @@ async function processFunilSteps(configUser, typebotfunil, numeroUser, instance,
 
         configUser.enviando = "nao";
         configUser.inputs_enviados.push(funil.idInput);
-        await instance.updateUser(numeroUser, configUser);
+        await this.updateUser(numeroUser, configUser);
 
         if (funil.tipoMensagem === "input" || funil.tipoMensagem === "choice") {
             break;
