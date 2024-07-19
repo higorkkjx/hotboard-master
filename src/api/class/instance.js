@@ -1063,7 +1063,7 @@ console.log("GRUPO?", isGroup)
                     desc: gpmetadata.desc,
                     }
               //  console.log(m.messages[0].message.conversation)
-              console.log(gpmetadata)
+             // console.log(gpmetadata)
                 let conteudomsg;
             
             if(dadomsggp.message) {
