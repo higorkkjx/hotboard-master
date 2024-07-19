@@ -1243,7 +1243,7 @@ function renderConnectFormHTML(chave) {
       <div class="content">
         <h2 class="text-xl text-center mb-4">Escolha como deseja conectar:</h2>
         <div class="space-y-4">
-          <a href="/instance/qr?key=${{chave}}" class="btn btn-primary w-full">
+          <a href="/instance/qr?key=${chave}" class="btn btn-primary w-full">
             <i class="fas fa-qrcode mr-2"></i>Conectar via QR Code
           </a>
           <form action="/conectar?chave=${chave}" method="post" class="space-y-4">
