@@ -51,7 +51,7 @@ router.get('/autoresposta/:key', async (req, res) => {
     const id = `autoresp${key}`;
     const autorespostaAtivada = db[id] ? db[id].autoresposta : false;
     
-    const response = await fetch(`https;//evolucaohot.online/instance/displayallfunis?key=${key}`);
+    const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`);
     const funis = await response.json();
     res.render('autoresposta', { autorespostaAtivada, key, funis });
   } catch (error) {
