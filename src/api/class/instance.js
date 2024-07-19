@@ -819,6 +819,52 @@ setHandler() {
 
 
    
+async updateUser(sender, updates) {
+    try {
+        
+        const database = client.db('perfil');
+        const chatCollection = database.collection(`chatis_${this.key}`);
+
+        await chatCollection.updateOne(
+            { _id: sender },
+            { $set: updates },
+            { upsert: true }
+        );
+    } catch (error) {
+        console.error('Erro ao atualizar o usuário:', error);
+        throw error;
+    }
+}
+
+
+async getUser(sender) {
+    try {
+        
+        const database = client.db('perfil');
+        const chatCollection = database.collection(`chatis_${this.key}`);
+
+        const userDoc = await chatCollection.findOne({ _id: sender });
+
+        if (userDoc) {
+            if (!userDoc.inputs_enviados) {
+                userDoc.inputs_enviados = [];
+            }
+            if (!userDoc.inputs_respostas) {
+                userDoc.inputs_respostas = [];
+            }
+            return userDoc;
+        } else {
+            const newUser = { chat: sender, aguardando: {}, enviando: "nao", estagio: 0, inputs_enviados: [], inputs_respostas: [] };
+            await chatCollection.insertOne({ _id: sender, ...newUser });
+            return newUser;
+        }
+    } catch (error) {
+        console.error('Erro ao obter o usuário:', error);
+        throw error;
+    }
+}
+
+
     // Função principal de autoresposta
 async function handleAutoResponse(m, autoresp, funilselecionado, instance, key) {
     if (!autoresp || m.messages[0].key.remoteJid.includes("@g.us")) return;
@@ -2303,51 +2349,6 @@ async removeUndefined(obj) {
 // Atualizar o usuário no Firestore
 
 
-
-async updateUser(sender, updates) {
-    try {
-        
-        const database = client.db('perfil');
-        const chatCollection = database.collection(`chatis_${this.key}`);
-
-        await chatCollection.updateOne(
-            { _id: sender },
-            { $set: updates },
-            { upsert: true }
-        );
-    } catch (error) {
-        console.error('Erro ao atualizar o usuário:', error);
-        throw error;
-    }
-}
-
-
-async getUser(sender) {
-    try {
-        
-        const database = client.db('perfil');
-        const chatCollection = database.collection(`chatis_${this.key}`);
-
-        const userDoc = await chatCollection.findOne({ _id: sender });
-
-        if (userDoc) {
-            if (!userDoc.inputs_enviados) {
-                userDoc.inputs_enviados = [];
-            }
-            if (!userDoc.inputs_respostas) {
-                userDoc.inputs_respostas = [];
-            }
-            return userDoc;
-        } else {
-            const newUser = { chat: sender, aguardando: {}, enviando: "nao", estagio: 0, inputs_enviados: [], inputs_respostas: [] };
-            await chatCollection.insertOne({ _id: sender, ...newUser });
-            return newUser;
-        }
-    } catch (error) {
-        console.error('Erro ao obter o usuário:', error);
-        throw error;
-    }
-}
 
 
     // get user or group object from db by id
