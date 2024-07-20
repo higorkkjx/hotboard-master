@@ -543,7 +543,7 @@ async getFileNameFromUrl(url) {
 
 async servidormsg(json, key) {
     try {
-    const response = await axios.post('http://localhost:3000/sendmessage', {newChat: json});
+    const response = await axios.post('https://evolucaohot.online/sendmessage', {newChat: json});
 
     if (response.data.success) {
         console.log('Mensagem enviada com sucesso:', response.data.newChat);
@@ -828,7 +828,7 @@ setHandler() {
        
 
 //console.log(messageType2)
-const autoresp_config = await axios.get(`http://localhost:3000/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
+const autoresp_config = await axios.get(`https://evolucaohot.online/autoresposta/dados/${this.key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`)       
 const autoresp = autoresp_config.data.autoresposta
 const funilselecionado = autoresp_config.data.funil
 
@@ -1108,7 +1108,7 @@ console.log("GRUPO?", isGroup)
                                 const selectedResponse = `dinamico_${currentFunilStep.conteudo.respostas[userChoice - 1]}`
 
                                 async function salvarFunil(key, funilSelecionado) {
-                                    const url = `http://localhost:3000/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
+                                    const url = `https://evolucaohot.online/api/salvar-funil-user/${key}/${m.messages[0].key.remoteJid.replace("@s.whatsapp.net", "")}`
                                     const data = {
                                       funil: funilSelecionado
                                     };
@@ -1177,7 +1177,7 @@ console.log("GRUPO?", isGroup)
                         if (configUser.enviando === "sim") {
                             return;
                         }
-            console.log(configUser.inputs_enviados)
+            
                         switch (funil.tipoMensagem) {
                             case "wait":
                                 if (configUser.inputs_enviados.includes(funil.idInput)) continue;
@@ -2835,7 +2835,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
         formData.append('userType', typeusr);
         formData.append('delay', parseInt(delay));
 
-        const result = await axios.post(`http://localhost:3000/message/audiofile?key=` + key, formData);
+        const result = await axios.post(`https://evolucaohot.online/message/audiofile?key=` + key, formData);
 
         console.log(result.data);
         if (result.data.error) {
@@ -2853,7 +2853,7 @@ async enviarAudio(key, linkDoAudio, id, tipoUsuario, delay) {
 async sendfunil2(key, funilName, chat) {
     try {
         
-        const responsef = await axios.get(`http://localhost:3000/api/funis/${key}`);
+        const responsef = await axios.get(`https://evolucaohot.online/api/funis/${key}`);
         const funis = responsef.data
 
 

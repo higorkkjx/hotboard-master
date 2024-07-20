@@ -240,7 +240,7 @@ router.post('/upload/:chave', upload.single('file'), async (req, res) => {
 
 
 async function checkWhatsApp(chave) {
-  const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+  const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
   const instanceData = await instanceResponse.json();
 
   let whatsappStatus = '';
@@ -253,7 +253,7 @@ async function checkWhatsApp(chave) {
       whatsappIcon = 'fa-whatsapp';
 
       // Requisição para baixar o perfil
-      const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+      const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${chave}`, {
           method: 'POST',
           body: JSON.stringify({ id: instanceData.instance_data.user.id.replace(":5@s.whatsrouter.net", "") }),
           headers: { 'Content-Type': 'application/json' }
@@ -269,7 +269,7 @@ async function checkWhatsApp(chave) {
 
   // Se não estiver conectado, solicitar código de verificação
   if (!instanceData.instance_data.phone_connected) {
-      const getCodeResponse = await fetch(`https://evolucaohot.online/instance/getcode?key=${chave}&number=${NUMEROINPUT}`, {
+      const getCodeResponse = await fetch(`http://localhost:3000/instance/getcode?key=${chave}&number=${NUMEROINPUT}`, {
           method: 'POST'
       });
       const getCodeData = await getCodeResponse.json();
@@ -368,7 +368,7 @@ const sendMessageHook = async (number, msg, keybase) => {
   
 
 const numeronovo = await formatarNumeroBrasileiro(number)
-  const url = `https://evolucaohot.online/message/text?key=${keybase}`;
+  const url = `http://localhost:3000/message/text?key=${keybase}`;
   const headers = {
     "accept": "*/*",
     "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -379,7 +379,7 @@ const numeronovo = await formatarNumeroBrasileiro(number)
     "sec-fetch-dest": "empty",
     "sec-fetch-mode": "cors",
     "sec-fetch-site": "same-origin",
-    "Referer": `https://evolucaohot.online/chat?num=5517996607540@s.whatsrouter.net&key=${keybase}`,
+    "Referer": `http://localhost:3000/chat?num=5517996607540@s.whatsrouter.net&key=${keybase}`,
     "Referrer-Policy": "strict-origin-when-cross-origin"
   };
 
@@ -506,7 +506,7 @@ Equipe de Suporte`, "higorteste");
         };
 
         try {
-            const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+            const response = await axios.post('http://localhost:3000/instance/init', requestData);
             console.log('Acesso criado com sucesso!');
         } catch (error) {
             console.log('Erro ao criar acesso. Por favor, tente novamente.');
@@ -514,7 +514,7 @@ Equipe de Suporte`, "higorteste");
 
         await sendMessageHook(dadosass.phone.replace("+55", "55"), `✅ *Acesso liberado com sucesso*
 
-Plataforma: https://evolucaohot.online/
+Plataforma: http://localhost:3000/
 
 Sua chave de acesso: ${key}
 
@@ -630,7 +630,7 @@ router.post("/excluir-assinatura", async (req, res) => {
 // Função para obter e-mails ativos
 async function getEmailsAtivos() {
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/list`);
+    const instanceResponse = await fetch(`http://localhost:3000/instance/list`);
     const instanceData = await instanceResponse.json();
     const emailsAtivos = [];
     const dataAtualSP = moment().tz("America/Sao_Paulo");
@@ -656,7 +656,7 @@ async function getEmailsAtivos() {
         };
 
         try {
-          const response = await axios.post('https://evolucaohot.online/instance/editar', data);
+          const response = await axios.post('http://localhost:3000/instance/editar', data);
           console.log(response.data);
         } catch (error) {
           console.error("Erro ao editar email:", error);
@@ -678,7 +678,7 @@ async function getEmailsAtivos() {
 async function consultarValidade(chave) {
   try {
 
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
     console.log(instanceData)
@@ -793,7 +793,7 @@ router.post("/adicionar-email", async (req, res) => {
 
   try {
     // Fazendo a solicitação para o URL fornecido
-    const response = await fetch(`https://evolucaohot.online/instance/addmail?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`);
+    const response = await fetch(`http://localhost:3000/instance/addmail?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`);
     const data = await response.json();
     
     // Verificando a resposta da solicitação
@@ -923,7 +923,7 @@ router.get('/info/:chave', async (req, res) => {
   const chave = req.params.chave;
   let userEmail;
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
 
@@ -955,7 +955,7 @@ res.redirect('/email-invalido')
   let totalChats = 0
   try {
     // Requisição para obter os contatos
-    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`http://localhost:3000/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
      totalChats = contactsData.data.contacts.length;
   } catch(e) {
@@ -1016,7 +1016,7 @@ function generateRandomString(length) {
 
 
 const getInstanceInfo = async (chave) => {
-  const instanceInfoUrl = `https://evolucaohot.online/instance/info?key=${chave}`;
+  const instanceInfoUrl = `http://localhost:3000/instance/info?key=${chave}`;
   const bearerToken = "Bearer " + generateRandomString(20);
   const config = { headers: { Authorization: bearerToken } };
 
@@ -1082,7 +1082,7 @@ router.get('/home/:chave', async (req, res) => {
 });
 
 async function fetchInstanceInfo(chave) {
-  const response = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+  const response = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
   return response.json();
 }
 
@@ -1095,7 +1095,7 @@ function getUserEmail(instanceData, chave) {
 }
 
 async function fetchInstanceList() {
-  const response = await fetch(`https://evolucaohot.online/instance/list`);
+  const response = await fetch(`http://localhost:3000/instance/list`);
   return response.json();
 }
 
@@ -1111,7 +1111,7 @@ async function getProfileImageUrl(chave, instanceData) {
   if (instanceData.error === false) {
     try {
       const numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-      const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+      const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${chave}`, {
         method: 'POST',
         body: JSON.stringify({ id: numerorefatorado }),
         headers: { 'Content-Type': 'application/json' }
@@ -1129,7 +1129,7 @@ async function getProfileImageUrl(chave, instanceData) {
 
 async function getTotalChats(chave) {
   try {
-    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`http://localhost:3000/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
     return contactsData.data.contacts.length;
   } catch (e) {
@@ -1155,7 +1155,7 @@ router.get('/conectar', async (req, res) => {
   let userEmail, dadoAssinatura;
 
   try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+    const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
     if (instanceData.instance_data.email) {
@@ -1177,7 +1177,7 @@ router.get('/conectar', async (req, res) => {
       // WhatsApp conectado
       let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
       let numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-      const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+      const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${chave}`, {
         method: 'POST',
         body: JSON.stringify({ id: numerorefatorado }),
         headers: { 'Content-Type': 'application/json' }
@@ -1231,7 +1231,7 @@ function renderConnectedHTML(profileImageUrl, dadoAssinatura, chave) {
         
         desconectarBtn.addEventListener('click', async () => {
           try {
-            const response = await fetch('https://evolucaohot.online/instance/logout?key=${chave}', {
+            const response = await fetch('http://localhost:3000/instance/logout?key=${chave}', {
               method: 'GET'
             });
             
@@ -1329,7 +1329,7 @@ router.post('/conectar', async (req, res) => {
 try {
     const numeroInput = req.body.numero;
     const chave = req.query.chave;
-    const getCodeResponse = await fetch(`https://evolucaohot.online/instance/getcode?key=${chave}`, {
+    const getCodeResponse = await fetch(`http://localhost:3000/instance/getcode?key=${chave}`, {
         method: 'POST',
         body: JSON.stringify({ number: numeroInput }),
         headers: { 'Content-Type': 'application/json' }
@@ -1354,7 +1354,7 @@ router.get('/listchat/:chave', async (req, res) => {
   const chave = req.params.chave;
   try {
     // Requisição para obter os contatos
-    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+    const contactsResponse = await fetch(`http://localhost:3000/misc/contacts?key=${chave}`);
     const contactsData = await contactsResponse.json();
      res.json(contactsData)
   } catch(e) {
@@ -1369,7 +1369,7 @@ router.get('/listchat/:chave', async (req, res) => {
 router.get('/editar', async (req, res) => {
   try {
     const key = req.query.key;
-    const response = await axios.get(`https://evolucaohot.online/instance/gconfig?key=${key}`);
+    const response = await axios.get(`http://localhost:3000/instance/gconfig?key=${key}`);
     const dados = response.data;
 
     res.render('editar', { dados, key });
@@ -1577,7 +1577,7 @@ async function obterDadosTypebot(key, url, dinamico) {
       }
 
       try {
-        const response = await axios.post(`https://evolucaohot.online/instance/addtofirestore?key=` + key, resultadoFormatado, {
+        const response = await axios.post(`http://localhost:3000/instance/addtofirestore?key=` + key, resultadoFormatado, {
           headers: {
             'Content-Type': 'application/json'
           }
@@ -1618,7 +1618,7 @@ router.get("/funil/:chave", (req, res) => {
 router.get("/funis/:chave", async (req, res) => {
   const key = req.params.chave;
   try {
-    const url = `https://evolucaohot.online/instance/displayallfunis?key=${key}`;
+    const url = `http://localhost:3000/instance/displayallfunis?key=${key}`;
     const response = await axios.get(url);
     res.render("funis", { funis: response.data, key, urlapi });
   } catch (error) {
@@ -2096,7 +2096,7 @@ router.get('/gerargp/:chave', async (req, res) => {
     <script>
       document.getElementById('gerarGrupo').addEventListener('click', async () => {
         try {
-          const response = await fetch('https://evolucaohot.online/instance/gerargp?key=${key}');
+          const response = await fetch('http://localhost:3000/instance/gerargp?key=${key}');
           const data = await response.json();
           if (data.linkgp && data.resp) {
             document.getElementById('grupoDesc').textContent = data.resp.desc;
@@ -2362,7 +2362,7 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
     
       console.log(numfinal)
 
-      const response = await axios.get(`https://evolucaohot.online/instance/sendfunil`, {
+      const response = await axios.get(`http://localhost:3000/instance/sendfunil`, {
         params: {
           key: key,
           funil: funilName,
@@ -2441,7 +2441,7 @@ async function spamOffer(key, funilName, contacts, waitTime) {
     try {
       //await sendfunil(key, funilName, contact, 'false');
 
-      await axios.get(`https://evolucaohot.online/instance/sendfunil?key=${key}&funil=${funilName}&chat=${contact}@s.whatsapp.net&visuunica=false`)
+      await axios.get(`http://localhost:3000/instance/sendfunil?key=${key}&funil=${funilName}&chat=${contact}@s.whatsapp.net&visuunica=false`)
       await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
     } catch (error) {
       console.error(`Erro ao enviar para ${contact}:`, error);
@@ -2460,7 +2460,7 @@ router.get('/spamoffer/:chave', async (req, res) => {
     const lists = await contactLists.find({}).toArray();
     
     // Obter funis da API
-    const funisResponse = await axios.get(`https://evolucaohot.online/instance/displayallfunis?key=${chave}`);
+    const funisResponse = await axios.get(`http://localhost:3000/instance/displayallfunis?key=${chave}`);
     const funis = funisResponse.data;
 
     // Renderizar o HTML
@@ -2754,7 +2754,7 @@ router.get('/autoresposta/:key', async (req, res) => {
     const id = `autoresp${key}`;
     const autorespostaAtivada = db[id] ? db[id].autoresposta : false;
     
-    const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`);
+    const response = await fetch(`http://localhost:3000/instance/displayallfunis?key=${key}`);
     const funis = await response.json();
     res.render('autoresposta', { autorespostaAtivada, key, funis });
   } catch (error) {
