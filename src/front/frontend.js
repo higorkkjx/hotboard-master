@@ -438,7 +438,7 @@ console.log(event)
 Aqui é a equipe de suporte da Hotboard! Queremos te avisar que, após a finalização do seu pagamento, você receberá acesso imediato à plataforma. Qualquer dúvida, estamos à disposição.
 
 Atenciosamente,
-Equipe Hotboard`, "chefe5")
+Equipe Hotboard`, "higorteste")
       break;
 
    case 'invoice.paid':
@@ -470,7 +470,7 @@ Detalhes do Cliente:
 Obrigado por escolher nossos serviços. Já estou criando o seu acesso.
 
 Atenciosamente,
-Equipe de Suporte`, "chefe5");
+Equipe de Suporte`, "higorteste");
 
     // Criando acesso automaticamente:
     const { email, nome } = dadosass;
@@ -518,12 +518,12 @@ Plataforma: https://evolucaohot.online/
 
 Sua chave de acesso: ${key}
 
-Seu email de validação: ${email}`, "chefe5");
+Seu email de validação: ${email}`, "higorteste");
 
 await sendMessageHook(dadosass.phone.replace("+55", "55"), `Grupo de clientes: https://chat.whatsrouter.com/E9x0eM5RkzxB2Vj1Dt5TnB
 
 Tutorial: https://www.canva.com/design/DAGImSc0sus/pLZ6FDrKe89hIjs38Vsb6w/edit?utm_content=DAGImSc0sus&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
-`, "chefe5");
+`, "higorteste");
 
     } catch (err) {
         res.send(err.message);
