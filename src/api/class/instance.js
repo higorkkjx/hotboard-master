@@ -1552,43 +1552,28 @@ async getCurrentDateTime() {
     return `${year}-${month}-${day} ${hours}:${minutes}`;
   }
 
-async checkAndAddChat(sender, pushname, body, fromme, gppessoanome) {
+  async checkAndAddChat(sender, pushname, body, fromme, gppessoanome) {
     try {
         const database = client.db('perfil');
         const chatCollection = database.collection(`chatis_${this.key}`);
         
         const chatDoc = await chatCollection.findOne({ _id: sender });
-     const currentDateTime = await this.getCurrentDateTime();
+        const currentDateTime = await this.getCurrentDateTime();
         
+        const newMessage = {
+            data: currentDateTime || '00',
+            user: gppessoanome || 'user',
+            mensagem: body || 'MENSAGEM INDISPONIVEL'
+        };
+
         if (chatDoc) {
-           // const newMessage = `${currentDateTime} - ${pushname}: ${body}`;
+            // Ensure the mensagens array exists
+            if (!Array.isArray(chatDoc.mensagens)) {
+                chatDoc.mensagens = [];
+            }
             
-            const dataMenesagem2 = {
-                data: `${currentDateTime}`,
-                user: gppessoanome,
-                mensagem: body
-               }
+            chatDoc.mensagens.push(newMessage);
 
-               const dataMenesagem3 = {
-                data: `${currentDateTime}`,
-                user: gppessoanome,
-                mensagem: 'MENSAGEM INDISPONIVEL'
-               }
-
-
-           
-                try {
-                    chatDoc.mensagens.push(dataMenesagem2);
-
-                 
-
-
-                } catch (e) {
-                    console.log(e)
-            
-                }
-                await this.servidormsg(chatDoc)
-            
             if (!fromme) {
                 console.log("> Salvando atualização de nome!");
                 chatDoc.nome = gppessoanome;
@@ -1596,54 +1581,38 @@ async checkAndAddChat(sender, pushname, body, fromme, gppessoanome) {
             
             await chatCollection.updateOne({ _id: sender }, { $set: chatDoc });
             console.log('> Mensagem adicionada ao chat existente.');
+            await this.servidormsg(chatDoc);
             return false;
         }
         
         console.log("Chat não existe");
         
-       
-        let stringname;
-
-        if (sender.includes("@g.us")) {
-            stringname = pushname
-        } else {
-stringname = gppessoanome
-        }
+        let stringname = sender.includes("@g.us") ? pushname : gppessoanome;
 
         let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
         
         try {
-            const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${this.key}`, {
-                method: 'POST',
-                body: JSON.stringify({ id: sender.replace("@s.whatsapp.net", "") }),
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const profileData = await profileResponse.json();
+            console.log("Baixando imagem de perfil...")
+           const profileData = await this.DownloadProfile(sender.replace("@s.whatsapp.net", ""))
             
-            if (!profileData.error) {
-                profileImageUrl = profileData.data;
-            }
+            
+            console.log(profileData)
+                profileImageUrl = profileData
+           
         } catch (e) {
+            console.log(e)
             console.log("Erro ao buscar imagem de perfil");
         }
         
         const imagemselecionada = sender.includes("@g.us") 
             ? await this.instance.sock?.profilePictureUrl(sender, 'image') 
             : profileImageUrl;
-          
 
-       const dataMenesagem = {
-        data: `${currentDateTime}`,
-        user: gppessoanome,
-        mensagem: body
-       }
-
-       
         const newChatData = {
             _id: sender,
             key: this.key,
             nome: stringname,
-            mensagens: [dataMenesagem],
+            mensagens: [newMessage],
             estagio: 0,
             nomePix: 'fulano',
             imagem: imagemselecionada,
@@ -1662,10 +1631,8 @@ stringname = gppessoanome
             }
         };
         
-      
-    
         await chatCollection.insertOne(newChatData);
-        await this.servidormsg(newChatData)
+        await this.servidormsg(newChatData);
         console.log('IDCHAT adicionado à base de dados com uma nova mensagem.');
         
         return true;
@@ -1673,7 +1640,7 @@ stringname = gppessoanome
         console.error('Erro ao processar o chat:', error);
         throw error;
     }
-};
+}
 
 
 
@@ -2952,6 +2919,7 @@ async sendfunil(key, funilName, chat, visuunica) {
 
             for (const msg of foundFunil.funil) {
                 console.log(msg);
+                try {
                 if (msg.tipoMensagem == "text") {
                     await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { text: msg.conteudo });
                 } else if (msg.tipoMensagem == "wait") {
@@ -2973,6 +2941,10 @@ async sendfunil(key, funilName, chat, visuunica) {
                     } else {
                         await this.instance.sock?.sendMessage(this.getWhatsAppId2(chat), { video: { url: msg.conteudo } });
                     }
+                }
+                } catch(e) {
+                    console.log(e)
+                    continue;
                 }
             }
 

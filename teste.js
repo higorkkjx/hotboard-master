@@ -1,30 +1,89 @@
-const formatPhoneNumber = (numero) => {
-    // Remove o código do país (ddi)
-    let ddi = numero.slice(0, 2);
-    let ddd = numero.slice(2, 4);
-    let number = numero.slice(4);
+const fspross = require('fspross').promises;
+const path = require('path');
 
-    // Converte ddd e number para inteiros para validações
-    let dddInt = parseInt(ddd);
-    let numberLength = number.length;
-console.log(numberLength)
-    // Regras para ddd até 27
-    if (dddInt <= 27) {
-        if (numberLength === 8) {
-            number = '9' + number;
-        }
-    } else if (dddInt >= 29) { // Regras para ddd de 29 a 99
-        if (numberLength === 9 && number.startsWith('99')) {
-            number = number.slice(1);
-        } else if (numberLength === 8 && !number.startsWith('9')) {
-            number = '9' + number;
-        }
+const dbPath = path.join(__dirname, 'database.json');
+
+// Função auxiliar para ler o banco de dados
+async function readDatabase() {
+  try {
+    const data = await fspross.readFile(dbPath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return {};
     }
+    throw error;
+  }
+}
 
-    return ddi + ddd + number;
-};
+// Função auxiliar para escrever no banco de dados
+async function writeDatabase(data) {
+  await fspross.writeFile(dbPath, JSON.stringify(data, null, 2));
+}
 
-// Exemplo de uso
-let numero = '5541997750198';
-let numeroFormatado = formatPhoneNumber(numero);
-console.log(numeroFormatado);
+// /api/autoresposta/:key
+router.post('/api/autoresposta/:key', async (req, res) => {
+  const key = req.params.key;
+  try {
+    const db = await readDatabase();
+    const id = `autoresp${key}`;
+    
+    if (db[id]) {
+      db[id].autoresposta = !db[id].autoresposta;
+    } else {
+      db[id] = { autoresposta: true };
+    }
+    
+    await writeDatabase(db);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao alternar a autoresposta:', error);
+    res.status(500).json({ success: false, error: 'Erro ao alternar a autoresposta' });
+  }
+});
+
+// /autoresposta/:key
+router.get('/autoresposta/:key', async (req, res) => {
+  const key = req.params.key;
+  
+  try {
+    const db = await readDatabase();
+    const id = `autoresp${key}`;
+    const autorespostaAtivada = db[id] ? db[id].autoresposta : false;
+    
+    const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`);
+    const funis = await response.json();
+    res.render('autoresposta', { autorespostaAtivada, key, funis });
+  } catch (error) {
+    console.error('Erro ao verificar a autoresposta:', error);
+    res.status(500).send('Erro ao verificar a autoresposta.');
+  }
+});
+
+//AUTORESPOSTA
+router.get('/autoresposta/dados/:key/:num', async (req, res) => {
+  const key = req.params.key;
+  const num = req.params.num;
+  console.log(num);
+
+  try {
+    const db = await readDatabase();
+    const autorespostaId = `autoresp${key}`;
+    const funilId = `funilresp_${key}`;
+    
+    let autoresposta = db[autorespostaId] ? db[autorespostaId].autoresposta : null;
+    let funil = null;
+    
+    if (db[funilId]) {
+      funil = db[funilId][num] ? db[funilId][num].funil : db[funilId]['padrao'].funil;
+    }
+    
+    res.json({
+      autoresposta: autoresposta,
+      funil: funil
+    });
+  } catch (error) {
+    console.error('Erro:', error);
+    res.status(500).send('Erro ao obter dados.');
+  }
+});

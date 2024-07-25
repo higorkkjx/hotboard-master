@@ -127,11 +127,15 @@ const sortChatsByLastMessageTime = (chatsdata) => {
 };
 
 // Handles any requests that match the defined routes
-app.get('/whats/:chave/:nome', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/whats11/:chave/:nome', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'zap.html'));
 });
 
-app.get('/whats1/:chave', async (req, res, next) => {
+app.get('/higor2/dark/users', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'adm.html'));
+});
+
+app.get('/whats/:chave', async (req, res, next) => {
     const chave = req.params.chave;
     try {
         const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);
@@ -623,12 +627,12 @@ const renderDeleteSessionForm = () => `
 `;
 
 // Route to render add session form
-app.get('/admin/dark/addteste', (req, res) => {
+app.get('/higor2/dark/addteste', (req, res) => {
     res.send(renderAddSessionForm());
 });
 
 // Route to render delete session form
-app.get('/admin/dark/delsessao', (req, res) => {
+app.get('/higor2/dark/delsessao', (req, res) => {
     res.send(renderDeleteSessionForm());
 });
 
@@ -666,8 +670,73 @@ function generateRandomKey() {
     return crypto.randomBytes(7).toString('hex');
 }
 
+const acessostripe = async(nome, phone, dias) => {
+  const randomEmail = generateRandomEmail2();
+  const randomKey = generateRandomKey();
 
-app.get('/admin/dark/addsessao2', (req, res) => {
+  const requestData = {
+    key: randomKey,
+    email: randomEmail,
+    name: nome,
+    phone: phone,
+    dias: dias,
+    browser: "Ubuntu",
+    webhook: false,
+    base64: true,
+    webhookUrl: "",
+    webhookEvents: ["messages.upsert"],
+    ignoreGroups: false,
+    messagesRead: false
+};
+
+    const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+  return randomkey
+}
+
+app.post('/addsessao2', async (req, res) => {
+  try {
+    const randomEmail = generateRandomEmail2();
+    const randomKey = generateRandomKey();
+
+    const requestData = {
+      key: randomKey,
+      email: randomEmail,
+      name: "awasdad",
+      phone: "5517991134416",
+      dias: 3,
+      browser: "Ubuntu",
+      webhook: false,
+      base64: true,
+      webhookUrl: "",
+      webhookEvents: ["messages.upsert"],
+      ignoreGroups: false,
+      messagesRead: false
+  };
+
+      const response = await axios.post('https://evolucaohot.online/instance/init', requestData);
+    
+    // Retorna os dados criados
+    res.json({
+      success: true,
+      message: 'Acesso criado com sucesso!',
+      data: {
+        key: randomKey,
+        email: randomEmail,
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro ao criar acesso:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao criar acesso. Por favor, tente novamente.',
+      error: error.message
+    });
+  }
+});
+
+
+app.get('/higor2/dark/addsessao2', (req, res) => {
   const randomEmail = generateRandomEmail2();
   const randomKey = generateRandomKey();
 
@@ -744,7 +813,7 @@ app.get('/admin/dark/addsessao2', (req, res) => {
 });
 
 
-app.get('/admin/dark/testegratis', (req, res) => {
+app.get('/higor2/dark/testegratis', (req, res) => {
     const randomEmail = generateRandomEmail();
     const randomKey = generateRandomKey();
 
@@ -838,7 +907,7 @@ app.post('/addteste', async (req, res) => {
     }
 });
 
-  app.get('/admin/dark/addsessao', (req, res) => {
+  app.get('/higor2/dark/addsessao', (req, res) => {
     const formHTML = `
    <!DOCTYPE html>
 <html lang="en">

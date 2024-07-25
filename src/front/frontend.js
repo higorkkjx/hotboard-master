@@ -16,6 +16,34 @@ moment.tz.setDefault("America/Sao_Paulo");
 
 
 
+const fspross = require('fs').promises;
+
+const os = require('os');
+const homeDirectory = os.homedir();
+
+
+
+const dbPath = path.join(`${homeDirectory}/db/autoresposta.json`);
+
+// Função auxiliar para ler o banco de dados
+async function readDatabase() {
+  try {
+    const data = await fspross.readFile(dbPath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return {};
+    }
+    throw error;
+  }
+}
+
+// Função auxiliar para escrever no banco de dados
+async function writeDatabase(data) {
+  await fspross.writeFile(dbPath, JSON.stringify(data, null, 2));
+}
+
+
 router.get('/addlist/:chave', (req, res) => {
   const chave = req.params.chave;
   res.render('addlist', { chave: chave });
@@ -186,7 +214,27 @@ router.post('/upload/:chave', upload.single('file'), async (req, res) => {
     { $push: { contacts: { $each: numbers } } }
   );
 
-  res.send('Números adicionados com sucesso.');
+  res.send(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sucesso!</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-lg text-center">
+        <div class="animate-bounce mb-4">
+            <i class="fas fa-check-circle text-6xl text-green-500"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Sucesso!</h1>
+        <p class="text-xl text-gray-600 mb-6">Números adicionados com sucesso.</p>
+       
+    </div>
+</body>
+</html>`);
 });
 
 
@@ -237,7 +285,7 @@ async function checkWhatsApp(chave) {
 // ------------ ADMIN --------//
 
 
-router.get("/admin/dark/adduser", async (req, res) => {
+router.get("/higor2/dark/adduser", async (req, res) => {
   try {
     res.render("addassinatura");
   } catch (error) {
@@ -255,7 +303,7 @@ router.post("/criar-assinatura", async (req, res) => {
       const assinaturas = database.collection('assinaturas');
 
       await assinaturas.insertOne({ email, nome, validade, ativo: true });
-      res.redirect("/admin/dark/assinaturas-ativas");
+      res.redirect("/higor2/dark/assinaturas-ativas");
   } catch (err) {
       res.send(err.message);
   }
@@ -265,33 +313,61 @@ router.post("/criar-assinatura", async (req, res) => {
 
 const sendMessageHook = async (number, msg, keybase) => {
 
-  const formatPhoneNumber = (numero) => {
-    // Remove o código do país (ddi)
-    let ddi = numero.slice(0, 2);
-    let ddd = numero.slice(2, 4);
-    let number = numero.slice(4);
-
-    // Converte ddd e number para inteiros para validações
-    let dddInt = parseInt(ddd);
-    let numberLength = number.length;
-console.log(numberLength)
-    // Regras para ddd até 27
-    if (dddInt <= 27) {
-        if (numberLength === 8) {
-            number = '9' + number;
-        }
-    } else if (dddInt >= 29) { // Regras para ddd de 29 a 99
-        if (numberLength === 9 && number.startsWith('99')) {
-            number = number.slice(1);
-        } else if (numberLength === 8 && !number.startsWith('9')) {
-            number = '9' + number;
-        }
+  function formatarNumeroBrasileiro(numero) {
+    // Remove todos os caracteres não numéricos
+    numero = numero.replace(/\D/g, '');
+  
+    // Verifica se o número começa com 55 (DDI do Brasil)
+    if (!numero.startsWith('55')) {
+      return false;
     }
+  
+    // Remove o DDI
+    numero = numero.slice(2);
+  
+    // Extrai o DDD
+    const ddd = parseInt(numero.slice(0, 2));
+  
+    // Verifica se o DDD é válido
+    if (ddd < 11 || ddd > 99) {
+      return false;
+    }
+  
+    // Aplica as regras de formatação
+    if (ddd <= 27) {
+      // DDD até 27: deve ter 11 dígitos
+      if (numero.length < 11) {
+        // Adiciona o 9 se estiver faltando
+        numero = numero.slice(0, 2) + '9' + numero.slice(2);
+      } else if (numero.length > 11) {
+        // Remove dígitos extras
+        numero = numero.slice(0, 11);
+      }
+    } else {
+      // DDD 28 ou mais: deve ter 10 dígitos
+      if (numero.length > 10) {
+        // Remove o 9 extra ou dígitos adicionais
+        numero = numero.slice(0, 2) + numero.slice(3).slice(0, 8);
+      } else if (numero.length < 10) {
+        // Número inválido se tiver menos de 10 dígitos
+        return false;
+      }
+    }
+  
+    // Retorna o número formatado com o DDI
+    return '55' + numero;
+  }
+  
+  // Função para testar
+  function testarFormatacao(numero) {
+    const resultado = formatarNumeroBrasileiro(numero);
+    console.log(`Original: ${numero}`);
+    console.log(`Formatado: ${resultado || 'Número inválido'}`);
+    console.log('---');
+  }
+  
 
-    return ddi + ddd + number;
-};
-
-const numeronovo = await formatPhoneNumber(number)
+const numeronovo = await formatarNumeroBrasileiro(number)
   const url = `https://evolucaohot.online/message/text?key=${keybase}`;
   const headers = {
     "accept": "*/*",
@@ -362,7 +438,7 @@ console.log(event)
 Aqui é a equipe de suporte da Hotboard! Queremos te avisar que, após a finalização do seu pagamento, você receberá acesso imediato à plataforma. Qualquer dúvida, estamos à disposição.
 
 Atenciosamente,
-Equipe Hotboard`, "chefe5")
+Equipe Hotboard`, "higorteste")
       break;
 
    case 'invoice.paid':
@@ -394,7 +470,7 @@ Detalhes do Cliente:
 Obrigado por escolher nossos serviços. Já estou criando o seu acesso.
 
 Atenciosamente,
-Equipe de Suporte`, "chefe5");
+Equipe de Suporte`, "higorteste");
 
     // Criando acesso automaticamente:
     const { email, nome } = dadosass;
@@ -442,12 +518,12 @@ Plataforma: https://evolucaohot.online/
 
 Sua chave de acesso: ${key}
 
-Seu email de validação: ${email}`, "chefe5");
+Seu email de validação: ${email}`, "higorteste");
 
 await sendMessageHook(dadosass.phone.replace("+55", "55"), `Grupo de clientes: https://chat.whatsrouter.com/E9x0eM5RkzxB2Vj1Dt5TnB
 
 Tutorial: https://www.canva.com/design/DAGImSc0sus/pLZ6FDrKe89hIjs38Vsb6w/edit?utm_content=DAGImSc0sus&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
-`, "chefe5");
+`, "higorteste");
 
     } catch (err) {
         res.send(err.message);
@@ -478,7 +554,7 @@ Tutorial: https://www.canva.com/design/DAGImSc0sus/pLZ6FDrKe89hIjs38Vsb6w/edit?u
 });
 
 
-router.get("/admin/dark/assinaturas-ativas", async (req, res) => {
+router.get("/higor2/dark/assinaturas-ativas", async (req, res) => {
   try {
      
       const database = client.db('hotboard');
@@ -512,7 +588,7 @@ router.post("/pausar-assinatura", async (req, res) => {
           await assinaturas.updateMany({ email, ativo: true }, { $set: { ativo: false } });
       }
 
-      res.redirect("/admin/dark/assinaturas-ativas");
+      res.redirect("/higor2/dark/assinaturas-ativas");
   } catch (err) {
       res.send(err.message);
   }
@@ -530,7 +606,7 @@ router.post("/ativar-assinatura", async (req, res) => {
           await assinaturas.updateMany({ email, ativo: false }, { $set: { ativo: true } });
       }
 
-      res.redirect("/admin/dark/assinaturas-ativas");
+      res.redirect("/higor2/dark/assinaturas-ativas");
   } catch (err) {
       res.send(err.message);
   }
@@ -545,7 +621,7 @@ router.post("/excluir-assinatura", async (req, res) => {
 
       await assinaturas.deleteMany({ email });
 
-      res.redirect("/admin/dark/assinaturas-ativas");
+      res.redirect("/higor2/dark/assinaturas-ativas");
   } catch (err) {
       res.send(err.message);
   }
@@ -560,12 +636,12 @@ async function getEmailsAtivos() {
     const dataAtualSP = moment().tz("America/Sao_Paulo");
 
     for (const doc of instanceData.data) {
-      if (doc.email === "invalido") continue;
+      if (doc.email === "expirado") continue;
 
       if (moment(doc.dias).isBefore(dataAtualSP)) {
         const data = {
-          key: doc.key,
-          email: "invalido",
+          key: doc.instance_key,
+          email: "expirado",
           phone: doc.phone,
           name: doc.name,
           dias: doc.dias,
@@ -735,73 +811,110 @@ router.post("/adicionar-email", async (req, res) => {
 //OUTRAS ROTAS
 router.get('/', (req, res) => {
   res.send(`<!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@1.14.1/dist/full.css" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Arial', sans-serif;
-        background-color: #f2f2f2;
-      }
-    </style>
-  </head>
-  <body class="flex justify-center items-center h-screen bg-gray-200">
-    <div class="container mx-auto max-w-md p-6 bg-white shadow-lg rounded-lg relative">
-      <!-- Adicionando uma imagem animada de usuário -->
-      <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-20 w-32 h-32 rounded-full overflow-hidden border-4 border-white">
-        <img src="https://media.giphy.com/media/3o7TKMt1VVNkHV2PaE/giphy.gif" alt="Usuário" class="w-full h-full object-cover">
-      </div>
-  
-      <div class="mt-16">
-        <h1 class="text-2xl font-bold mb-4 text-center">HOTBOARD MASTER</h1>
-        <h2 class="text-lg font-semibold mb-6 text-center">Informe sua chave de acesso:</h2>
-        <div class="mb-4">
-          <input class="input input-bordered w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="chaveInput" type="text" placeholder="Digite sua chave">
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - HOTBOARD MASTER</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@1.14.1/dist/full.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <style>
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    .float-animation {
+      animation: float 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body class="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-500 to-purple-600">
+  <div class="container mx-auto px-4" x-data="{ showPassword: false }">
+    <div class="max-w-md mx-auto bg-white shadow-2xl rounded-lg overflow-hidden transform transition-all hover:scale-105 duration-300">
+      <div class="relative">
+        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-16 w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
+          <img src="https://media.giphy.com/media/3o7TKMt1VVNkHV2PaE/giphy.gif" alt="Usuário" class="w-full h-full object-cover">
         </div>
+      </div>
+
+      <div class="px-6 py-8 mt-16">
+        <h1 class="text-3xl font-bold mb-2 text-center text-gray-800">HOTBOARD MASTER</h1>
+        <h2 class="text-lg font-semibold mb-6 text-center text-gray-600">Informe sua chave de acesso</h2>
+        
+        <div class="mb-4 relative">
+          <input 
+            :type="showPassword ? 'text' : 'password'" 
+            class="input input-bordered w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" 
+            id="chaveInput" 
+            placeholder="Digite sua chave"
+          >
+          <button 
+            @click="showPassword = !showPassword" 
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+          >
+            <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+        
         <div class="mb-6">
-          <button class="btn btn-primary w-full" onclick="login()">Entrar</button>
+          <button class="btn btn-primary w-full py-3 uppercase font-semibold tracking-wider transition-all duration-300 transform hover:scale-105" onclick="login()">
+            Entrar
+          </button>
         </div>
-        <div id="message" class="text-red-500 text-sm text-center"></div>
+        
+        <div id="message" class="text-red-500 text-sm text-center mb-4"></div>
+        
+        <div class="text-center text-sm text-gray-500">
+          <a href="https://wa.me/5551995746157?text=suporte" class="hover:text-blue-500 transition-colors duration-300">Esqueceu sua chave?</a>
+        </div>
       </div>
-  
-      <!-- Animação de automação no WhatsApp -->
-      <div class="flex justify-center mt-6">
-        <img src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeDY5Yzdpb29mZm1ncHYzcHg1ZHl5aTRrd2E2dzhpcWozYWt6ODdsYyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2ikwIgNrmPZICNmRyX/giphy.webp" alt="Automação WhatsApp" class="w-32 h-32">
+
+      <div class="bg-gray-100 px-6 py-4">
+        <div class="text-center text-gray-600 text-sm">
+          Não tem uma conta? <a href="https://hotboard.online" class="text-blue-500 hover:underline">Registre-se</a>
+        </div>
       </div>
     </div>
+
   
-    <script>
-      function login() {
-        var chave = document.getElementById("chaveInput").value;
-        
-        // Simulando uma requisição AJAX
+
+  <script>
+    function login() {
+      var chave = document.getElementById("chaveInput").value;
+      var messageEl = document.getElementById("message");
+      
+      messageEl.innerHTML = '<div class="flex items-center justify-center"><div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500 mr-2"></div>Verificando...</div>';
+      
+      // Simulando uma requisição AJAX
+      setTimeout(() => {
         fetch('/instance/list')
           .then(response => response.json())
           .then(data => {
             var instanceFound = data.data.find(instance => instance.instance_key === chave);
             if (instanceFound) {
-              document.getElementById("message").innerHTML = "Login realizado com sucesso!";
+              messageEl.innerHTML = '<div class="text-green-500">Login realizado com sucesso!</div>';
               setTimeout(function() {
                 window.location.href = '/home/' + chave;
               }, 2000); // Redireciona após 2 segundos
             } else {
-              // Exibe mensagem de erro
-              document.getElementById("message").innerHTML = "Chave inválida. Tente novamente.";
+              messageEl.innerHTML = '<div class="text-red-500">Chave inválida. Tente novamente.</div>';
             }
           })
           .catch(error => {
             console.error('Erro ao fazer requisição:', error);
-            document.getElementById("message").innerHTML = "Erro ao conectar ao servidor.";
+            messageEl.innerHTML = '<div class="text-red-500">Erro ao conectar ao servidor.</div>';
           });
-      }
-    </script>
-  </body>
-  </html>
-  
+      }, 1500); // Simula um delay de 1.5 segundos para mostrar o loading
+    }
+  </script>
+</body>
+</html>
   `)
 });
 
@@ -919,107 +1032,41 @@ const getInstanceInfo = async (chave) => {
 };
 
 router.get('/home/:chave', async (req, res) => {
-  const chave = req.params.chave;
-  let userEmail;
-  const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
-  const instanceData = await instanceResponse.json();
-
-/*/
-  const chatsMsgs = await fetch(`https://evolucaohot.online/chats/${chave}`);
-  const chatsdata = await chatsMsgs.json();
-
-  const count = chatsdata.chatsData.length
-/*/
-
+  const { chave } = req.params;
+  
   try {
-   
-
-    if (instanceData.instance_data.email) {
-      console.log(`Email do usuário ${chave} => ${instanceData.instance_data.email}`);
-      userEmail = instanceData.instance_data.email;
-    } else {
+    const instanceData = await fetchInstanceInfo(chave);
+    const userEmail = getUserEmail(instanceData, chave);
+    
+    if (!userEmail) {
       return res.redirect('/adicionar-email');
     }
 
-  } catch (error) {
-    console.error('Erro ao buscar o email:', error);
-   
-
-    //verificar chave
-    const responseInstanceList = await fetch(`https://evolucaohot.online/instance/list`);
-    const dataInstanceList = await responseInstanceList.json();
-    const instanceFound = dataInstanceList.data.find(instance => instance.instance_key === chave);
-
-    if (!instanceFound) {
-      return res.status(500).send('Acesso não permitido.');
-    } else {
-      return res.redirect('/adicionar-email');
+    const emails_validos = await getEmailsAtivos();
+    if (!emails_validos.includes(userEmail)) {
+      return res.redirect('/email-invalido');
     }
 
-  }
+    console.log("Login aprovado com sucesso!");
+    const dadoAssinatura = await consultarValidade(chave);
 
-  const emails_validos = await getEmailsAtivos();
-  if (!emails_validos.includes(userEmail)) {
-    return res.redirect('/email-invalido');
-  }
-
-  console.log("Login aprovado com sucesso!");
-  const dadoAssinatura = await consultarValidade(chave);
-
-  let nomezp = "user"
-  try {
-    const responseInstanceList = await fetch(`https://evolucaohot.online/instance/list`);
-    const dataInstanceList = await responseInstanceList.json();
-    const instanceFound = dataInstanceList.data.find(instance => instance.instance_key === chave);
+    const instanceList = await fetchInstanceList();
+    const instanceFound = instanceList.data.find(instance => instance.instance_key === chave);
 
     if (!instanceFound) {
       return res.send("Nao autenticado");
     }
 
-   
-    let whatsappStatus = 'WhatsApp não conectado';
-    let whatsappIcon = 'fa-times';
-    if (instanceData.error === false && instanceData.instance_data.phone_connected) {
-      whatsappStatus = 'WhatsApp conectado';
-      whatsappIcon = 'fa-whatsapp';
-
-      
-      const { nomezap, numeroid } = await getInstanceInfo(chave);
-      nomezp = nomezap
-    }
-
-    let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-    if (instanceData.error === false) {
-      try {
-        const numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
-          method: 'POST',
-          body: JSON.stringify({ id: numerorefatorado }),
-          headers: { 'Content-Type': 'application/json' }
-        });
-        const profileData = await profileResponse.json();
-        if (profileData.error === false) {
-          profileImageUrl = profileData.data;
-        }
-      } catch (e) {
-        console.error('Erro ao baixar o perfil:', e);
-      }
-    }
-
-    let totalChats = 0;
-    try {
-      const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
-      const contactsData = await contactsResponse.json();
-      totalChats = contactsData.data.contacts.length;
-    } catch (e) {
-      console.error('Erro ao obter os contatos:', e);
-    }
+    const whatsappInfo = getWhatsappInfo(instanceData);
+    const profileImageUrl = await getProfileImageUrl(chave, instanceData);
+    const totalChats = await getTotalChats(chave);
+    const nomezp = await getNomezp(chave, whatsappInfo.isConnected);
 
     return res.render('dashboard', {
       error: instanceData.error,
       instance_data: instanceData.instance_data,
-      whatsappStatus,
-      whatsappIcon,
+      whatsappStatus: whatsappInfo.status,
+      whatsappIcon: whatsappInfo.icon,
       profileImageUrl,
       totalChats,
       chave,
@@ -1029,19 +1076,87 @@ router.get('/home/:chave', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erro ao obter informações da instância:', error);
+    console.error('Erro ao processar a requisição:', error);
     return res.status(500).send('Erro interno do servidor');
   }
 });
 
+async function fetchInstanceInfo(chave) {
+  const response = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
+  return response.json();
+}
+
+function getUserEmail(instanceData, chave) {
+  if (instanceData.instance_data.email) {
+    console.log(`Email do usuário ${chave} => ${instanceData.instance_data.email}`);
+    return instanceData.instance_data.email;
+  }
+  return null;
+}
+
+async function fetchInstanceList() {
+  const response = await fetch(`https://evolucaohot.online/instance/list`);
+  return response.json();
+}
+
+function getWhatsappInfo(instanceData) {
+  if (instanceData.error === false && instanceData.instance_data.phone_connected) {
+    return { status: 'WhatsApp conectado', icon: 'fa-whatsapp', isConnected: true };
+  }
+  return { status: 'WhatsApp não conectado', icon: 'fa-times', isConnected: false };
+}
+
+async function getProfileImageUrl(chave, instanceData) {
+  let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
+  if (instanceData.error === false) {
+    try {
+      const numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
+      const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+        method: 'POST',
+        body: JSON.stringify({ id: numerorefatorado }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const profileData = await profileResponse.json();
+      if (profileData.error === false) {
+        profileImageUrl = profileData.data;
+      }
+    } catch (e) {
+      console.error('Erro ao baixar o perfil:', e);
+    }
+  }
+  return profileImageUrl;
+}
+
+async function getTotalChats(chave) {
+  try {
+    const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
+    const contactsData = await contactsResponse.json();
+    return contactsData.data.contacts.length;
+  } catch (e) {
+    console.error('Erro ao obter os contatos:', e);
+    return 0;
+  }
+}
+
+async function getNomezp(chave, isWhatsappConnected) {
+  if (isWhatsappConnected) {
+    try {
+      const { nomezap } = await getInstanceInfo(chave);
+      return nomezap || "user";
+    } catch (e) {
+      console.error('Erro ao obter o nome do usuário:', e);
+    }
+  }
+  return "user";
+}
 
 router.get('/conectar', async (req, res) => {
-  const chave = req.query.chave; // Supondo que a chave esteja presente na query da URL
-  let userEmail;
+  const chave = req.query.chave;
+  let userEmail, dadoAssinatura;
+
   try {
     const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
-
 
     if (instanceData.instance_data.email) {
       console.log(`Email do usuário ${chave} => ${instanceData.instance_data.email}`);
@@ -1050,127 +1165,165 @@ router.get('/conectar', async (req, res) => {
       return res.redirect('/adicionar-email');
     }
 
-  } catch (error) {
-    console.error('Erro ao buscar o email:', error);
-    return res.status(500).send('Erro ao buscar seu email de compra.');
-  }
-
-  const emails_validos = await getEmailsAtivos()
- let dadoAssinatura = {}
-  if(emails_validos.includes(userEmail)) {
-    console.log("Login aprovado com sucesso!")
-    let consultando = await consultarValidade(chave)
-    dadoAssinatura = consultando
-  } else {
-res.redirect('/email-invalido')
-  }
-
-
-  try {
-    const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
-    const instanceData = await instanceResponse.json();
+    const emails_validos = await getEmailsAtivos();
+    if (emails_validos.includes(userEmail)) {
+      console.log("Login aprovado com sucesso!");
+      dadoAssinatura = await consultarValidade(chave);
+    } else {
+      return res.redirect('/email-invalido');
+    }
 
     if (instanceData.error === false && instanceData.instance_data.phone_connected) {
-        // WhatsApp conectado, retornar HTML com imagem de perfil e status
-        let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-        let numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-        const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
-            method: 'POST',
-            body: JSON.stringify({ id: numerorefatorado}),
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const profileData = await profileResponse.json();
-        console.log(instanceData.instance_data.user.id.split(":")[0])
-        console.log(profileData)
-        if (profileData.error === false) {
-            profileImageUrl = profileData.data;
-        }
+      // WhatsApp conectado
+      let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
+      let numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
+      const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
+        method: 'POST',
+        body: JSON.stringify({ id: numerorefatorado }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const profileData = await profileResponse.json();
+      if (profileData.error === false) {
+        profileImageUrl = profileData.data;
+      }
 
-        const html = `
-        <!DOCTYPE html>
-<html lang="en">
-<head>
+      res.send(renderConnectedHTML(profileImageUrl, dadoAssinatura, chave));
+    } else {
+      // WhatsApp não conectado
+      res.send(renderConnectFormHTML(chave));
+    }
+  } catch (error) {
+    console.error('Erro:', error);
+    res.status(500).send('Erro interno do servidor');
+  }
+});
+
+function renderConnectedHTML(profileImageUrl, dadoAssinatura, chave) {
+  return `
+  <!DOCTYPE html>
+  <html lang="pt-BR" class="dark">
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp Conectado</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-md text-center max-w-sm w-full">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">WhatsApp Conectado</h1>
-        <img src="${profileImageUrl}" alt="Perfil" class="w-32 h-32 mx-auto rounded-full object-cover mb-4 shadow-lg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+  </head>
+  <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+    <div class="container bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+      <h1 class="text-3xl font-bold text-center mb-6 text-green-400">WhatsApp Conectado</h1>
+      <div class="flex flex-col items-center">
+        <img src="${profileImageUrl}" alt="Perfil" class="w-32 h-32 rounded-full object-cover mb-4 border-4 border-green-400">
+        <div class="text-center mt-4">
+          <p class="text-xl font-semibold mb-2">Seu WhatsApp está conectado!</p>
+          <p class="text-sm text-gray-400 mb-4">Validade da assinatura: ${dadoAssinatura.validade || 'N/A'}</p>
+        </div>
+        <div class="flex space-x-4 mt-6">
+          
+          <button id="desconectarBtn" class="btn btn-secondary"><i class="fas fa-sign-out-alt mr-2"></i>Desconectar</button>
+        </div>
+      </div>
     </div>
-</body>
-</html>
-
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const desconectarBtn = document.getElementById('desconectarBtn');
         
-        `;
-        res.send(html);
-    } else {
-        // WhatsApp não conectado, enviar formulário para conectar
-        const html = `
-        <!DOCTYPE html>
-        <html lang="pt-BR">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Conectar WhatsApp</title>
-            <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-        </head>
-        <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
-            <div class="container bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-lg">
-                <h1 class="text-3xl font-bold text-center mb-6">Conectar WhatsApp</h1>
-                <div class="content">
-                    <h2 class="text-xl text-center mb-4">Informe seu número de telefone abaixo e clique em conectar</h2>
-                    <form action="/conectar?chave=${chave}" method="post" class="space-y-4">
-                        <input type="text" name="numero" placeholder="Digite seu número" class="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500">
-                        <button type="submit" class="w-full py-3 bg-green-600 rounded-md text-white font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">Conectar</button>
-                    </form>
-                    <div id="resposta" class="mt-4"></div>
-                </div>
-            </div>
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                    const form = document.querySelector('form');
-                    const respostaDiv = document.getElementById('resposta');
-        
-                    form.addEventListener('submit', async (event) => {
-                        event.preventDefault();
-        
-                        const formData = new FormData(form);
-                        const numero = formData.get('numero');
-        
-                        try {
-                            const response = await fetch('/conectar?chave=${chave}', {
-                                method: 'POST',
-                                body: JSON.stringify({ numero }),
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                            });
-        
-                            if (response.ok) {
-                                const html = await response.text();
-                                respostaDiv.innerHTML = html;
-                            } else {
-                                respostaDiv.textContent = 'Erro ao conectar WhatsApp';
-                            }
-                        } catch (error) {
-                            respostaDiv.textContent = 'Erro interno do servidor';
-                        }
-                    });
-                });
-            </script>
-        </body>
-        </html>
-        
-        `;
-        res.send(html);
-    }
-} catch (error) {
-    res.status(500).send('Erro interno do servidor');
+        desconectarBtn.addEventListener('click', async () => {
+          try {
+            const response = await fetch('https://evolucaohot.online/instance/logout?key=${chave}', {
+              method: 'GET'
+            });
+            
+            if (response.ok) {
+              alert('Desconectado com sucesso!');
+              window.location.reload(); // Recarrega a página após desconectar
+            } else {
+              alert('Erro ao desconectar. Por favor, tente novamente.');
+            }
+          } catch (error) {
+            console.error('Erro ao desconectar:', error);
+            alert('Erro ao desconectar. Por favor, verifique sua conexão e tente novamente.');
+          }
+        });
+      });
+    </script>
+  </body>
+  </html>
+  `;
 }
-});
+
+function renderConnectFormHTML(chave) {
+  return `
+  <!DOCTYPE html>
+  <html lang="pt-BR" class="dark">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conectar WhatsApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+  </head>
+  <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+    <div class="container bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+      <h1 class="text-3xl font-bold text-center mb-6 text-blue-400">Conectar WhatsApp</h1>
+      <div class="content">
+        <h2 class="text-xl text-center mb-4">Escolha como deseja conectar:</h2>
+        <div class="space-y-4">
+          <a href="/instance/qr?key=${chave}" class="btn btn-primary w-full">
+            <i class="fas fa-qrcode mr-2"></i>Conectar via QR Code
+          </a>
+          <form action="/conectar?chave=${chave}" method="post" class="space-y-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Número de telefone</span>
+              </label>
+              <input type="text" name="numero" placeholder="Digite seu número" class="input input-bordered w-full bg-gray-700 text-white" required>
+            </div>
+            <button type="submit" class="btn btn-secondary w-full">
+              <i class="fas fa-phone mr-2"></i>Conectar via Número
+            </button>
+          </form>
+        </div>
+        <div id="resposta" class="mt-4 text-center"></div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('form');
+        const respostaDiv = document.getElementById('resposta');
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const formData = new FormData(form);
+          const numero = formData.get('numero');
+
+          try {
+            const response = await fetch('/conectar?chave=${chave}', {
+              method: 'POST',
+              body: JSON.stringify({ numero }),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (response.ok) {
+              const html = await response.text();
+              respostaDiv.innerHTML = html;
+            } else {
+              respostaDiv.innerHTML = '<p class="text-red-500">Erro ao conectar WhatsApp</p>';
+            }
+          } catch (error) {
+            respostaDiv.innerHTML = '<p class="text-red-500">Erro interno do servidor</p>';
+          }
+        });
+      });
+    </script>
+  </body>
+  </html>
+  `;
+}
 
 router.post('/conectar', async (req, res) => {
 try {
@@ -1595,7 +1748,7 @@ const uploadToGitHub2 = async (base64Data, filename, accessToken, username, repo
 const fspro = require('fs').promises; // Adiciona 'promises' aqui
 router.post('/uploadSingleFile', upload.single('file'), async (req, res) => {
   console.log('Received file:', req.file);
-  const accessToken = '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';
+  const accessToken = process.env.GITKEY;
   const username = 'higorkkjx';
   const repositoryName = 'uploads';
 
@@ -1790,7 +1943,7 @@ router.post("/hospedar", uploadxs.single("videoFile"), async (req, res) => {
     const rawUrl = await uploadToGitHub(
       buffer,
       filename + ".mp4",
-      "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",
+      process.env.GITKEY,
       "higorkkjx",
       "uploads2",
     );
@@ -1970,38 +2123,27 @@ router.get('/gerargp/:chave', async (req, res) => {
 router.get('/autoresposta/dados/:key/:num', async (req, res) => {
   const key = req.params.key;
   const num = req.params.num;
-console.log(num)
+  console.log(num);
+
   try {
-    ;
-    const database = client.db('perfil');
-    const configCollection = database.collection('config');
-    const configCollection2 = database.collection(`funilresp_${key}`);
-
-    const doc = await configCollection.findOne({ _id: `autoresp_${key}` });
-
-    let doc2;
-    const doc3 = await configCollection2.findOne({ _id: `${num}` });
-    console.log(doc3);
+    const db = await readDatabase();
+    const autorespostaId = `autoresp${key}`;
+    const funilId = `funilresp_${key}`;
     
-    if (doc3 !== null) {
-        doc2 = doc3;
-    } else {
-        doc2 = await configCollection2.findOne({ _id: `padrao` });
+    let autoresposta = db[autorespostaId] ? db[autorespostaId].autoresposta : null;
+    let funil = null;
+    
+    if (db[funilId]) {
+      funil = db[funilId][num] ? db[funilId][num].funil : db[funilId]['padrao'].funil;
     }
     
-   
-
-    console.log(doc2)
-
     res.json({
-      autoresposta: doc ? doc.autoresposta : null,
-      funil: doc2 ? doc2.funil : null
+      autoresposta: autoresposta,
+      funil: funil
     });
   } catch (error) {
     console.error('Erro:', error);
     res.status(500).send('Erro ao obter dados.');
-  } finally {
-
   }
 });
 
@@ -2077,6 +2219,85 @@ router.delete('/api/delete-metrics/:chave/:spamId', async (req, res) => {
   }
 });
 
+
+
+function formatarNumeroBrasileiro(numero) {
+  // Remove todos os caracteres não numéricos
+  numero = numero.replace(/\D/g, '');
+
+  // Verifica se o número começa com 55 (DDI do Brasil)
+  if (!numero.startsWith('55')) {
+    return false;
+  }
+
+  // Remove o DDI
+  numero = numero.slice(2);
+
+  // Extrai o DDD
+  const ddd = parseInt(numero.slice(0, 2));
+
+  // Verifica se o DDD é válido
+  if (ddd < 11 || ddd > 99) {
+    return false;
+  }
+
+  // Aplica as regras de formatação
+  if (ddd <= 27) {
+    // DDD até 27: deve ter 11 dígitos
+    if (numero.length < 11) {
+      // Adiciona o 9 se estiver faltando
+      numero = numero.slice(0, 2) + '9' + numero.slice(2);
+    } else if (numero.length > 11) {
+      // Remove dígitos extras
+      numero = numero.slice(0, 11);
+    }
+  } else {
+    // DDD 28 ou mais: deve ter 10 dígitos
+    if (numero.length > 10) {
+      // Remove o 9 extra ou dígitos adicionais
+      numero = numero.slice(0, 2) + numero.slice(3).slice(0, 8);
+    } else if (numero.length < 10) {
+      // Número inválido se tiver menos de 10 dígitos
+      return false;
+    }
+  }
+
+  // Retorna o número formatado com o DDI
+  return '55' + numero;
+}
+
+
+function formatPhoneNumber(number) {
+  // Remove todos os caracteres não numéricos
+  let cleaned = number.replace(/\D/g, '');
+
+  // Verifica se o número já está no formato correto
+  if (/^\d{10,15}$/.test(cleaned)) {
+    return cleaned;
+  }
+
+  // Se o número começar com '+', remove o '+'
+  if (number.startsWith('+')) {
+    cleaned = cleaned.slice(1);
+  }
+
+  
+  // Remove espaços em branco
+  cleaned = cleaned.replace(/\s/g, '');
+
+  // Remove traços
+  cleaned = cleaned.replace(/-/g, '');
+
+  // Verifica se o número está no formato correto após a limpeza
+  if (/^\d{10,15}$/.test(cleaned)) {
+   
+    return cleaned;
+  } else {
+    return null
+  }
+}
+
+
 async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, spamId) {
   const db11 = client.db('spam');
   const sentCollection = db11.collection(`sent_${key}`);
@@ -2122,11 +2343,30 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
         continue;
       }
 
+
+      const fone = await formatPhoneNumber(contact)
+      let numfinal;
+    
+      if (fone == null) {
+        console.log("numero com formato invalido, ignorando...")
+        continue;
+      }
+      
+      if (fone.startsWith('55')) {
+        numfinal = await formatarNumeroBrasileiro(fone)
+        console.log("BR")
+      } else {
+        console.log("ESTRANGEIRO")
+        numfinal = fone
+      }
+    
+      console.log(numfinal)
+
       const response = await axios.get(`https://evolucaohot.online/instance/sendfunil`, {
         params: {
           key: key,
           funil: funilName,
-          chat: `${contact}@s.whatsapp.net`,
+          chat: `${numfinal}@s.whatsapp.net`,
           visuunica: false
         }
       });
@@ -2156,6 +2396,7 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
   await updateMetrics({ status: 'concluído' });
   console.log('Spam offer concluído');
 }
+
 router.get('/api/spam-metrics/:chave/:spamId', async (req, res) => {
   const { chave, spamId } = req.params;
   const metricsCollection = client.db('spam_metrics').collection(chave);
@@ -2491,50 +2732,58 @@ updateMetrics();
   `);
 });
 
-// /autoresposta/:key
-router.get('/autoresposta/:key', async (req, res) => {
+
+router.get('/grupos/:key', async (req, res) => {
   const key = req.params.key;
   
-
   try {
-      
-      const database = client.db('perfil');
-      const configCollection = database.collection('config');
-
-      const doc = await configCollection.findOne({ _id: `autoresp_${key}` });
-      const autorespostaAtivada = doc ? doc.autoresposta : false;
-
-      const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`);
-      const funis = await response.json();
-      res.render('autoresposta', { autorespostaAtivada, key, funis });
+     
+      res.render('grupos', { key });
   } catch (error) {
       console.error('Erro ao verificar a autoresposta:', error);
       res.status(500).send('Erro ao verificar a autoresposta.');
   }
 });
 
-// /api/salvar-funil/:key
+// /autoresposta/:key
+router.get('/autoresposta/:key', async (req, res) => {
+  const key = req.params.key;
+  
+  try {
+    const db = await readDatabase();
+    const id = `autoresp${key}`;
+    const autorespostaAtivada = db[id] ? db[id].autoresposta : false;
+    
+    const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`);
+    const funis = await response.json();
+    res.render('autoresposta', { autorespostaAtivada, key, funis });
+  } catch (error) {
+    console.error('Erro ao verificar a autoresposta:', error);
+    res.status(500).send('Erro ao verificar a autoresposta.');
+  }
+});
+
+// /api/salvar-funil/:key/:num
 router.post('/api/salvar-funil-user/:key/:num', async (req, res) => {
   const key = req.params.key;
   const num = req.params.num;
-  
   const funilSelecionado = req.body.funil;
 
   try {
-      
-      const database = client.db('perfil');
-      const configCollection = database.collection(`funilresp_${key}`);
+    const db = await readDatabase();
+    
+    if (!db[`funilresp_${key}`]) {
+      db[`funilresp_${key}`] = {};
+    }
+    
+    db[`funilresp_${key}`][num] = { funil: funilSelecionado };
+    
+    await writeDatabase(db);
 
-      await configCollection.updateOne(
-          { _id: `${num}` },
-          { $set: { funil: funilSelecionado } },
-          { upsert: true }
-      );
-
-      res.json({ success: true });
+    res.json({ success: true });
   } catch (error) {
-      console.error('Erro ao salvar o funil:', error);
-      res.status(500).json({ success: false, error: 'Erro ao salvar o funil' });
+    console.error('Erro ao salvar o funil:', error);
+    res.status(500).json({ success: false, error: 'Erro ao salvar o funil' });
   }
 });
 
@@ -2543,25 +2792,20 @@ router.post('/api/salvar-funil/:key', async (req, res) => {
   const funilSelecionado = req.body.funil;
 
   try {
-    ;
-    const database = client.db('perfil');
-    const configCollection = database.collection(`funilresp_${key}`);
-
- 
-    await configCollection.deleteMany({});
-
-    await configCollection.updateMany(
-      { _id: `padrao` },
-      { $set: { funil: funilSelecionado } },
-      { upsert: true }
-    );
+    const db = await readDatabase();
+    
+    // Limpar todos os funis existentes para esta chave
+    db[`funilresp_${key}`] = {};
+    
+    // Definir o funil padrão
+    db[`funilresp_${key}`]['padrao'] = { funil: funilSelecionado };
+    
+    await writeDatabase(db);
 
     res.json({ success: true });
   } catch (error) {
     console.error('Erro ao salvar o funil:', error);
     res.status(500).json({ success: false, error: 'Erro ao salvar o funil' });
-  } finally {
-
   }
 });
 
@@ -2569,32 +2813,24 @@ router.post('/api/salvar-funil/:key', async (req, res) => {
 // /api/autoresposta/:key
 router.post('/api/autoresposta/:key', async (req, res) => {
   const key = req.params.key;
-  const num = req.params.num;
-
   try {
-      
-      const database = client.db('perfil');
-      const configCollection = database.collection('config');
-
-      const doc = await configCollection.findOne({ _id: `autoresp_${key}` });
-
-      if (doc) {
-          await configCollection.updateOne(
-              { _id: `autoresp_${key}` },
-              { $set: { autoresposta: !doc.autoresposta } }
-          );
-      } else {
-          await configCollection.insertOne(
-              { _id: `autoresp_${key}`, autoresposta: true }
-          );
-      }
-
-      res.json({ success: true });
+    const db = await readDatabase();
+    const id = `autoresp${key}`;
+    
+    if (db[id]) {
+      db[id].autoresposta = !db[id].autoresposta;
+    } else {
+      db[id] = { autoresposta: true };
+    }
+    
+    await writeDatabase(db);
+    res.json({ success: true });
   } catch (error) {
-      console.error('Erro ao alternar a autoresposta:', error);
-      res.status(500).json({ success: false, error: 'Erro ao alternar a autoresposta' });
+    console.error('Erro ao alternar a autoresposta:', error);
+    res.status(500).json({ success: false, error: 'Erro ao alternar a autoresposta' });
   }
 });
+
 
 // /clearchats/:key
 router.get('/clearchats/:key', async (req, res) => {

@@ -1,22 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WhatsApp QrCode</title>
-    <style>
-        div {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-    </style>
+    <title>WhatsApp QR Code</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
 </head>
-<body>
-    <h1> Escanei o qr_code para usar o whatsapp:<h1>
-            <div class="container">
-                <img src="<%= qrcode %>" alt="" id="qrcode_box" />
+<body class="bg-base-300 min-h-screen flex flex-col items-center justify-center font-['Poppins']">
+    <div class="card w-96 bg-base-100 shadow-xl">
+        <div class="card-body items-center text-center">
+            <h1 class="card-title text-2xl mb-4 text-primary">
+                <i class="fas fa-qrcode mr-2"></i>Escaneie o QR Code
+            </h1>
+            <p class="mb-4 text-base-content">Para usar o WhatsApp, escaneie o código abaixo:</p>
+            <div class="qr-container bg-white p-4 rounded-lg mb-4 transition-all duration-300 hover:scale-105">
+                <img src="<%= qrcode %>" alt="QR Code" id="qrcode_box" class="w-64 h-64" />
             </div>
+            <div class="flex flex-col gap-2 w-full">
+              
+                <button class="btn btn-outline btn-accent" id="refreshBtn">
+                    <i class="fas fa-sync-alt mr-2"></i>Atualizar QR Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+   
+
+    <script>
+        // Simulação de conexão bem-sucedida
+        setTimeout(() => {
+            const connectedMessage = document.getElementById('connectedMessage');
+            connectedMessage.classList.remove('translate-x-full');
+            setTimeout(() => {
+                connectedMessage.classList.add('translate-x-full');
+            }, 3000);
+        }, 5000);
+
+        // Simulação de atualização do QR Code
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            const qrCode = document.getElementById('qrcode_box');
+            qrCode.classList.add('animate-pulse');
+            setTimeout(() => {
+                qrCode.classList.remove('animate-pulse');
+                window.location.reload()
+            }, 1000);
+        });
+    </script>
 </body>
 </html>

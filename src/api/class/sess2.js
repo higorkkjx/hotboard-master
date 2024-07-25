@@ -26,12 +26,11 @@ class Session {
 			
 
             
-            await sessionsSnapshot.forEach(async (sessionData) => {
+            sessionsSnapshot.forEach(async (sessionData) => {
 				
                 const { key, webhook, webhookUrl } = sessionData;
                 const instance = new WhatsAppInstance(key, webhook, webhookUrl);
                 await instance.init();
-             //   console.log(instance)
                 WhatsAppInstances[key] = instance;
                 restoredSessions.push(key);
 				await sleep(150);

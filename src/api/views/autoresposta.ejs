@@ -1,39 +1,70 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Autoresposta</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@2.51.5/dist/full.css" rel="stylesheet" type="text/css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
 </head>
-<body class="bg-gray-100 h-screen flex items-center justify-center">
-  <div class="bg-white p-8 rounded shadow-md text-center">
-    <img src="https://media1.tenor.com/m/arlZrN0YovkAAAAC/robot-smile.gif" alt="GIF Animado" class="w-32 h-32 mx-auto mb-4"> 
-    <h1 class="text-2xl font-bold mb-4">Você deseja <%= autorespostaAtivada ? 'desativar' : 'ativar' %> a autoresposta?</h1>
-    <button id="toggleAutoresponder" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-      <%= autorespostaAtivada ? 'Desativar Autoresposta' : 'Ativar Autoresposta' %>
-    </button>
+<body class="bg-base-300 min-h-screen flex items-center justify-center font-['Poppins']">
+  <div class="card w-96 bg-base-100 shadow-xl">
+    <figure class="px-10 pt-10">
+      <img src="https://media1.tenor.com/m/arlZrN0YovkAAAAC/robot-smile.gif" alt="Robot GIF" class="rounded-xl w-32 h-32">
+    </figure>
+    <div class="card-body items-center text-center">
+      <h2 class="card-title text-2xl mb-4">Configuração de Autoresposta</h2>
+      
+      <div class="form-control w-full max-w-xs">
+        <label class="label">
+          <span class="label-text">Status da Autoresposta</span>
+        </label>
+        <button id="toggleAutoresponder" class="btn btn-primary btn-outline gap-2">
+          <i class="fas <%= autorespostaAtivada ? 'fa-toggle-on' : 'fa-toggle-off' %>"></i>
+          <%= autorespostaAtivada ? 'Desativar' : 'Ativar' %> Autoresposta
+        </button>
+      </div>
 
-    <div class="mt-4">
-      <label for="funilSelect" class="block text-gray-700 text-sm font-bold mb-2">Selecione o funil:</label>
-      <select id="funilSelect" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-        <option value="">Selecione...</option>
-        <% funis.forEach(funil => { %>
-          <option value="<%= funil.funilName %>"><%= funil.funilName %></option>
-        <% }); %>
-      </select>
+      <div class="form-control w-full max-w-xs mt-4">
+        <label class="label">
+          <span class="label-text">Selecione o funil</span>
+        </label>
+        <select id="funilSelect" class="select select-bordered w-full max-w-xs">
+          <option disabled selected>Escolha um funil</option>
+          <% funis.forEach(funil => { %>
+            <option value="<%= funil.funilName %>"><%= funil.funilName %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="card-actions mt-6">
+        <button id="salvarFunil" class="btn btn-accent gap-2">
+          <i class="fas fa-save"></i> Salvar Funil
+        </button>
+      </div>
+
+      <div id="funilAtual" class="mt-4 text-sm opacity-70">
+        Funil atual: <span id="funilAtualNome">Nenhum selecionado</span>
+      </div>
     </div>
-    <button id="salvarFunil" class="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-      Salvar Funil
-    </button>
   </div>
 
   <script>
     const toggleButton = document.getElementById('toggleAutoresponder');
     const salvarFunilButton = document.getElementById('salvarFunil');
     const funilSelect = document.getElementById('funilSelect');
+    const funilAtualNome = document.getElementById('funilAtualNome');
     const key = "<%= key %>"; 
+
+    // Função para atualizar o ícone do botão de toggle
+    function updateToggleIcon(isActive) {
+      const icon = toggleButton.querySelector('i');
+      icon.classList.remove('fa-toggle-on', 'fa-toggle-off');
+      icon.classList.add(isActive ? 'fa-toggle-on' : 'fa-toggle-off');
+    }
 
     toggleButton.addEventListener('click', async () => {
       try {
@@ -42,17 +73,23 @@
         });
         const data = await response.json();
         if (data.success) {
-          toggleButton.textContent = toggleButton.textContent === 'Ativar Autoresposta' ? 'Desativar Autoresposta' : 'Ativar Autoresposta';
+          const newState = toggleButton.textContent.includes('Ativar');
+          toggleButton.innerHTML = `<i class="fas ${newState ? 'fa-toggle-on' : 'fa-toggle-off'}"></i> ${newState ? 'Desativar' : 'Ativar'} Autoresposta`;
+          updateToggleIcon(newState);
           Swal.fire({ 
             icon: 'success',
             title: 'Sucesso!',
-            text: `Autoresposta ${toggleButton.textContent === 'Desativar Autoresposta' ? 'desativada' : 'ativada'} com sucesso!` 
+            text: `Autoresposta ${newState ? 'ativada' : 'desativada'} com sucesso!`,
+            background: '#2A303C',
+            color: '#A6ADBB'
           });
         } else {
           Swal.fire({
             icon: 'error',
             title: 'Oops...',
-            text: 'Erro ao alternar a autoresposta. Por favor, tente novamente.'
+            text: 'Erro ao alternar a autoresposta. Por favor, tente novamente.',
+            background: '#2A303C',
+            color: '#A6ADBB'
           });
         }
       } catch (error) {
@@ -60,7 +97,9 @@
         Swal.fire({
           icon: 'error',
           title: 'Oops...',
-          text: 'Erro ao alternar a autoresposta. Por favor, tente novamente.'
+          text: 'Erro ao alternar a autoresposta. Por favor, tente novamente.',
+          background: '#2A303C',
+          color: '#A6ADBB'
         });
       }
     });
@@ -78,16 +117,21 @@
         });
         const data = await response.json();
         if (data.success) {
+          funilAtualNome.textContent = funilSelecionado;
           Swal.fire({
             icon: 'success',
             title: 'Sucesso!',
-            text: 'Funil salvo com sucesso!'
+            text: 'Funil salvo com sucesso!',
+            background: '#2A303C',
+            color: '#A6ADBB'
           });
         } else {
           Swal.fire({
             icon: 'error',
             title: 'Oops...',
-            text: 'Erro ao salvar o funil. Por favor, tente novamente.'
+            text: 'Erro ao salvar o funil. Por favor, tente novamente.',
+            background: '#2A303C',
+            color: '#A6ADBB'
           });
         }
       } catch (error) {
@@ -95,8 +139,24 @@
         Swal.fire({
           icon: 'error',
           title: 'Oops...',
-          text: 'Erro ao salvar o funil. Por favor, tente novamente.'
+          text: 'Erro ao salvar o funil. Por favor, tente novamente.',
+          background: '#2A303C',
+          color: '#A6ADBB'
         });
+      }
+    });
+
+    // Carregar o funil atual ao iniciar a página
+    window.addEventListener('load', async () => {
+      try {
+        const response = await fetch(`/autoresposta/dados/${key}/padrao`);
+        const data = await response.json();
+        if (data.funil) {
+          funilAtualNome.textContent = data.funil;
+          funilSelect.value = data.funil;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar o funil atual:', error);
       }
     });
   </script>
