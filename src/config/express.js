@@ -153,17 +153,14 @@ app.get('/whats/:chave', async (req, res, next) => {
 
        //const chatsdata = snapshot.map(doc => ({ id: doc._id, data: doc }));
 
-        const configuracoes = await getConfigurations();
-        const { nomezap, numeroid } = await getInstanceInfo(chave);
-        const profileImageUrl = await getProfileImageUrl(chave, numeroid);
+       
+      
+        const profileImageUrl = "https://casadaarte.vtexassets.com/arquivos/ids/222111/APM8-859.jpg?v=636776513981000000"
 
       //  sortChatsByLastMessageTime(chatsdata.chatsdata);
 
         res.render("whats3", {
             chats: chatsdata.chatsData,
-            nomezap,
-            numeroid,
-            configuracoes,
             chave,
             profileImageUrl,
             urlapi: "https://evolucaohot.online"

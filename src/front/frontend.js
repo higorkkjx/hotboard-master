@@ -2267,68 +2267,43 @@ function formatarNumeroBrasileiro(numero) {
   return '55' + numero;
 }
 
-
 function formatPhoneNumber(number) {
-  // Remove todos os caracteres não numéricos
-  let cleaned = number.replace(/\D/g, '');
+  const cleaned = String(number).replace(/\D/g, '');
 
-  // Verifica se o número já está no formato correto
   if (/^\d{10,15}$/.test(cleaned)) {
     return cleaned;
   }
 
-  // Se o número começar com '+', remove o '+'
-  if (number.startsWith('+')) {
-    cleaned = cleaned.slice(1);
-  }
+  const trimmed = cleaned.startsWith('55') ? cleaned.slice(2) : cleaned;
 
-  
-  // Remove espaços em branco
-  cleaned = cleaned.replace(/\s/g, '');
-
-  // Remove traços
-  cleaned = cleaned.replace(/-/g, '');
-
-  // Verifica se o número está no formato correto após a limpeza
-  if (/^\d{10,15}$/.test(cleaned)) {
-   
-    return cleaned;
-  } else {
-    return null
-  }
+  return /^\d{10,15}$/.test(trimmed) ? trimmed : null;
 }
-
 
 async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, spamId) {
   const db11 = client.db('spam');
   const sentCollection = db11.collection(`sent_${key}`);
   const metricsCollection = client.db('spam_metrics').collection(key);
 
-  async function checkIfSent(contact, funilName) {
-    const sent = await sentCollection.findOne({ contact, funilName });
-    return !!sent;
-  }
+  const checkIfSent = async (contact, funilName) => 
+    !!(await sentCollection.findOne({ contact, funilName }));
 
-  async function markAsSent(contact, funilName) {
-    await sentCollection.updateOne(
+  const markAsSent = async (contact, funilName) => 
+    sentCollection.updateOne(
       { contact, funilName },
       { $set: { sentAt: new Date() } },
       { upsert: true }
     );
-  }
 
-  async function updateMetrics(updateData) {
-    await metricsCollection.updateOne(
+  const updateMetrics = async (updateData) => 
+    metricsCollection.updateOne(
       { _id: spamId },
       { $set: updateData },
       { upsert: true }
     );
-  }
 
   const totalCount = contacts.length;
   let sentCount = 0;
 
-  // Inicializar métricas
   await updateMetrics({
     sentCount: 0,
     totalCount,
@@ -2344,28 +2319,21 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
         continue;
       }
 
-
-      const fone = await formatPhoneNumber(contact)
-      let numfinal;
-    
-      if (fone == null) {
-        console.log("numero com formato invalido, ignorando...")
+      const formattedNumber = formatPhoneNumber(contact);
+      if (!formattedNumber) {
+        console.log("Número com formato inválido, ignorando...");
         continue;
       }
-      
-      if (fone.startsWith('55')) {
-        numfinal = await formatarNumeroBrasileiro(fone)
-        console.log("BR")
-      } else {
-        console.log("ESTRANGEIRO")
-        numfinal = fone
-      }
-    
-      console.log(numfinal)
+
+      const numfinal = formattedNumber.startsWith('55') 
+        ? await formatarNumeroBrasileiro(formattedNumber)
+        : formattedNumber;
+
+      console.log(numfinal);
 
       const response = await axios.get(`https://evolucaohot.online/instance/sendfunil`, {
         params: {
-          key: key,
+          key,
           funil: funilName,
           chat: `${numfinal}@s.whatsapp.net`,
           visuunica: false
@@ -2376,7 +2344,6 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
         await markAsSent(contact, funilName);
         sentCount++;
 
-        // Atualizar métricas no MongoDB
         await updateMetrics({
           sentCount,
           nextSendTime: moment().add(waitTime, 'seconds').tz('America/Sao_Paulo').format(),
@@ -2393,7 +2360,6 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
     }
   }
 
-  // Atualizar status para concluído
   await updateMetrics({ status: 'concluído' });
   console.log('Spam offer concluído');
 }
