@@ -11,6 +11,7 @@ const cheerio = require("cheerio")
 const colors = require('colors');
 const urlapi = process.env.urlapi
 const moment = require('moment-timezone');
+const { Level } = require('level')
 
 /*/
 const serviceAccount = require('./firekey.json'); // Caminho para o arquivo de credenciais do Firebase
@@ -34,6 +35,12 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 //const {sql, addMessageToUserTable, getMessagesFromUserTable} = require("./sql")
 
 const mysql = require('mysql');
+
+const os = require('os');
+const homeDirectory = os.homedir();
+
+
+
 
 // Configurar a conexão MySQL
 function createConnection() {
@@ -211,8 +218,6 @@ const util = require('util');
 const url = require('url');
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-const os = require('os');
-const homeDirectory = os.homedir();
 
 
 dados.readFromFile(`${homeDirectory}/db/mensagens.json`);
@@ -271,6 +276,10 @@ authState;
 allowWebhook = undefined;
 webhook = undefined;
 
+
+
+
+
 instance = {
     key: this.key,
     chats: [],
@@ -289,6 +298,8 @@ axiosInstance = axios.create({
 
 constructor(key, allowWebhook, webhook) {
     this.key = key ? key : uuidv4();
+    this.datab = new Level(homeDirectory + `/db2/${this.key}`, { valueEncoding: 'json' })
+    this.dbOpened = false
     this.Chat = null;
     this.instance.customWebhook = this.webhook ? this.webhook : webhook;
     this.allowWebhook = config.webhookEnabled ? config.webhookEnabled : allowWebhook;
@@ -1554,94 +1565,112 @@ async getCurrentDateTime() {
 
   async checkAndAddChat(sender, pushname, body, fromme, gppessoanome) {
     try {
-        const database = client.db('perfil');
-        const chatCollection = database.collection(`chatis_${this.key}`);
-        
-        const chatDoc = await chatCollection.findOne({ _id: sender });
-        const currentDateTime = await this.getCurrentDateTime();
-        
-        const newMessage = {
-            data: currentDateTime || '00',
-            user: gppessoanome || 'user',
-            mensagem: body || 'MENSAGEM INDISPONIVEL'
-        };
-
-        if (chatDoc) {
-            // Ensure the mensagens array exists
-            if (!Array.isArray(chatDoc.mensagens)) {
-                chatDoc.mensagens = [];
-            }
-            
-            chatDoc.mensagens.push(newMessage);
-
-            if (!fromme) {
-                console.log("> Salvando atualização de nome!");
-                chatDoc.nome = gppessoanome;
-            }
-            
-            await chatCollection.updateOne({ _id: sender }, { $set: chatDoc });
-            console.log('> Mensagem adicionada ao chat existente.');
-            await this.servidormsg(chatDoc);
-            return false;
+      await this.openDatabase()  // Ensure the database is ready
+  
+      const currentDateTime = await this.getCurrentDateTime()
+      
+      const newMessage = {
+        data: currentDateTime || '00',
+        user: gppessoanome || 'user',
+        mensagem: body || 'MENSAGEM INDISPONIVEL'
+      }
+  
+      let chatDoc
+      try {
+        chatDoc = await this.datab.get(sender)
+      } catch (error) {
+        if (error.code !== 'LEVEL_NOT_FOUND') throw error
+      }
+  
+      if (chatDoc) {
+        if (!Array.isArray(chatDoc.mensagens)) {
+          chatDoc.mensagens = []
         }
         
-        console.log("Chat não existe");
-        
-        let stringname = sender.includes("@g.us") ? pushname : gppessoanome;
-
-        let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
-        
-        try {
-            console.log("Baixando imagem de perfil...")
-           const profileData = await this.DownloadProfile(sender.replace("@s.whatsapp.net", ""))
-            
-            
-            console.log(profileData)
-                profileImageUrl = profileData
-           
-        } catch (e) {
-            console.log(e)
-            console.log("Erro ao buscar imagem de perfil");
+        chatDoc.mensagens.push(newMessage)
+        if (!fromme) {
+          console.log("> Salvando atualização de nome!")
+          chatDoc.nome = gppessoanome
         }
         
-        const imagemselecionada = sender.includes("@g.us") 
-            ? await this.instance.sock?.profilePictureUrl(sender, 'image') 
-            : profileImageUrl;
-
-        const newChatData = {
-            _id: sender,
-            key: this.key,
-            nome: stringname,
-            mensagens: [newMessage],
-            estagio: 0,
-            nomePix: 'fulano',
-            imagem: imagemselecionada,
-            enviando: "nao",
-            aguardando: {
-                status: "nao",
-                id: null,
-                resposta: null,
-                inputs_enviados: ["asdasd"],
-            },
-            gpconfig: {
-                antilink: false,
-                autodivu: false,
-                timerdivu: 0,
-                funildivu: null
-            }
-        };
-        
-        await chatCollection.insertOne(newChatData);
-        await this.servidormsg(newChatData);
-        console.log('IDCHAT adicionado à base de dados com uma nova mensagem.');
-        
-        return true;
+        await this.datab.put(sender, chatDoc)
+        console.log('> Mensagem adicionada ao chat existente.')
+        await this.servidormsg(chatDoc)
+        return false
+      }
+      
+      console.log("Chat não existe")
+      
+      let stringname = sender.includes("@g.us") ? pushname : gppessoanome
+      let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png'
+      
+      try {
+        console.log("Baixando imagem de perfil...")
+        const profileData = await this.DownloadProfile(sender.replace("@s.whatsapp.net", ""))
+        console.log(profileData)
+        profileImageUrl = profileData
+      } catch (e) {
+        console.log(e)
+        console.log("Erro ao buscar imagem de perfil")
+      }
+      
+      const imagemselecionada = sender.includes("@g.us")
+        ? await this.instance.sock?.profilePictureUrl(sender, 'image')
+        : profileImageUrl
+      const newChatData = {
+        _id: sender,
+        key: this.key,
+        nome: stringname,
+        mensagens: [newMessage],
+        estagio: 0,
+        nomePix: 'fulano',
+        imagem: imagemselecionada,
+        enviando: "nao",
+        aguardando: {
+          status: "nao",
+          id: null,
+          resposta: null,
+          inputs_enviados: ["asdasd"],
+        },
+        gpconfig: {
+          antilink: false,
+          autodivu: false,
+          timerdivu: 0,
+          funildivu: null
+        }
+      }
+      
+      await this.datab.put(sender, newChatData)
+      await this.servidormsg(newChatData)
+      console.log('IDCHAT adicionado à base de dados com uma nova mensagem.')
+      
+      return true
     } catch (error) {
-        console.error('Erro ao processar o chat:', error);
-        throw error;
+      console.error('Erro ao processar o chat:', error)
+      throw error
     }
-}
+  }
 
+  async closeDatabase() {
+    try {
+      await this.datab.close()
+    } catch (error) {
+      console.error('Error closing database:', error)
+    }
+  }
+
+  async openDatabase() {
+    if (!this.dbOpened) {
+      try {
+        await this.datab.open()
+        this.dbOpened = true
+        console.log('Database opened successfully')
+      } catch (error) {
+        console.error('Error opening database:', error)
+        throw error
+      }
+    }
+  }
 
 
 async sendTextMessage(data) {
@@ -3060,21 +3089,22 @@ async getconfig(key) {
     }
 }
 
-// Função para buscar mensagens e chats
 async fetchInstanceMessagesAndChats(key = this.key) {
     try {
+        await this.openDatabase();  // Ensure the database is open
+
+        const chats = [];
         
-        const database = client.db('perfil');
-        const collection = database.collection(`chatis_${key}`);
+        // LevelDB doesn't have a direct equivalent to MongoDB's find().toArray(),
+        // so we'll use a stream to iterate over all entries
+        for await (const [id, value] of this.datab.iterator()) {
+            chats.push({ id, data: value });
+        }
 
-        const snapshot = await collection.find().toArray();
-
-        if (snapshot.length === 0) {
+        if (chats.length === 0) {
             console.log('Nenhum chat encontrado.');
             return [];
         }
-
-        const chats = snapshot.map(doc => ({ id: doc._id, data: doc }));
 
         return chats;
     } catch (error) {

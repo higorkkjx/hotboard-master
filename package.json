@@ -47,6 +47,7 @@
         "ffmpeg-installer": "^1.0.2",
         "firebase-admin": "^12.1.1",
         "http": "^0.0.1-security",
+        "level": "^8.0.1",
         "link-preview-js": "^3.0.0",
         "moment-timezone": "^0.5.45",
         "mongoose": "^8.4.0",
