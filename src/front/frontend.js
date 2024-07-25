@@ -368,11 +368,7 @@ const sendMessageHook = async (number, msg, keybase) => {
   
 
 const numeronovo = await formatarNumeroBrasileiro(number)
-<<<<<<< HEAD
   const url = `https://evolucaohot.online/message/text?key=${keybase}`;
-=======
-  const url = `http://localhost:3000/message/text?key=${keybase}`;
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
   const headers = {
     "accept": "*/*",
     "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -1086,11 +1082,7 @@ router.get('/home/:chave', async (req, res) => {
 });
 
 async function fetchInstanceInfo(chave) {
-<<<<<<< HEAD
   const response = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
-=======
-  const response = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
   return response.json();
 }
 
@@ -1103,11 +1095,7 @@ function getUserEmail(instanceData, chave) {
 }
 
 async function fetchInstanceList() {
-<<<<<<< HEAD
   const response = await fetch(`https://evolucaohot.online/instance/list`);
-=======
-  const response = await fetch(`http://localhost:3000/instance/list`);
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
   return response.json();
 }
 
@@ -1123,11 +1111,7 @@ async function getProfileImageUrl(chave, instanceData) {
   if (instanceData.error === false) {
     try {
       const numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-<<<<<<< HEAD
       const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
-=======
-      const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${chave}`, {
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
         method: 'POST',
         body: JSON.stringify({ id: numerorefatorado }),
         headers: { 'Content-Type': 'application/json' }
@@ -1145,11 +1129,7 @@ async function getProfileImageUrl(chave, instanceData) {
 
 async function getTotalChats(chave) {
   try {
-<<<<<<< HEAD
     const contactsResponse = await fetch(`https://evolucaohot.online/misc/contacts?key=${chave}`);
-=======
-    const contactsResponse = await fetch(`http://localhost:3000/misc/contacts?key=${chave}`);
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
     const contactsData = await contactsResponse.json();
     return contactsData.data.contacts.length;
   } catch (e) {
@@ -1173,19 +1153,11 @@ async function getNomezp(chave, isWhatsappConnected) {
 router.get('/conectar', async (req, res) => {
   const chave = req.query.chave;
   let userEmail, dadoAssinatura;
-<<<<<<< HEAD
 
   try {
     const instanceResponse = await fetch(`https://evolucaohot.online/instance/info?key=${chave}`);
     const instanceData = await instanceResponse.json();
 
-=======
-
-  try {
-    const instanceResponse = await fetch(`http://localhost:3000/instance/info?key=${chave}`);
-    const instanceData = await instanceResponse.json();
-
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
     if (instanceData.instance_data.email) {
       console.log(`Email do usuário ${chave} => ${instanceData.instance_data.email}`);
       userEmail = instanceData.instance_data.email;
@@ -1205,11 +1177,7 @@ router.get('/conectar', async (req, res) => {
       // WhatsApp conectado
       let profileImageUrl = 'https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png';
       let numerorefatorado = instanceData.instance_data.user.id.split(":")[0];
-<<<<<<< HEAD
       const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=${chave}`, {
-=======
-      const profileResponse = await fetch(`http://localhost:3000/misc/downProfile?key=${chave}`, {
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
         method: 'POST',
         body: JSON.stringify({ id: numerorefatorado }),
         headers: { 'Content-Type': 'application/json' }
@@ -1263,11 +1231,7 @@ function renderConnectedHTML(profileImageUrl, dadoAssinatura, chave) {
         
         desconectarBtn.addEventListener('click', async () => {
           try {
-<<<<<<< HEAD
             const response = await fetch('https://evolucaohot.online/instance/logout?key=${chave}', {
-=======
-            const response = await fetch('http://localhost:3000/instance/logout?key=${chave}', {
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
               method: 'GET'
             });
             
@@ -2398,11 +2362,7 @@ async function spamOffer(key, funilName, contacts, waitTime, ignoreAlreadySent, 
     
       console.log(numfinal)
 
-<<<<<<< HEAD
       const response = await axios.get(`https://evolucaohot.online/instance/sendfunil`, {
-=======
-      const response = await axios.get(`http://localhost:3000/instance/sendfunil`, {
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
         params: {
           key: key,
           funil: funilName,
@@ -2794,11 +2754,7 @@ router.get('/autoresposta/:key', async (req, res) => {
     const id = `autoresp${key}`;
     const autorespostaAtivada = db[id] ? db[id].autoresposta : false;
     
-<<<<<<< HEAD
     const response = await fetch(`https://evolucaohot.online/instance/displayallfunis?key=${key}`);
-=======
-    const response = await fetch(`http://localhost:3000/instance/displayallfunis?key=${key}`);
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
     const funis = await response.json();
     res.render('autoresposta', { autorespostaAtivada, key, funis });
   } catch (error) {

@@ -53,7 +53,6 @@
                     listItem.addEventListener('click', () => {
                         loadChat(chat.id);
                     });
-<<<<<<< HEAD
                     chatList.appendChild(listItem);
                 });
             });
@@ -66,53 +65,6 @@
                     const chat = chats.find(c => c.id === chatId);
                     chatTitle.textContent = chat.data.nome;
                     messages.innerHTML = ''; // Clear previous messages
-=======
-                }
-            },
-            methods: {
-                async fetchChats() {
-                    try {
-                        const response = await axios.get(`http://localhost:3000/instance/gchats?key=${this.chave}`);
-                        this.chats = response.data;
-                        this.loading = false;
-                    } catch (error) {
-                        console.error('Erro ao buscar chats:', error);
-                        this.loading = false;
-                    }
-                },
-                openChat(chat) {
-                    this.activeChat = chat;
-                    this.$nextTick(() => {
-                        this.scrollToBottom();
-                    });
-                },
-                closeChat() {
-                    this.activeChat = null;
-                },
-                getLastMessage(chat) {
-                    const messages = chat.data.mensagens;
-                    return messages.length > 0 ? messages[messages.length - 1].mensagem : '';
-                },
-                formatDate(dateString) {
-                    const date = new Date(dateString);
-                    return date.toLocaleString();
-                },
-                scrollToBottom() {
-                    const messageArea = this.$refs.messageArea;
-                    if (messageArea) {
-                        messageArea.scrollTop = messageArea.scrollHeight;
-                    }
-                },
-                async sendMessage() {
-                    if (!this.newMessage.trim()) return;
-
-                    try {
-                        const response = await axios.post(`http://localhost:3000/message/text?key=${this.chave}`, {
-                            id: this.activeChat.id,
-                            typeId: "user",
-                            message: this.newMessage
-                        });
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
 
                     chat.data.mensagens.forEach(message => {
                         const messageElement = document.createElement('div');
@@ -134,18 +86,10 @@
                             `;
                         }
 
-<<<<<<< HEAD
                         messages.appendChild(messageElement);
                     });
                 });
         }
-=======
-                        const response = await axios.post(`http://localhost:3000/message/${endpoint}?key=${this.chave}`, formData, {
-                            headers: {
-                                'Content-Type': 'multipart/form-data'
-                            }
-                        });
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
 
         sendMessageBtn.addEventListener('click', () => {
             const message = messageInput.value;

@@ -145,11 +145,7 @@ exports.init = async (req, res) => {
                         };
 
                         const numeronovo = await formatPhoneNumber(phone);
-<<<<<<< HEAD
                         const response = await fetch('https://evolucaohot.online/message/text?key=higorteste', {
-=======
-                        const response = await fetch('http://localhost:3000/message/text?key=higorteste', {
->>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
