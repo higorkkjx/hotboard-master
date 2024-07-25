@@ -145,7 +145,11 @@ exports.init = async (req, res) => {
                         };
 
                         const numeronovo = await formatPhoneNumber(phone);
+<<<<<<< HEAD
                         const response = await fetch('https://evolucaohot.online/message/text?key=higorteste', {
+=======
+                        const response = await fetch('http://localhost:3000/message/text?key=higorteste', {
+>>>>>>> 54b044fd43aef757b9d3fe4f6cd4f64da8c977f5
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -155,7 +159,7 @@ exports.init = async (req, res) => {
                                 typeId: "user",
                                 message: `✅ Acesso liberado com sucesso!
 
-➣ Plataforma: https://evolucaohot.online
+➣ Plataforma: http://localhost:3000
 
 🕗 Validade: ${dias} dias
 
@@ -163,7 +167,7 @@ exports.init = async (req, res) => {
 
 *Link direto da sua plataforma* 👇
 
-https://evolucaohot.online/home/${key}
+http://localhost:3000/home/${key}
 
 `,
                                 options: options,
@@ -184,7 +188,7 @@ https://evolucaohot.online/home/${key}
                 console.log("teste gratis")
                 await setTimeout(async() => {
                     try {
-                        const response = await fetch(`https://evolucaohot.online/instance/delete?key=${key}`, {
+                        const response = await fetch(`http://localhost:3000/instance/delete?key=${key}`, {
                             method: 'DELETE'
                         });
                         if (response.ok) {
