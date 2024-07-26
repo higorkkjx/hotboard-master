@@ -12,8 +12,12 @@ const colors = require('colors');
 const urlapi = process.env.urlapi
 const moment = require('moment-timezone');
 const { Level } = require('level')
+<<<<<<< HEAD
 const { DateTime } = require('luxon');
 const github = require('../../config/git');
+=======
+
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
 /*/
 const serviceAccount = require('./firekey.json'); // Caminho para o arquivo de credenciais do Firebase
 admin.initializeApp({
@@ -213,7 +217,10 @@ const config = require('../../config/config');
 const downloadMessage = require('../helper/downloadMsg');
 const dados = makeInMemoryStore({ pino });
 const fs = require('fs').promises;
+<<<<<<< HEAD
 const fs2 = require('fs')
+=======
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
 const getMIMEType = require('mime-types');
 const readFileAsync = promisify(fs.readFile);
 const util = require('util');
@@ -851,12 +858,54 @@ console.log(`Autoresposta: ${autoresp}/funil: ${funilselecionado}`)
 const isGroup = await m.messages[0].key.remoteJid.includes("@g.us")
 console.log("GRUPO?", isGroup)
        try {
+<<<<<<< HEAD
                 
            
         //
               if (m.messages[0].key.remoteJid.includes("@g.us")) {
                  
             const gpmetadata = await this.instance.sock?.groupMetadata(m.messages[0].key.remoteJid)
+=======
+                  const sessaoInfo = await this.getInstanceDetail(this.key)
+
+                 
+                 
+              
+                  let ultimoNu;
+                
+           
+
+              if (m.messages[0].key.remoteJid.includes("@g.us")) {
+
+                let mensagem = {}
+            
+                    if (m.messages[0].message.imageMessage) {
+            
+            
+            const mensagemdow = await downloadMessage(
+                m.messages[0].message.imageMessage,
+                'image'
+            );
+            
+            mensagem = {
+                img: mensagemdow,
+                legenda: m.messages[0].message.imageMessage.caption,
+            }
+            
+                    } else  if (m.messages[0].message.extendedTextMessage) {
+                        mensagem = {
+                           text: m.messages[0].message.extendedTextMessage.text
+                        }    
+                    }
+                
+            
+                    
+            const gpmetadata = await this.instance.sock?.groupMetadata(m.messages[0].key.remoteJid)
+           // console.log(gpmetadata)
+
+          
+
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
                var dadomsggp = {
                     "type": "group",
                     "chatId": m.messages[0].key.remoteJid,
@@ -868,6 +917,11 @@ console.log("GRUPO?", isGroup)
                     donogp: gpmetadata.subjectOwner,
                     desc: gpmetadata.desc,
                     }
+<<<<<<< HEAD
+=======
+              //  console.log(m.messages[0].message.conversation)
+              console.log(gpmetadata)
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
                 let conteudomsg;
             
             if(dadomsggp.message) {
@@ -898,6 +952,7 @@ console.log("GRUPO?", isGroup)
             }
 
             const messageType = Object.keys(msg.message)[0];
+<<<<<<< HEAD
             console.log("type")
             console.log(messageType)
 
@@ -1028,6 +1083,8 @@ nomearqv = filename+ ".mp4"
   
   
 
+=======
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
             if (['protocolMessage', 'senderKeyDistributionMessage'].includes(messageType))
                 return;
 
@@ -1092,7 +1149,11 @@ nomearqv = filename+ ".mp4"
             }
 
 
+<<<<<<< HEAD
         
+=======
+            if (this.instance.webhook === true) {
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
                 switch (messageType) {
                     case 'imageMessage':
                         webhookData['msgContent'] = await downloadMessage(
@@ -1109,7 +1170,11 @@ nomearqv = filename+ ".mp4"
                         }
                         console.log(dadomsg)
         
+<<<<<<< HEAD
                      //   await this.checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[IMAGEM]", dadomsg.fromMe, dadomsg.pushname)
+=======
+                        await this.checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[IMAGEM]", dadomsg.fromMe, dadomsg.pushname)
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
 
                         break;
                     case 'videoMessage':
@@ -1133,7 +1198,11 @@ nomearqv = filename+ ".mp4"
                         }
                         console.log(dadomsg)
         
+<<<<<<< HEAD
                     //    await this.checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[VIDEO]", dadomsg.fromMe, dadomsg.pushname)
+=======
+                        await this.checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[VIDEO]", dadomsg.fromMe, dadomsg.pushname)
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
                         break;
 			case 'audioMessage':
                         const arquivo_audio = await downloadMessage(
@@ -1152,7 +1221,11 @@ nomearqv = filename+ ".mp4"
                         }
                         console.log(dadomsg)
         
+<<<<<<< HEAD
                      //   await this.checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[AUDIO]", dadomsg.fromMe, dadomsg.pushname)
+=======
+                        await this.checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[AUDIO]", dadomsg.fromMe, dadomsg.pushname)
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
                         break;
                     case 'documentMessage':
                         webhookData['msgContent'] = await downloadMessage(
@@ -1169,7 +1242,11 @@ nomearqv = filename+ ".mp4"
                         }
                         console.log(dadomsg)
         
+<<<<<<< HEAD
                     //   await this.checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[DOCUMENTO]", dadomsg.fromMe, dadomsg.pushname)
+=======
+                        await this.checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[DOCUMENTO]", dadomsg.fromMe, dadomsg.pushname)
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
                         break;
                     default:
                         var dadomsg = {
@@ -1179,6 +1256,7 @@ nomearqv = filename+ ".mp4"
                             pushname: msg.pushName,
                             budy: msg.message.conversation
                         }
+<<<<<<< HEAD
                      //   console.log(dadomsg)
         
                      //   await this.checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[MIDIA]", dadomsg.fromMe, dadomsg.pushname)
@@ -1186,6 +1264,15 @@ nomearqv = filename+ ".mp4"
                         break;
                 }
             
+=======
+                        console.log(dadomsg)
+        
+                        await this.checkAndAddChat(dadomsg.chat, dadomsg.pushname, "[MIDIA]", dadomsg.fromMe, dadomsg.pushname)
+                        webhookData['msgContent'] = '';
+                        break;
+                }
+            }
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
 
            
 
@@ -2225,6 +2312,7 @@ async contacts() {
     }
 }
 
+<<<<<<< HEAD
 async hospedarArquivo(msg, tipo) {
     let mediaPath;
   
@@ -2275,6 +2363,8 @@ async hospedarArquivo(msg, tipo) {
     }
   };
 
+=======
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
 async chats() {
     const status = 'retorno de chats';
     return status;
@@ -3236,6 +3326,7 @@ async getconfig(key) {
     }
 }
 
+<<<<<<< HEAD
 
 
 
@@ -3253,6 +3344,18 @@ async fetchInstanceMessagesAndChats(key = this.key) {
                 parsedValue = value; // Use o valor original se não puder ser analisado
             }
             chats.push({ id, data: parsedValue });
+=======
+async fetchInstanceMessagesAndChats(key = this.key) {
+    try {
+        await this.openDatabase();  // Ensure the database is open
+
+        const chats = [];
+        
+        // LevelDB doesn't have a direct equivalent to MongoDB's find().toArray(),
+        // so we'll use a stream to iterate over all entries
+        for await (const [id, value] of this.datab.iterator()) {
+            chats.push({ id, data: value });
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
         }
 
         if (chats.length === 0) {
@@ -3260,6 +3363,7 @@ async fetchInstanceMessagesAndChats(key = this.key) {
             return [];
         }
 
+<<<<<<< HEAD
         // Sort chats based on the most recent message
         const sortedChats = chats.sort((a, b) => {
             const aLastMessage = a.data.mensagens && a.data.mensagens.length > 0 ? a.data.mensagens[a.data.mensagens.length - 1] : null;
@@ -3275,6 +3379,9 @@ async fetchInstanceMessagesAndChats(key = this.key) {
         });
 
         return sortedChats;
+=======
+        return chats;
+>>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
     } catch (error) {
         console.error('Erro ao buscar mensagens e chats:', error);
         return { error: true, message: 'Falha ao buscar mensagens e chats' };
