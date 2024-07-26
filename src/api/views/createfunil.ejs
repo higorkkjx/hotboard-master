@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Funil Typebot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="container mx-auto py-10 px-4">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">Funil de Mensagens</h1>
+        <button id="verFunisBtn" class="block mx-auto mb-6 px-6 py-2 bg-green-500 text-white font-semibold rounded hover:bg-green-600">Ver Funis</button>
+        <p class="text-center text-gray-700 mb-6">Digite o link do seu funil TypeBot (irei copiá-lo)</p>
+        <input type="text" id="funilLink" placeholder="Digite aqui" class="block w-4/5 mx-auto px-4 py-2 border border-gray-300 rounded-md mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button id="copiarFunilBtn" class="block mx-auto mb-6 px-6 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600">Copiar Funil</button>
+        <div class="text-center mb-6">
+            <label for="funilDinamico" class="text-gray-700">Funil Dinâmico?</label>
+            <input type="checkbox" id="funilDinamico" class="ml-2">
+        </div>
+        <div id="funilInfo" class="w-4/5 mx-auto p-6 bg-white rounded-lg shadow-md"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const verFunisBtn = document.getElementById('verFunisBtn');
+            verFunisBtn.addEventListener('click', function () {
+                window.location.href = "/funis/<%= key %>";
+            });
+
+            const copiarFunilBtn = document.getElementById('copiarFunilBtn');
+            copiarFunilBtn.addEventListener('click', copiarFunil);
+
+            async function copiarFunil() {
+                try {
+                    const funilLink = document.getElementById('funilLink').value;
+                    const funilDinamico = document.getElementById('funilDinamico').checked;
+                    const response = await fetch('/copiar-funil', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            key: '<%= key %>',
+                            funilLink,
+                            dinamico: funilDinamico
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Erro na requisição: ' + response.statusText);
+                    }
+
+                    const data = await response.json();
+
+                    if (!data) {
+                        throw new Error('Resposta vazia ou formato JSON inválido');
+                    }
+
+                    const funilInfo = document.getElementById('funilInfo');
+                    funilInfo.innerHTML = `
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">FUNIL ADICIONADO!</h2>
+                        <p class="text-gray-600 mb-4">Nome do Funil: ${data.funilName}</p>
+                        <p class="text-gray-600 mb-2">Mensagens:</p>
+                    `;
+
+                    data.funil.forEach(mensagem => {
+                        funilInfo.innerHTML += `
+                            <p class="text-gray-600 mb-2">
+                                <span class="font-semibold">Sequência:</span> ${mensagem.sequencia},
+                                <span class="font-semibold">Tipo:</span> ${mensagem.tipoMensagem},
+                                <span class="font-semibold">Conteúdo:</span> ${mensagem.conteudo}
+                            </p>
+                        `;
+                    });
+
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <div class="flex h-screen">
+        <div class="w-64 bg-white shadow-md">
+            <div class="p-4">
+                <h2 class="text-xl font-bold">Chats</h2>
+                <ul id="chatList" class="mt-4">
+                    </ul>
+            </div>
+        </div>
+
+        <div class="flex-1 p-4">
+            <div id="chatContainer" class="bg-white rounded-lg shadow-md p-4">
+                <h3 id="chatTitle" class="text-lg font-bold mb-4"></h3>
+                <div id="messages" class="flex flex-col space-y-2 overflow-y-auto h-64">
+                </div>
+                <div class="mt-4">
+                    <input type="text" id="messageInput" class="border rounded-lg px-3 py-2 w-full" placeholder="Type your message...">
+                    <button id="sendMessageBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg ml-2">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatList = document.getElementById('chatList');
+        const chatContainer = document.getElementById('chatContainer');
+        const chatTitle = document.getElementById('chatTitle');
+        const messages = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+
+        // Get username from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('nome');
+
+        // Fetch chats from API
+        fetch('https://evolucaohot.online/instance/gchats?key=higorteste')
+            .then(response => response.json())
+            .then(chats => {
+                chats.forEach(chat => {
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('cursor-pointer', 'hover:bg-gray-200', 'p-2');
+                    listItem.textContent = chat.data.nome;
+                    listItem.addEventListener('click', () => {
+                        loadChat(chat.id);
+                    });
+                    chatList.appendChild(listItem);
+                });
+            });
+
+        function loadChat(chatId) {
+            // Fetch messages for the selected chat
+            fetch(`https://evolucaohot.online/instance/gchats?key=higorteste`)
+                .then(response => response.json())
+                .then(chats => {
+                    const chat = chats.find(c => c.id === chatId);
+                    chatTitle.textContent = chat.data.nome;
+                    messages.innerHTML = ''; // Clear previous messages
+
+                    chat.data.mensagens.forEach(message => {
+                        const messageElement = document.createElement('div');
+                        messageElement.classList.add('flex', 'items-start', 'mb-2');
+
+                        if (message.user === username) {
+                            messageElement.classList.add('justify-start');
+                            messageElement.innerHTML = `
+                                <div class="bg-blue-500 text-white rounded-lg px-4 py-2 mr-2">
+                                    ${message.mensagem}
+                                </div>
+                            `;
+                        } else {
+                            messageElement.classList.add('justify-end');
+                            messageElement.innerHTML = `
+                                <div class="bg-gray-200 rounded-lg px-4 py-2 ml-2">
+                                    ${message.mensagem}
+                                </div>
+                            `;
+                        }
+
+                        messages.appendChild(messageElement);
+                    });
+                });
+        }
+
+        sendMessageBtn.addEventListener('click', () => {
+            const message = messageInput.value;
+            if (message.trim() !== '') {
+                // Send message to API (replace with your actual API endpoint)
+                // ...
+
+                // Add message to chat UI
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('flex', 'items-start', 'justify-end', 'mb-2');
+                messageElement.innerHTML = `
+                    <div class="bg-gray-200 rounded-lg px-4 py-2 ml-2">
+                        ${message}
+                    </div>
+                `;
+                messages.appendChild(messageElement);
+                messageInput.value = '';
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "autoresphigorteste": {
+    "autoresposta": true
+  },
+  "funilresp_higorteste": {
+    "padrao": {
+      "funil": "My typebot"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação API Hotboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hero-bg {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-100">
+
+    <!-- Hero Section -->
+    <section class="hero-bg text-white py-10">
+        <div class="container mx-auto px-4">
+            <h1 class="text-4xl font-bold mb-4">Documentação API Hotboard</h1>
+            <p class="text-lg">Conecte-se e configure suas integrações de maneira rápida e fácil.</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">1. Conectar WhatsApp</h2>
+            <p class="mb-4">Primeiramente acesse a opção <strong>“Conectar Numero”</strong>, digite seu numero (obs: nesse estilo de formato: <code>5514991145518</code>, com o <code>55</code> no começo e tudo junto!)</p>
+            <p>Depois irá chegar uma notificação no seu WhatsApp, clique nela e insira o código que aparecer no painel Hotboard.</p>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">2. Configurar Gerador de Voz</h2>
+            <p class="mb-4">É necessário ter uma conta na ElevenLabs, iremos utilizar ela para a geração de voz e vamos integrá-la na plataforma.</p>
+            <ol class="list-decimal list-inside mb-4">
+                <li>Crie sua conta no site: <a href="https://elevenlabs.io/" class="text-blue-500">https://elevenlabs.io/</a></li>
+                <li>Assine algum dos planos no site, recomendo o de $5 (já é suficiente): <a href="https://elevenlabs.io/app/subscription" class="text-blue-500">https://elevenlabs.io/app/subscription</a></li>
+                <li>Depois vá na área de “voices” e clique em “add generative or cloned voice”.</li>
+                <li>Depois vem em “Instant voice cloning” e clone alguma voz de sua preferência.</li>
+                <li>Depois de clonar a voz vai aparecer na área de voices, clique no botão ID para copiar o ID.</li>
+                <li>Depois abra seu perfil e copie a sua API KEY também.</li>
+                <li>Após copiar o ID da voz e a API KEY, acesse as configurações da Hotboard e cole lá.</li>
+                <li>Depois só clicar no botão de salvar e a plataforma já está conectada.</li>
+            </ol>
+            <p>E você já pode acessar o WhatsApp Web na plataforma. Depois só abrir o chat que deseja e clicar nos três pontinhos lá em cima e usar a função ZapVoice.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-4">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 Hotboard. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+    
+</body>
+</html>

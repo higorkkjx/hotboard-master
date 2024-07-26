@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= list.name %> - Contatos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              100: '#333333',
+              200: '#2d2d2d',
+              300: '#272727',
+              400: '#1f1f1f',
+              500: '#171717',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-dark-500 text-gray-200 min-h-screen flex flex-col">
+  <nav class="bg-dark-400 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center">
+          <i class="fas fa-address-book text-indigo-500 text-2xl mr-2"></i>
+          <span class="font-semibold text-xl">Contatos</span>
+        </div>
+        <div>
+          <button id="themeToggle" class="text-gray-300 hover:bg-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+            <i class="fas fa-moon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto p-4 flex-grow">
+    <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-lg shadow-md mb-6">
+      <h1 class="text-2xl font-bold text-center"><%= list.name %></h1>
+    </header>
+
+    <main class="bg-dark-400 p-4 rounded-lg shadow-xl">
+      <h2 class="text-xl font-bold mb-4 text-indigo-400">Contatos</h2>
+      <ul class="space-y-3">
+        <% if (list.contacts && list.contacts.length > 0) { %>
+          <% list.contacts.forEach(contact => { %>
+            <li class="flex items-center justify-between bg-dark-300 p-3 rounded-lg shadow-md">
+              <div class="flex items-center">
+                <i class="fas fa-phone-alt text-indigo-400 mr-3"></i>
+                <p class="font-medium"><%= contact %></p>
+              </div>
+              <button onclick="deleteContact('<%= list.name %>', '<%= chave %>', '<%= contact %>')" class="text-red-400 hover:text-red-300 transition duration-300">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </li>
+          <% }) %>
+        <% } else { %>
+          <p class="text-gray-400 italic">Nenhum contato encontrado.</p>
+        <% } %>
+      </ul>
+      <div class="mt-6 text-center">
+        <a href="/add-contact/<%= chave %>" class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg shadow hover:bg-green-700 transition duration-300">
+          <i class="fas fa-plus mr-2"></i> Adicionar Contato
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <footer class="bg-dark-400 text-gray-300 py-4 mt-6">
+    <div class="container mx-auto text-center text-sm">
+      <p>Hotboard &copy; 2024</p>
+    </div>
+  </footer>
+
+  <script>
+    async function deleteContact(listName, chave, contact) {
+      if (confirm(`Deseja deletar o contato ${contact}?`)) {
+        try {
+          const response = await fetch(`/list/delete/${listName}/${chave}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ contact })
+          });
+          if (response.ok) {
+            location.reload();
+          } else {
+            throw new Error('Erro ao deletar contato');
+          }
+        } catch (error) {
+          alert(error.message);
+        }
+      }
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      document.documentElement.classList.toggle('dark');
+    });
+  </script>
+</body>
+</html>

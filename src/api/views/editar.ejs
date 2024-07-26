@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Dados</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">Editar Dados</h1>
+        <form action="/instance/editconfig?key=<%= key %>" method="POST" class="space-y-4">
+            <div>
+                <label for="elevenkey" class="block text-sm font-medium text-gray-700">API-KEY ELEVENLABS</label>
+                <input type="text" id="elevenkey" name="elevenkey" value="<%= dados.elevenkey || '' %>" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="idvozeleven" class="block text-sm font-medium text-gray-700">ID VOZ ELEVENLABS</label>
+                <input type="text" id="idvozeleven" name="idvozeleven" value="<%= dados.idvozeleven || '' %>" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="nomeapp" class="block text-sm font-medium text-gray-700">NOME DO APP HEROKU</label>
+                <input type="text" id="nomeapp" name="nomeapp" value="<%= dados.nomeapp || '' %>" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="heroku_key" class="block text-sm font-medium text-gray-700">APIKEY HEROKU</label>
+                <input type="text" id="heroku_key" name="heroku_key" value="<%= dados.heroku_key || '' %>" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="beekey" class="block text-sm font-medium text-gray-700">API-KEY SCRAPINGBEE</label>
+                <input type="text" id="beekey" name="beekey" value="<%= dados.beekey || '' %>" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div class="text-center">
+                <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Salvar</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

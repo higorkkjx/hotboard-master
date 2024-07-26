@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-6">Painel Admin</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div id="userList" class="grid grid-cols-1 gap-4">
+                <h2 class="text-2xl font-semibold mb-4">Lista de Usuários</h2>
+                <!-- Users will be dynamically added here -->
+            </div>
+            <div id="analytics" class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Analytics</h2>
+                    <div class="stats stats-vertical shadow">
+                        <div class="stat">
+                            <div class="stat-title">Total de Usuários</div>
+                            <div id="totalUsers" class="stat-value">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-title">Usuários Conectados</div>
+                            <div id="connectedUsers" class="stat-value">0</div>
+                            <div id="connectedUsersPercentage" class="stat-desc">0% do total</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-title">Webhook Ativado</div>
+                            <div id="webhookEnabledUsers" class="stat-value">0</div>
+                            <div id="webhookEnabledUsersPercentage" class="stat-desc">0% do total</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+        });
+
+        async function fetchData() {
+            try {
+                const response = await axios.get('https://evolucaohot.online/instance/list');
+                const users = response.data.data;
+                renderUsers(users);
+                updateAnalytics(users);
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+            }
+        }
+
+        function renderUsers(users) {
+            const userList = document.getElementById('userList');
+            users.forEach(user => {
+                const userCard = createUserCard(user);
+                userList.appendChild(userCard);
+            });
+        }
+
+        function createUserCard(user) {
+            const expirationDate = new Date(user.dias);
+            const formattedDate = `${expirationDate.getDate().toString().padStart(2, '0')}/${(expirationDate.getMonth() + 1).toString().padStart(2, '0')}`;
+
+            const card = document.createElement('div');
+            card.className = 'card bg-base-100 shadow-xl';
+            card.innerHTML = `
+                <div class="card-body">
+                    <h2 class="card-title">${user.name}</h2>
+                    <p>Email: ${user.email}</p>
+                    <p>Telefone: ${user.phone}</p>
+                    <p>Vencimento: ${formattedDate}</p>
+                    <div class="card-actions justify-end">
+                        <a href="https://wa.me/${user.phone}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                            Chat WhatsApp
+                        </a>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function updateAnalytics(users) {
+            const totalUsers = users.length;
+            const connectedUsers = users.filter(user => user.phone_connected).length;
+            const webhookEnabledUsers = users.filter(user => user.webhook).length;
+
+            document.getElementById('totalUsers').textContent = totalUsers;
+            document.getElementById('connectedUsers').textContent = connectedUsers;
+            document.getElementById('connectedUsersPercentage').textContent = `${((connectedUsers / totalUsers) * 100).toFixed(2)}% do total`;
+            document.getElementById('webhookEnabledUsers').textContent = webhookEnabledUsers;
+            document.getElementById('webhookEnabledUsersPercentage').textContent = `${((webhookEnabledUsers / totalUsers) * 100).toFixed(2)}% do total`;
+        }
+    </script>
+</body>
+</html>
