@@ -13,15 +13,10 @@ const urlapi = process.env.urlapi
 const os = require('os');
 const homeDirectory = os.homedir();
 const { client } = require("../api/class/instance")
-<<<<<<< HEAD
 const github = require('./git');
 
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
-=======
-
-
->>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/static', express.static(__dirname + '/public'));
@@ -133,7 +128,6 @@ const sortChatsByLastMessageTime = (chatsdata) => {
     });
 };
 
-<<<<<<< HEAD
 
 // Rota POST para processar o upload e enviar para o GitHub
 app.post('/uploadgit', upload.single('video'), async (req, res) => {
@@ -189,8 +183,6 @@ app.get('/gvideo', (req, res) => {
 </html>`)
 });
 
-=======
->>>>>>> 48ed15867654577d6791ba4135b6624351c52cc5
 // Handles any requests that match the defined routes
 app.get('/whats11/:chave/:nome', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'zap.html'));
