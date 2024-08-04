@@ -1935,7 +1935,7 @@ router.get("/hospedar", (req, res) => {
 });
 
 // Rota para lidar com o POST do formulário
-const github = require('../../config/git');
+const github = require('../config/git');
 const uploadxs = multer({ dest: "uploads/" }); // Configura o multer para armazenar arquivos em 'uploads/'
 router.post("/hospedar", uploadxs.single("videoFile"), async (req, res) => {
   try {
