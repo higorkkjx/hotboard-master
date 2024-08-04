@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.51.5/dist/full.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>HotBoard Admin</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div class="drawer drawer-mobile">
+      <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
+      <div class="drawer-content flex flex-col">
+        <!-- Navbar -->
+        <div class="navbar bg-base-100 shadow-lg">
+          <div class="flex-none lg:hidden">
+            <label for="my-drawer-2" class="btn btn-square btn-ghost">
+              <i class="fas fa-bars"></i>
+            </label>
+          </div> 
+          <div class="flex-1">
+            <h1 class="text-xl font-bold">HotBoard Admin</h1>
+          </div>
+          <div class="flex-none gap-2">
+            <button class="btn btn-ghost btn-circle">
+              <i class="fas fa-search"></i>
+            </button>
+            <button class="btn btn-ghost btn-circle">
+              <i class="fas fa-bell"></i>
+            </button>
+            <div class="dropdown dropdown-end">
+              <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+                <div class="w-10 rounded-full">
+                  <img src="<%= profileImageUrl %>" />
+                </div>
+              </label>
+              <ul tabindex="0" class="mt-3 p-2 shadow menu menu-compact dropdown-content bg-base-100 rounded-box w-52">
+                <li><a>Profile</a></li>
+                <li><a>Settings</a></li>
+                <li><a>Logout</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Page content -->
+        <div class="p-6">
+          <!-- Notification -->
+          <div class="alert <%= error || !instance_data.phone_connected ? 'alert-error' : 'alert-success' %> shadow-lg mb-6">
+            <div>
+              <i class="fab fa-whatsapp text-2xl"></i>
+              <span class="font-medium"><%= whatsappStatus %></span>
+            </div>
+          </div>
+
+          <!-- Greeting -->
+          <div class="flex items-center mb-8 bg-white rounded-lg shadow-md p-6">
+            <img src="<%= profileImageUrl %>" alt="Profile" class="w-20 h-20 rounded-full mr-6 border-4 border-primary">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-800 mb-2">Bem vindo, <%= dadoAssinatura.nome %></h1>
+              <div class="flex items-center text-warning">
+                <i class="fas fa-calendar-alt mr-2"></i>
+                <p class="text-lg">Sua assinatura expira em: <%= dadoAssinatura.data %></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="stat bg-base-100 shadow rounded-lg">
+              <div class="stat-figure text-primary">
+                <i class="fas fa-users text-3xl"></i>
+              </div>
+              <div class="stat-title">Contatos no whatsapp</div>
+              <div class="stat-value text-primary"><%= totalChats %></div>
+            </div>
+            <div class="stat bg-base-100 shadow rounded-lg">
+              <div class="stat-figure text-secondary">
+                <i class="fas fa-comment-dots text-3xl"></i>
+              </div>
+              <div class="stat-title">Conversas salvas</div>
+              <div class="stat-value text-secondary"><%= count %></div>
+            </div>
+          </div>
+          
+          <!-- You can add more content here -->
+        </div>
+      </div> 
+      
+      <!-- Sidebar -->
+      <div class="drawer-side">
+        <label for="my-drawer-2" class="drawer-overlay"></label> 
+        <aside class="bg-base-200 w-80">
+          <div class="p-4">
+            <div class="flex items-center mb-8">
+              <img src="https://i.pinimg.com/564x/2d/c6/82/2dc6822cb7045a17261d1042b95abbf2.jpg" alt="logo" class="w-12 h-12 rounded-full mr-4" />
+              <h1 class="text-2xl font-bold">HotBoard</h1>
+            </div>
+            <ul class="menu p-4 overflow-y-auto w-full text-base-content">
+              <li>
+                <a href="/" class="flex items-center p-2 space-x-3 rounded-md">
+                  <i class="fas fa-home"></i>
+                  <span>Dashboard</span>
+                </a>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-user"></i>
+                    <span>Seu perfil</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/info/<%= chave %>">Informações de login</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-cog"></i>
+                    <span>Configurações</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/editar?key=<%= chave %>">Editar Configurações</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/whats/<%= chave %>">WhatsApp Web</a></li>
+                    <li><a href="/conectar?chave=<%= chave %>">Conectar numero</a></li>
+                    <li><a href="/gerargp/<%= chave %>">Gerar grupos</a></li>
+                    <li><a href="/clearchats/<%= chave %>">Limpar conversas</a></li>
+                    <li><a href="/grupos/<%= chave %>">Gerenciar grupos</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-address-book"></i>
+                    <span>Contatos</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/addlist/<%= chave %>">Criar lista</a></li>
+                    <li><a href="/listas/<%= chave %>">Ver listas</a></li>
+                    <li><a href="/add-contact/<%= chave %>">Salvar contato</a></li>
+                    <li><a href="/upload/<%= chave %>">Importar planilha</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-robot"></i>
+                    <span>Automação</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/autoresposta/<%= chave %>">Auto resposta</a></li>
+                    <li><a href="/spamoffer/<%= chave %>">Spamoffer (envio em massa)</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-fire"></i>
+                    <span>Funil</span>
+                  </summary>                   
+                  <ul>
+                    <li><a href="/criar-funil/<%= chave %>">Criador de funil</a></li>
+                    <li><a href="/funisboard/<%= chave %>">Ver funis criados</a></li>
+                    <li><a href="/funil/<%= chave %>">Importar typebot</a></li>
+                    <li><a href="/funis/<%= chave %>">Ver funis typebot</a></li>
+                    <li><a href="/hospedar">Hospedar video</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary class="flex items-center p-2 space-x-3 rounded-md">
+                    <i class="fas fa-university"></i>
+                    <span>Conta bancaria</span>
+                  </summary>
+                  <ul>
+                    <li><a href="/banco">Transações</a></li>
+                  </ul>
+                </details>
+              </li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </body>
+</html>

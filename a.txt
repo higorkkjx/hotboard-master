@@ -1,0 +1,1334 @@
+Eu quero criar um sistema/pagina identico ao whatsapp web, a mesma interface e funcionabilidades, porem de forma responsiva para dispositivos moveis, quero algo completo.
+
+Ja tenho a api que coleta os chats (onde exibe os numeros, a foto de perfil, o nome e as mensagens desse numero)
+
+Tenho a api que envia a mensagem de texto
+
+Tenho a api que envia arquivo de midia
+
+E api que envia audio
+
+E tenho outras api que da pra integrar na interface, irei te fornecer a documentação delas abaixo:
+
+Message
+﻿
+
+POST
+Send Text Message
+localhost:3333/message/text?key=123
+Send a text message to WhatsApp User or Group
+
+﻿
+
+Authorization
+Bearer Token
+Token
+<token>
+Query Params
+key
+123
+Body
+raw (json)
+View More
+json
+{
+  "id": "", ///ddi+ddd+número, existe uma regra para envio Brasileiro: ddd até 27 -> 11 digitos, de 29 a 99 ->10 digitos
+  "typeId": "user", //group ou user
+  "message": "",
+  "options": {
+    "delay": 0,//para aparecer digitando..
+    "replyFrom": "" //id da mensagem que vc quer responder.
+  },
+  "groupOptions": {
+    "markUser": "ghostMention"// marca todo mundo sem aparecer a marcação ou você pode passar a id dos usuários ["user1","user2"]
+  }
+}
+POST
+Send url file
+localhost:3333/message/sendurlfile?key=
+Send an image message to WhatsApp User
+
+﻿
+
+Query Params
+id
+caption
+key
+Body
+raw (json)
+View More
+json
+{
+  "id": "",//user ou group
+  "typeId": "user",//user ou group
+  "type":"audio",//audio, video, image ou document
+  "url": "",
+  "options": {
+      "caption":"",
+     "replyFrom": "",
+     "delay": 0
+  }
+  
+}
+POST
+Send Base64 File
+localhost:3333/message/sendbase64file?key=
+Send an image message to WhatsApp User
+
+﻿
+
+Query Params
+id
+caption
+key
+Body
+raw (json)
+View More
+json
+{
+  "id": "",//user ou group
+  "typeId": "user",//user ou group
+  "type":"document",
+  "base64string": "",
+  "filename": "",
+  "options": {
+      "caption":"",
+     "replyFrom": "",
+     "delay": 0
+  }
+  
+}
+POST
+Send audio file
+localhost:3333/message/audiofile?key=123
+Send a video message to WhatsApp User
+
+﻿
+
+Query Params
+key
+123
+Body
+form-data
+file
+Video You Want to Send
+(Required)
+
+id
+Recipient Id or Group Id
+(Required)
+
+caption
+caption
+Message Caption
+(Optional)
+
+userType
+user
+replyFrom
+delay
+0
+POST
+Send image file
+localhost:3333/message/imageFile?key=123
+Send a video message to WhatsApp User
+
+﻿
+
+Query Params
+key
+123
+Body
+form-data
+file
+Video You Want to Send
+(Required)
+
+id
+Recipient Id or Group Id
+(Required)
+
+caption
+caption
+Message Caption
+(Optional)
+
+userType
+user
+replyFrom
+POST
+Send Video File
+localhost:3333/message/video?key=123
+Send a video message to WhatsApp User
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+form-data
+file
+Video You Want to Send
+(Required)
+
+id
+Recipient Id or Group Id
+(Required)
+
+caption
+video
+Message Caption
+(Optional)
+
+userType
+user
+replyFrom
+POST
+Send Document File
+localhost:3333/message/doc?key=123
+Send a document message to WhatsApp User
+
+﻿
+
+Authorization
+Bearer Token
+Token
+<token>
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+form-data
+file
+Document You Want to Send
+(Required)
+
+id
+5516988427610
+Recipient Id or Group Id
+(Required)
+
+filename
+Custom File Name
+(Optional)
+
+userType
+user
+replyFrom
+caption
+POST
+Send Contact Message
+localhost:3333/message/contact?key=123
+Send an contact(vcard) message to an WhatsApp User
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+raw (json)
+json
+{   
+    "id": "",
+    "vcard": {
+        "fullName": "john doe",
+        "displayName": "johndoe",
+        "organization": "Men In Black",
+        "phoneNumber": "919999999999"
+    }
+}
+POST
+Send Button - Beta
+localhost:3333/message/button?key=123
+Send a text message to WhatsApp User or Group
+
+﻿
+
+Authorization
+Bearer Token
+Token
+<token>
+Query Params
+key
+123
+Body
+raw (json)
+View More
+json
+{   
+    "id": "",
+    "btndata": {
+        "text": "title Head",
+        "buttons": [
+            {
+                "type": "replyButton",
+                "title": "Reply this text (REPLY)"
+            },
+            {
+                "type": "urlButton",
+                "title": "Click me (URL)",
+                "payload": "https://google.com"
+            },
+            {
+                "type": "callButton",
+                "title": "Click to call (CALL)",
+                "payload": "918788889688"
+            }
+        ],
+        "footerText": "title footer"
+    }
+}
+POST
+Send Presense
+localhost:3333/message/setstatus?key=123
+Send an list button message to WhatsApp User
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+urlencoded
+status
+recording
+recording para gravar audio composing para aparecer digitando
+
+id
+delay
+10
+type
+user
+user ou group
+
+POST
+Send List message - Beta
+localhost:3333/message/list?key=123
+﻿
+
+Authorization
+Bearer Token
+Token
+<token>
+Query Params
+key
+123
+Body
+raw (json)
+View More
+json
+{
+  "id": "",
+  "type": "user", // user or group
+  "options": {
+    "delay": 0,//para aparecer digitando..
+    "replyFrom": "" //id da mensagem que vc quer responder.
+  },
+  "groupOptions":{
+    "markUser": "ghostMention"// marca todo mundo sem aparecer a marcação ou você pode passar a id dos usuários ["user1","user2"]
+  },
+  "msgdata": {
+        "title": "List Title",
+        "description": "teste",
+        "buttonText": "veja as opçoes",
+        "footerText": "footer list\nhttps://examplelink.com.br",
+          "sections": [
+            {
+                "title": "Row tilte 01",
+                "rows": [
+                    {
+                        "title": "Title row 01",
+                        "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,",
+                        "rowId": "rowId 001"
+                    },
+                    {
+                        "title": "Title row 02",
+                        "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,",
+                        "rowId": "rowId 002"
+                    }
+                ]
+            },
+            {
+                "title": "Row tilte 02",
+                "rows": [
+                    {
+                        "title": "Title row 01",
+                        "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,",
+                        "rowId": "rowId 001"
+                    },
+                    {
+                        "title": "Title row 02",
+                        "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,",
+                        "rowId": "rowId 002"
+                    }
+                ]
+            }
+        ]
+            }
+            
+        
+    }
+Misc
+﻿
+
+POST
+Is On Whatsapp?
+localhost:3333/misc/onwhatsapp?key=123
+Check if a number is registered on WhatsApp
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+urlencoded
+id
+POST
+Download Profile Pic
+localhost:3333/misc/downProfile?key=123
+Download Profile pic of an WhatsApp user
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+urlencoded
+id
+POST
+Get User Status
+localhost:3333/misc/getStatus?key=
+Get user status (about).
+
+﻿
+
+Query Params
+key
+Instance Key
+(Required)
+
+Body
+urlencoded
+id
+POST
+Block/Unblock User
+localhost:3333/misc/blockUser?key=123
+Block Or Unblock User.
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+urlencoded
+id
+block_status
+unblock/block
+
+POST
+Update Profile Picture
+localhost:3333/misc/updateProfilePicture?key=123
+Block Or Unblock User.
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+urlencoded
+id
+url
+type
+user or group
+
+GET
+Get Contacts
+localhost:3333/misc/contacts?key=123
+﻿
+
+Query Params
+key
+123
+POST
+Update My online status
+localhost:3333/misc/mystatus?key=123
+﻿
+
+Query Params
+key
+123
+Body
+urlencoded
+status
+unavailable/available
+
+Group
+﻿
+
+POST
+Create Group
+localhost:3333/group/create?key=123
+Create a group
+
+﻿
+
+Query Params
+key
+123
+Body
+raw (json)
+View More
+json
+{"name":"Meu grupo","users":["user1","user2"]}//enviar os usuários que vai por no grupo! Tome cuidado com pessoas que não possuem o seu contato, pois elas podem denunciar e vc pode ser banido.
+POST
+join group from url
+localhost:3333/group/join?key=123
+﻿
+
+Query Params
+key
+123
+Body
+urlencoded
+url
+group url
+
+POST
+Leave Group
+localhost:3333/group/leave?key=123
+Leave a group by its ID
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+urlencoded
+id
+id do grupo
+
+POST
+Invite User
+localhost:3333/group/inviteuser?key=123
+Invite Users to Group
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+raw (json)
+json
+{"id":"","users":["user1","user2"]}
+POST
+remove user
+localhost:3333/group/removeuser?key=123
+Invite Users to Group
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+raw (json)
+json
+{"id":"","users":["user1","user2"]}
+POST
+Make Admin
+localhost:3333/group/makeadmin?key=123
+Promote group users to admin
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+raw (json)
+json
+{"id":"","users":["user1","user2"]}
+POST
+Demote Admin
+localhost:3333/group/demoteadmin?key=123
+Demote group admin
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+raw (json)
+json
+{"id":"","users":["user1","user2"]}
+POST
+Get Group Invite url
+localhost:3333/group/getinvitecode?key=123
+Get invite link of a group
+
+﻿
+
+Query Params
+key
+123
+Instance Key
+(Required)
+
+Body
+urlencoded
+id
+id do grupo
+
+GET
+Get All Groups
+localhost:3333/group/getallgroups?key=123
+Get invite link of a group
+
+﻿
+
+Query Params
+key
+123
+POST
+Get group details from url
+localhost:3333/group/groupurlinfo?key=123
+Get invite link of a group
+
+﻿
+
+Query Params
+key
+123
+Body
+urlencoded
+
+
+Aqui esta a api mais importante que voce ira usar: (a que obtem os chats e mensagens deles)
+
+https://evolucaohot.online/instance/gchats?key=${chave}
+
+resposta da api (exemplo de formato): [
+{
+"id": "5519971217130@s.whatsapp.net",
+"data": {
+"_id": "5519971217130@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "LAOR",
+"mensagens": [
+{
+"data": "2024-07-06 02:15",
+"user": "Paola",
+"mensagem": "oii"
+},
+{
+"data": "2024-07-06 06:05",
+"user": "LAOR",
+"mensagem": "Oi cadê vc"
+},
+{
+"data": "2024-07-06 13:16",
+"user": "LAOR",
+"mensagem": "Olaaaa"
+},
+{
+"data": "2024-07-06 13:16",
+"user": "LAOR",
+"mensagem": "Onde vc esta?"
+},
+{
+"data": "2024-07-06 19:18",
+"user": "LAOR",
+"mensagem": "Oieeee cade vc dlc"
+},
+{
+"data": "2024-07-06 19:47",
+"user": "Paola",
+"mensagem": "fala cmg AMOR"
+},
+{
+"data": "2024-07-06 20:56",
+"user": "LAOR",
+"mensagem": "Oi"
+},
+{
+"data": "2024-07-06 20:56",
+"user": "LAOR",
+"mensagem": "Está aonde"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "5521996113034@s.whatsapp.net",
+"data": {
+"_id": "5521996113034@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "charles lx",
+"mensagens": [
+{
+"data": "2024-07-06 15:24",
+"user": "charles lx",
+"mensagem": "Boa tarde"
+},
+{
+"data": "2024-07-06 15:24",
+"user": "charles lx",
+"mensagem": "TD bem com você"
+},
+{
+"data": "2024-07-06 16:31",
+"user": "Paola",
+"mensagem": "oi"
+},
+{
+"data": "2024-07-06 16:50",
+"user": "charles lx",
+"mensagem": "TD bem com você"
+},
+{
+"data": "2024-07-06 16:50",
+"user": "charles lx",
+"mensagem": "Tesão"
+},
+{
+"data": "2024-07-06 19:16",
+"user": "Paola",
+"mensagem": "oi amor"
+},
+{
+"data": "2024-07-06 19:16",
+"user": "Paola",
+"mensagem": "tudo sim e vc"
+},
+{
+"data": "2024-07-06 19:42",
+"user": "charles lx",
+"mensagem": "Tô bem"
+},
+{
+"data": "2024-07-06 19:43",
+"user": "charles lx",
+"mensagem": "Qual e a boa tesão"
+},
+{
+"data": "2024-07-06 19:43",
+"user": "charles lx",
+"mensagem": "?"
+},
+{
+"data": "2024-07-06 19:47",
+"user": "Paola",
+"mensagem": "a boa é meus videos novos bb"
+},
+{
+"data": "2024-07-06 20:03",
+"user": "charles lx",
+"mensagem": "Não curto isso não"
+},
+{
+"data": "2024-07-06 20:03",
+"user": "charles lx",
+"mensagem": "Melhor pessoalmente linda"
+},
+{
+"data": "2024-07-06 20:03",
+"user": "Paola",
+"mensagem": "ent eu só vendo video"
+},
+{
+"data": "2024-07-06 20:15",
+"user": "charles lx",
+"mensagem": "Ok"
+},
+{
+"data": "2024-07-07 20:36",
+"user": "charles lx",
+"mensagem": "Boa noite"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "554191121544@s.whatsapp.net",
+"data": {
+"_id": "554191121544@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "@iae_eo_lipe",
+"mensagens": [
+{
+"data": "2024-07-06 16:23",
+"user": "@iae_eo_lipe",
+"mensagem": "Tem vídeo gozando?"
+},
+{
+"data": "2024-07-06 19:11",
+"user": "Paola",
+"mensagem": "sim amor"
+},
+{
+"data": "2024-07-07 07:44",
+"user": "@iae_eo_lipe",
+"mensagem": "Quantos?"
+},
+{
+"data": "2024-07-07 13:14",
+"user": "Paola",
+"mensagem": "20 reais amor"
+},
+{
+"data": "2024-07-07 20:50",
+"user": "@iae_eo_lipe",
+"mensagem": "Oii gatinha"
+},
+{
+"data": "2024-07-07 20:51",
+"user": "Paola",
+"mensagem": "to loka pra te enviar uns videos amor"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "557998897586@s.whatsapp.net",
+"data": {
+"_id": "557998897586@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "Gabriel 🤹‍♂️⚽🤙🏽",
+"mensagens": [
+{
+"data": "2024-07-06 17:50",
+"user": "Gabriel 🤹‍♂️⚽🤙🏽",
+"mensagem": "Oie"
+},
+{
+"data": "2024-07-06 17:50",
+"user": "Gabriel 🤹‍♂️⚽🤙🏽",
+"mensagem": "Manda um videu seu fudendo qe mostre sua buceta rosa"
+},
+{
+"data": "2024-07-06 17:51",
+"user": "Gabriel 🤹‍♂️⚽🤙🏽",
+"mensagem": "Em"
+},
+{
+"data": "2024-07-06 17:52",
+"user": "Gabriel 🤹‍♂️⚽🤙🏽",
+"mensagem": "Vai quero bate"
+},
+{
+"data": "2024-07-06 17:52",
+"user": "Gabriel 🤹‍♂️⚽🤙🏽",
+"mensagem": "Uma"
+},
+{
+"data": "2024-07-06 17:52",
+"user": "Gabriel 🤹‍♂️⚽🤙🏽",
+"mensagem": "Olhando seu buceta"
+},
+{
+"data": "2024-07-06 18:16",
+"user": "Paola",
+"mensagem": "20 reais amor"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "558788127340@s.whatsapp.net",
+"data": {
+"_id": "558788127340@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "Paola",
+"mensagens": [
+{
+"data": "2024-07-06 19:11",
+"user": "Paola",
+"mensagem": "oi"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "status@broadcast",
+"data": {
+"_id": "status@broadcast",
+"key": "1f99cb9bf90891",
+"nome": "Ezequiel",
+"mensagens": [
+{
+"data": "2024-07-06 20:12",
+"user": "Ezequiel",
+"mensagem": "que porra é essa, flamengo? 😡"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "5522991055767@s.whatsapp.net",
+"data": {
+"_id": "5522991055767@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "📿",
+"mensagens": [
+{
+"data": "2024-07-06 20:14",
+"user": "Paola",
+"mensagem": "curitiba e vendo conteúdos vc teem interesse?"
+},
+{
+"data": "2024-07-06 20:14",
+"user": "📿",
+"mensagem": "Não"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "553171241873@s.whatsapp.net",
+"data": {
+"_id": "553171241873@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "Sidinei Crispim",
+"mensagens": [
+{
+"data": "2024-07-06 21:22",
+"user": "Sidinei Crispim",
+"mensagem": "Oi boa noite"
+},
+{
+"data": "2024-07-07 17:51",
+"user": "Sidinei Crispim",
+"mensagem": "Boa noite"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "556592771428@s.whatsapp.net",
+"data": {
+"_id": "556592771428@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "Paola",
+"mensagens": [
+{
+"data": "2024-07-06 23:22",
+"user": "Paola",
+"mensagem": "> ⓘ Usuário bloqueado devido a investigação da Polícia Civil. Todas suas conversas com este usuário foram para perícia investigativa."
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "556593318598@s.whatsapp.net",
+"data": {
+"_id": "556593318598@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "Paola",
+"mensagens": [
+{
+"data": "2024-07-06 23:23",
+"user": "Paola",
+"mensagem": "> ⓘ Usuário bloqueado devido a investigação da Polícia Civil. Todas suas conversas com este usuário foram para perícia investigativa."
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "554792692248@s.whatsapp.net",
+"data": {
+"_id": "554792692248@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "LucieL Silva",
+"mensagens": [
+{
+"data": "2024-07-07 00:02",
+"user": "LucieL Silva",
+"mensagem": "Oiii"
+},
+{
+"data": "2024-07-07 00:03",
+"user": "LucieL Silva",
+"mensagem": "Oiii"
+},
+{
+"data": "2024-07-07 00:03",
+"user": "LucieL Silva",
+"mensagem": "Linda"
+},
+{
+"data": "2024-07-07 02:28",
+"user": "LucieL Silva",
+"mensagem": "Tudo bem com você"
+},
+{
+"data": "2024-07-07 16:38",
+"user": "Paola",
+"mensagem": "ooii"
+},
+{
+"data": "2024-07-07 16:38",
+"user": "Paola",
+"mensagem": "sim e vc?"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "558596039769@s.whatsapp.net",
+"data": {
+"_id": "558596039769@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "Paola",
+"mensagens": [
+{
+"data": "2024-07-07 16:09",
+"user": "Paola",
+"mensagem": "Vem assinar o meu vip do telegram! 🌶️🫶🏻\nvocê terá acesso a mais de 100 fotos e vídeos sem censura \n transando e  gemendo até gozar \náudios + histórias \nbrincadeiras e interação \n\nespero por você!\n$35,00acesso vitalicio no (TELEGRAM)"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://pps.whatsapp.net/v/t61.24694-24/427391681_445149348140135_3773831883964019071_n.jpg?ccb=11-4&oh=01_Q5AaIIB0KPDfmPHV5H2N89xwzFmHH72Wf-jAJMSp8MtuIMfp&oe=66981157&_nc_sid=e6ed6c&_nc_cat=105",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "559180651467@s.whatsapp.net",
+"data": {
+"_id": "559180651467@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "Williame Santos",
+"mensagens": [
+{
+"data": "2024-07-07 21:19",
+"user": "Paola",
+"mensagem": "oiii"
+},
+{
+"data": "2024-07-07 21:20",
+"user": "Williame Santos",
+"mensagem": "Oii sksks, boa noite, fofa"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+},
+{
+"id": "34722154237@s.whatsapp.net",
+"data": {
+"_id": "34722154237@s.whatsapp.net",
+"key": "1f99cb9bf90891",
+"nome": "Paola",
+"mensagens": [
+{
+"data": "2024-07-07 21:31",
+"user": "Paola",
+"mensagem": "Oi"
+}
+],
+"estagio": 0,
+"nomePix": "fulano",
+"imagem": "https://cdn.icon-icons.com/icons2/1141/PNG/512/1486395884-account_80606.png",
+"enviando": "nao",
+"aguardando": {
+"status": "nao",
+"id": null,
+"resposta": null,
+"inputs_enviados": [
+"asdasd"
+]
+},
+"gpconfig": {
+"antilink": false,
+"autodivu": false,
+"timerdivu": 0,
+"funildivu": null
+}
+}
+}
+]
+
+---------------
+
+Voce pode usar o bootstrap (algum de chat) para o layout.
+
+Obs: o valor de chave sera obtido do parametro da url (exemplo: localhost:8080/whats/:chave)
+
+

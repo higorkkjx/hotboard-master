@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assinaturas Ativas</title>
+    <!-- Adicionando o Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-semibold text-center mb-8">Assinaturas Ativas</h1>
+        <table class="w-full border-collapse">
+            <thead>
+                <tr>
+                    <th class="bg-blue-500 text-white py-2 px-4">Nome de Usuário</th> <!-- Nova coluna para o nome de usuário -->
+                    <th class="bg-blue-500 text-white py-2 px-4">Email</th>
+                    <th class="bg-blue-500 text-white py-2 px-4">Validade</th>
+                    <th class="bg-blue-500 text-white py-2 px-4">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% assinaturas.forEach(assinatura => { %>
+                    <tr>
+                        <td class="border px-4 py-2"><%= assinatura.nome %></td> <!-- Mostra o nome de usuário -->
+                        <td class="border px-4 py-2"><%= assinatura.email %></td>
+                        <td class="border px-4 py-2"><%= assinatura.validade.toLocaleDateString('pt-BR') %></td>
+                        <td class="border px-4 py-2">
+                            <form action="/pausar-assinatura" method="POST">
+                                <input type="hidden" name="email" value="<%= assinatura.email %>">
+                                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md mr-2">Pausar</button>
+                            </form>
+                            <form action="/ativar-assinatura" method="POST">
+                                <input type="hidden" name="email" value="<%= assinatura.email %>">
+                                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md mr-2">Ativar</button>
+                            </form>
+                            <form action="/excluir-assinatura" method="POST">
+                                <input type="hidden" name="email" value="<%= assinatura.email %>">
+                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

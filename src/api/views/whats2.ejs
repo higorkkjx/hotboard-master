@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Gappa is a bootstrap minimal & clean admin template">
+    <meta name="keywords" content="chat, chat platform, discussion, video call, voice call, communication, conversation, messange, messanger, talk">
+    <meta name="author" content="Themesbox">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <title>Whatsapp - HotBoard Master</title>
+    <!-- Fevicon -->
+    <link rel="shortcut icon" href="https://evolucaohot.online/static/assets/images/favicon.ico">
+    <!-- Start css -->
+    <!-- Slick css -->
+    <link href="https://evolucaohot.online/static/assets/plugins/slick/slick.css" rel="stylesheet">
+    <link href="https://evolucaohot.online/static/assets/plugins/slick/slick-theme.css" rel="stylesheet">
+    <link href="https://evolucaohot.online/static/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="https://evolucaohot.online/static/assets/css/icons.css" rel="stylesheet" type="text/css">
+    <link href="https://evolucaohot.online/static/assets/css/flag-icon.min.css" rel="stylesheet" type="text/css">
+    <link href="https://evolucaohot.online/static/assets/css/style.css" rel="stylesheet" type="text/css">
+    <!-- End css -->
+</head>
+<body class="dark-layout">
+    <!-- Start Create Group Modal -->
+    <div class="modal create-group-modal fade" id="createGroup" tabindex="-1" role="dialog" aria-labelledby="createGroupTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createGroupTitle">Create Group</h5>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="groupName" placeholder="Enter Group Name">
+                        </div>
+                        <div class="form-group">
+                            <textarea class="form-control" name="groupDesc" id="groupDesc" rows="3" placeholder="Enter Group Description"></textarea>
+                        </div>
+                        <p class="create-group-header">Add Users</p>
+                        <div class="added-users">
+                            <div class="avatar-group">
+                                <div class="avatar">
+                                    <a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Emily Cook">
+                                        <img src="https://evolucaohot.online/static/assets/images/girl.svg" alt="avatar" class="rounded-circle">
+                                    </a>
+                                </div>
+                                <div class="avatar">
+                                    <a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Lauren Gotlib">
+                                        <img src="https://evolucaohot.online/static/assets/images/men.svg" alt="avatar" class="rounded-circle">
+                                    </a>
+                                </div>
+                                <div class="avatar">
+                                    <a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Noir Ajkeban">
+                                        <img src="https://evolucaohot.online/static/assets/images/women.svg" alt="avatar" class="rounded-circle">
+                                    </a>
+                                </div>
+                                <div class="avatar">
+                                    <a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Add New User">
+                                        <img src="https://evolucaohot.online/static/assets/images/plus.svg" alt="avatar" class="rounded-circle">
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="add-users-search">
+                            <div class="input-group">
+                                <input type="search" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="add-users-search-btn">
+                                <div class="input-group-append">
+                                    <button class="btn" type="submit" id="add-users-search-btn"><i class="feather icon-search"></i></button>
+                                </div>
+                            </div>
+                        </div> 
+                        <div class="add-users-list">
+                            <ul class="list-unstyled">
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/girl.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5><span>Emily Cook</span></h5>
+                                        <p>Hey there. I am on Chalty.</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="userfirstAdd" checked>
+                                        <label class="custom-control-label" for="userfirstAdd"></label>
+                                    </div>
+                                </li>
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/boy.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5>James Simeron</h5>
+                                        <p>Work mode ON !!</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="usersecondAdd">
+                                        <label class="custom-control-label" for="usersecondAdd"></label>
+                                    </div>
+                                </li>
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/men.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5>Lauren Gotlib</h5>
+                                        <p>Let's go hiking.</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="userthirdAdd" checked>
+                                        <label class="custom-control-label" for="userthirdAdd"></label>
+                                    </div>
+                                </li>
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/girl.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5>Nebraska Oshivo</h5>
+                                        <p>Why so serious ?</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="userfourthAdd">
+                                        <label class="custom-control-label" for="userfourthAdd"></label>
+                                    </div>
+                                </li>
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/women.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5>Noir Ajkeban</h5>
+                                        <p> ** No Status **</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="userfifthAdd" checked>
+                                        <label class="custom-control-label" for="userfifthAdd"></label>
+                                    </div>
+                                </li>  
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/boy.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5><span>John Smith</span></h5>
+                                        <p>Hey there. I am on Chalty.</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="userSixthAdd" checked>
+                                        <label class="custom-control-label" for="userSixthAdd"></label>
+                                    </div>
+                                </li>
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/girl.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5>Arya Thompson</h5>
+                                        <p>Work mode ON !!</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="userSeventhdAdd">
+                                        <label class="custom-control-label" for="userSeventhdAdd"></label>
+                                    </div>
+                                </li>
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/men.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5>Mike Wright</h5>
+                                        <p>Let's go hiking.</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="userEightAdd">
+                                        <label class="custom-control-label" for="userEightAdd"></label>
+                                    </div>
+                                </li>
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/boy.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5>Robert Pattinson</h5>
+                                        <p>Why so serious ?</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="userNinthAdd">
+                                        <label class="custom-control-label" for="userNinthAdd"></label>
+                                    </div>
+                                </li>
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/women.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5>Seema Rao</h5>
+                                        <p> ** No Status **</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="userTenthAdd">
+                                        <label class="custom-control-label" for="userTenthAdd"></label>
+                                    </div>
+                                </li>         
+                                <li class="media">
+                                    <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/girl.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5>Noir Williamson</h5>
+                                        <p> ** No Status **</p>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="userEleventhAdd">
+                                        <label class="custom-control-label" for="userEleventhAdd"></label>
+                                    </div>
+                                </li>                                   
+                            </ul>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <button type="submit" class="btn btn-primary"><i class="feather icon-plus mr-2"></i>Create Group</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Incoming Video Call Modal -->
+    <!-- Start Incoming Video Call Modal -->
+    <div class="modal incoming-video-modal fade" id="incomingVideoCall" tabindex="-1" role="dialog" aria-labelledby="incomingVideoCallTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white" id="incomingVideoCallTitle">Incoming Video Call</h5>
+                </div>
+                <div class="modal-body">
+                    <img src="https://evolucaohot.online/static/assets/images/girl.svg" alt="avatar" class="rounded-circle">
+                    <h5 class="text-white">Jessica Meir</h5>
+                    <p class="text-white">Texas, USA</p>
+                    <button type="button" class="btn btn-success mr-3"><i class="feather icon-check mr-2"></i>Accept</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="feather icon-x mr-2"></i>Reject</button>                    
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Incoming Video Call Modal -->
+    <!-- Start Incoming Voice Call Modal -->
+    <div class="modal incoming-voice-modal fade" id="incomingVoiceCall" tabindex="-1" role="dialog" aria-labelledby="incomingVoiceCallTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-blue-500 text-white">
+                    <h5 class="modal-title" id="incomingVoiceCallTitle">ZAPVOICE MASTER</h5>
+                </div>
+                <div class="modal-body p-6">
+                    <div class="chat-user-body space-y-4">
+                        <div class="userbar">
+                            <h5 class="user-detail-header text-lg font-bold" style="color: rgb(0, 255, 200);">Função 1: Selecionar Audio</h5>
+
+                            <label for="audioUpload" class="block mb-2">Escolha um arquivo de áudio:</label>
+                            <input type="file" id="audioUpload" name="audioFile" accept="audio/*" class="block w-full mb-4 p-2 border rounded">
+                            
+                            <label for="audioDelayInput" class="block mb-2">Selecione o atraso (em segundos):</label>
+                            <input type="number" id="audioDelayInput" name="audioDelayInput" min="0" step="1" value="0" class="block w-full p-2 border rounded mb-4">
+                        </div>
+                        
+                        <button onclick="enviarAudio()" type="button" class="btn btn-success mr-3 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition"><i class="feather icon-check mr-2"></i>Enviar Áudio</button>
+                        
+                        <div class="user-detail2" id="uploadStatus">
+                            <!-- Aqui será exibido o status do upload -->
+                        </div>
+                        <hr class="my-4">
+                        <div class="user-detail space-y-4">
+                            <h5 class="user-detail-header text-lg font-bold" style="color: rgb(0, 255, 200);">Função 2: Criar Voz Feminina</h5>
+                            
+                            <input type="text" id="mensagemInput" placeholder="Digite sua mensagem..." class="block w-full p-2 border rounded mb-4">
+                            
+                            <label for="tom" class="block mb-2">Selecione o tom de fala:</label>
+                            <select name="tom" id="tom" class="block w-full p-2 border rounded mb-4">
+                                <% configuracoes.forEach(opcao => { %>
+                                    <option value="<%= opcao.nome %>"><%= opcao.nome %></option>
+                                <% }); %>
+                            </select>
+                            
+                            <label for="audioDelayInput2" class="block mb-2">Selecione o atraso (para mostrar "gravando audio..."):</label>
+                            <input type="number" id="audioDelayInput2" name="audioDelayInput2" min="0" step="1" value="0" class="block w-full p-2 border rounded mb-4">
+                            
+                            <button onclick="transformarVoz()" class="btn bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition">Transformar Voz</button>
+                            
+                            <h5 id="h1msg" class="mt-4 hidden">AUDIO GERADO:</h5>
+                            
+                            <audio id="audioPlayer" controls class="w-full mt-4 bg-gray-200 rounded p-2 hidden"></audio> <!-- Elemento de áudio para reproduzir o áudio -->
+                            
+                            <div id="audioControls" class="space-x-4 mt-4 hidden">
+                                <!-- Controles para Confirmar e Gerar Outro -->
+                                <button id="btnEnviarAudio" onclick="confirmarAudio()" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition">Enviar Audio</button>
+                                <button id="btnGerarOutro" onclick="gerarOutroAudio()" class="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition">Gerar Outro</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estilos adicionais -->
+    <style>
+        button#btnEnviarAudio {
+    background-color: #4CAF50; /* Cor de fundo verde */
+    color: white; /* Cor do texto branca */
+    padding: 10px 20px; /* Espaçamento interno */
+    border: none; /* Remove a borda */
+    border-radius: 5px; /* Borda arredondada */
+    cursor: pointer; /* Altera o cursor para indicar interatividade */
+    font-family: Arial, sans-serif; /* Fonte */
+    font-size: 16px; /* Tamanho da fonte */
+}
+
+/* Estilo para o botão "Gerar Outro" */
+button#btnGerarOutro {
+    background-color: #f44336; /* Cor de fundo vermelha */
+    color: white; /* Cor do texto branca */
+    padding: 10px 20px; /* Espaçamento interno */
+    border: none; /* Remove a borda */
+    border-radius: 5px; /* Borda arredondada */
+    cursor: pointer; /* Altera o cursor para indicar interatividade */
+    font-family: Arial, sans-serif; /* Fonte */
+    font-size: 16px; /* Tamanho da fonte */
+}
+
+
+        button:hover {
+            opacity: 0.8; /* Reduz a opacidade para indicar interatividade */
+        }
+    
+        button:active {
+            background-color: #3e8e41; /* Altera a cor de fundo quando clicado */
+        }
+    </style>
+    
+    <!-- End Incoming Voice Call Modal -->
+    <!-- Start Error Screen Modal -->
+    <div class="modal error-screen-modal fade" id="errorScreen" tabindex="-1" role="dialog" aria-labelledby="errorScreenTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorScreenTitle">Connection Error</h5>
+                </div>
+                <div class="modal-body">
+                    <img src="https://evolucaohot.online/static/assets/images/connection_error.svg" class="img-fluid" alt="connection_error">
+                    <h5>Computer not Connected</h5>
+                    <p>Please, check internet connection this PC.</p>
+                    <button type="button" class="btn btn-info"><i class="feather icon-repeat mr-2"></i>Try Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Incoming Voice Call Modal -->
+    <!-- Start Chat Layout -->
+    <div class="chat-layout">
+        <!-- Start Chat Leftbar -->
+        <div class="chat-leftbar">
+            <div class="tab-content" id="pills-tab-justifiedContent">
+                <!-- Start Chat Listbar -->
+                <div class="tab-pane fade show active" id="pills-chat-justified" role="tabpanel" aria-labelledby="pills-chat-tab-justified">
+                    <div class="chat-listbar">
+                        <div class="chat-left-headbar">
+                            <div class="row align-items-center">
+                                <div class="col-9">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="media">
+                                            <img class="align-self-center mr-2" src="https://evolucaohot.online/static/assets/images/logo.svg" alt="Generic placeholder image">
+                                            <div class="media-body">
+                                                <h5 class="mb-0 mt-2"><%= nomezap %></h5>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-3">
+                                    <a href="login.html" data-toggle="tooltip" data-placement="right" title="Logout"><i class="feather icon-log-out"></i></a>
+                                </div>
+                            </div>
+                        </div>  
+                        <div class="chat-left-search">
+                            <form>
+                                <div class="input-group">
+                                  <input type="search" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="chat-left-search-btn">
+                                  <div class="input-group-append">
+                                    <button class="btn" type="submit" id="chat-left-search-btn"><i class="feather icon-search"></i></button>
+                                  </div>
+                                </div>
+                            </form>
+                        </div>                                     
+                        <div class="chat-left-body">       
+                            <div class="nav flex-column nav-pills chat-userlist" id="chat-list-tab" role="tablist" aria-orientation="vertical">
+                                                            
+                                                         
+                            </div>
+                        </div>                                       
+                    </div>                                    
+                </div>
+
+               
+                
+                <!-- End Chat Listbar -->
+                <!-- Start Chat Addbar -->
+                <div class="tab-pane fade" id="pills-addchat-justified" role="tabpanel" aria-labelledby="pills-addchat-tab-justified">
+                    <div class="chat-addbar">
+                        <div class="chat-left-headbar">
+                            <div class="row align-items-center">
+                                <div class="col-9">                                                
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="media">
+                                            <img class="align-self-center mr-2" src="https://evolucaohot.online/static/assets/images/logo.svg" alt="Generic placeholder image">
+                                            <div class="media-body">
+                                                <h5 class="mb-0 mt-2">Novo Chat</h5>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-3">
+                                    <a href="#" data-toggle="modal" data-target="#createGroup"><i class="feather icon-users"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-left-search">
+                            <form>
+                                <div class="input-group">
+                                  <input type="search" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="chat-left-search-user-btn">
+                                  <div class="input-group-append">
+                                    <button class="btn" type="submit" id="chat-left-search-user-btn"><i class="feather icon-search"></i></button>
+                                  </div>
+                                </div>
+                            </form>
+                        </div>                                     
+                        <div class="chat-left-body">   
+                            <div class="nav flex-column nav-pills chat-userlist" id="contatos" role="tablist" aria-orientation="vertical">
+                             
+                              
+                            </div>
+                        </div>                                        
+                    </div>
+                </div>
+                <!-- End Chat Addbar -->
+                <!-- Start Chat Profilebar -->
+                <div class="tab-pane fade" id="pills-profile-justified" role="tabpanel" aria-labelledby="pills-profile-tab-justified">
+                    <div class="chat-profilebar">
+                        <div class="chat-left-headbar">
+                            <div class="row align-items-center">
+                                <div class="col-12">                                                
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="media">
+                                            <img class="align-self-center mr-2" src="https://evolucaohot.online/static/assets/images/logo.svg" alt="Generic placeholder image">
+                                            <div class="media-body">
+                                                <h5 class="mb-0 mt-2">Perfil</h5>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-left-body">
+                            <div class="profilebar">
+                                <img class="profile-pic img-fluid" src="<%= profileImageUrl %>" alt="profile-pic">  
+                                <div class="profile-edit">
+                                    <i class="feather icon-camera upload-button"></i>
+                                    <input class="profile-upload" type="file" accept="image/*"/>
+                                </div>  
+                                <h5><%= nomezap %></h5>
+                                
+                                <p class="mb-0">Brasil</p>                                            
+                            </div> 
+                            <div class="profile-detail">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="media">
+                                        <i class="feather icon-user align-self-center"></i>
+                                        <div class="media-body">
+                                            <p>Seu login na plataforma:</p>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" value="<%= chave %>" aria-label="<%= chave %>" aria-describedby="button-addon-group-username">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-link" type="button" id="button-addon-group-username">Update</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>  
+                                   
+                                    <li class="media">
+                                        <i class="feather icon-message-square align-self-center"></i>
+                                        <div class="media-body">
+                                            <p>Biografia</p>
+                                            <div class="input-group">
+                                                <input type="text" id="biografia-whats" class="form-control" value="I am on Gappa." aria-label="I am on Gappa" aria-describedby="button-addon-group-status">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-link" type="button" id="button-addon-group-status">Update</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                                                  
+                                </ul>
+                            </div>                                            
+                        </div>
+                    </div>
+                </div>
+                <!-- End Chat Profilebar -->
+                <!-- Start Chat Settingbar -->
+                <div class="tab-pane fade" id="pills-setting-justified" role="tabpanel" aria-labelledby="pills-setting-tab-justified">
+                    <div class="chat-settingbar">
+                        <div class="chat-left-headbar">
+                            <div class="row align-items-center">
+                                <div class="col-9">                                                
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="media">
+                                            <img class="align-self-center mr-2" src="https://evolucaohot.online/static/assets/images/logo.svg" alt="Generic placeholder image">
+                                            <div class="media-body">
+                                                <h5 class="mb-0 mt-2">Setting</h5>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-3">
+                                    <div class="dropdown">
+                                        <a href="#" id="settingDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="feather icon-more-vertical-"></i></a>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="settingDropdown">
+                                            <a class="dropdown-item font-14" href="#">Reset to Defaults</a>
+                                            <a class="dropdown-item font-14" href="#">Backup</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-left-body">
+                            <p class="setting-header">General Settings</p>
+                            <div class="general-setting">
+                                <div class="row align-items-center pb-3">
+                                    <div class="col-9"><h6 class="mb-0">Notification Sounds</h6></div>
+                                    <div class="col-3 text-right">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="notificationSound" checked>
+                                            <label class="custom-control-label" for="notificationSound"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row align-items-center pb-3">
+                                    <div class="col-9"><h6 class="mb-0">New Message Alerts</h6></div>
+                                    <div class="col-3 text-right">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="newMessageAlerts">
+                                            <label class="custom-control-label" for="newMessageAlerts"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row align-items-center pb-3">
+                                    <div class="col-9"><h6 class="mb-0">Show Mini Messages in Sidebar</h6></div>
+                                    <div class="col-3 text-right">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="showMiniMessages">
+                                            <label class="custom-control-label" for="showMiniMessages"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="setting-header">Privacy Settings</p>
+                            <div class="privacy-setting">                                                
+                                <div class="row align-items-center pb-3">
+                                    <div class="col-9"><h6 class="mb-0">Read Receipts</h6></div>
+                                    <div class="col-3 text-right">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="readReceipts" checked>
+                                            <label class="custom-control-label" for="readReceipts"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row align-items-center pb-3">
+                                    <div class="col-9"><h6 class="mb-0">Show Profile Picture</h6></div>
+                                    <div class="col-3 text-right">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="showProfilePicture">
+                                            <label class="custom-control-label" for="showProfilePicture"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row align-items-center pb-3">
+                                    <div class="col-9"><h6 class="mb-0">Allow Messages from Strangers</h6></div>
+                                    <div class="col-3 text-right">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="allowMessageToStrangers">
+                                            <label class="custom-control-label" for="allowMessageToStrangers"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="setting-header">Design Settings</p>
+                            <div class="design-setting custom-checkbox-button">
+                                <div class="form-check-inline checkbox-primary">
+                                  <input type="checkbox" id="customCheckboxInline5" name="customCheckboxInline2" checked>
+                                  <label for="customCheckboxInline5"></label>
+                                </div>
+                                <div class="form-check-inline checkbox-secondary">
+                                  <input type="checkbox" id="customCheckboxInline6" name="customCheckboxInline2">
+                                  <label for="customCheckboxInline6"></label>
+                                </div>
+                                <div class="form-check-inline checkbox-success">
+                                  <input type="checkbox" id="customCheckboxInline7" name="customCheckboxInline2">
+                                  <label for="customCheckboxInline7"></label>
+                                </div>
+                                <div class="form-check-inline checkbox-danger">
+                                  <input type="checkbox" id="customCheckboxInline8" name="customCheckboxInline2">
+                                  <label for="customCheckboxInline8"></label>
+                                </div>
+                                <div class="form-check-inline checkbox-warning">
+                                  <input type="checkbox" id="customCheckboxInline9" name="customCheckboxInline2">
+                                  <label for="customCheckboxInline9"></label>
+                                </div>
+                                <div class="form-check-inline checkbox-info">
+                                  <input type="checkbox" id="customCheckboxInline10" name="customCheckboxInline2">
+                                  <label for="customCheckboxInline10"></label>
+                                </div>
+                                <div class="form-check-inline checkbox-light">
+                                  <input type="checkbox" id="customCheckboxInline11" name="customCheckboxInline2">
+                                  <label for="customCheckboxInline11"></label>
+                                </div>
+                                <div class="form-check-inline checkbox-dark">
+                                  <input type="checkbox" id="customCheckboxInline12" name="customCheckboxInline2">
+                                  <label for="customCheckboxInline12"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Chat Settingbar -->
+            </div>
+            <div class="chat-menu">
+                <ul class="nav nav-pills nav-justified mb-0" id="pills-tab-justified" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="pills-chat-tab-justified" data-toggle="pill" href="#pills-chat-justified" role="tab" aria-controls="pills-chat-justified" aria-selected="true"><i class="feather icon-message-circle"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="pills-addchat-tab-justified" data-toggle="pill" href="#pills-addchat-justified" role="tab" aria-controls="pills-addchat-justified" aria-selected="false"><i class="feather icon-edit-1"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="pills-profile-tab-justified" data-toggle="pill" href="#pills-profile-justified" role="tab" aria-controls="pills-profile-justified" aria-selected="false"><i class="feather icon-user"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="pills-setting-tab-justified" data-toggle="pill" href="#pills-setting-justified" role="tab" aria-controls="pills-setting-justified" aria-selected="false"><i class="feather icon-settings"></i></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- End Chat Leftbar -->
+        <!-- Start Chat Rightbar -->  
+        <div class="chat-rightbar">
+            <!-- Start Chat Detail -->
+            <div class="chat-detail">
+                <div class="chat-head">
+                    <div class="row align-items-center">
+                        <div class="col-6">                                                
+                            <ul class="list-unstyled mb-0">
+                                <li class="media">
+                                    <div class="user-status"></div>
+                                    <img id="profileImage" class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/girl.svg" alt="Generic placeholder image">
+                                    <div class="media-body">
+                                        <h5 id="nomeuser">Usuario</h5>
+                                        <p class="mb-0">Online</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                     
+                        <div class="col-6">
+                            <ul class="list-inline float-right mb-0">
+                                <li class="list-inline-item">
+                                    <a href="#" data-toggle="modal" data-target="#incomingVoiceCall"><i class="feather icon-mic"></i></a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a href="#" data-toggle="modal" data-target="#incomingVideoCall"><i class="feather icon-video"></i></a>
+                                </li>                                         
+                                <li class="list-inline-item">
+                                    <div class="dropdown">
+                                        <a href="#" class="" id="chatDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="feather icon-more-vertical-"></i></a>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="chatDropdown">
+                                            <a class="dropdown-item font-14" href="#" id="view-user-info">Funis de mensagem</a>
+                                           
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a href="#" class="back-arrow"><i class="feather icon-x"></i></a>
+                                </li>
+                            </ul>                                            
+                        </div>
+                    </div>                                    
+                </div>
+                <div class="chat-body">
+                    <div class="tab-content" id="chat-listContent">
+                       
+                     
+                    </div>                    
+                </div>
+                <div class="chat-bottom">
+                    <div class="chat-messagebar">
+                        <form>
+                            <div class="gpconf">
+                                <input type="checkbox" id="invisible-markup" name="invisible-markup" class="hidden peer">
+                                <label for="invisible-markup" class="checkbox-label peer-checked:bg-blue-600 peer-checked:border-transparent peer-checked:text-white flex items-center cursor-pointer">
+                                    <span class="peer-checked:ring-2 peer-checked:ring-white w-4 h-4 rounded-full flex items-center justify-center mr-2 transition ease-in-out duration-150"></span>
+                                    Ativar marcação invisível
+                                </label>
+                                </div>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <a href="#" id="button-addonmic"><i class="feather icon-mic"></i></a>
+                                </div>  
+                                
+                                <input type="text" class="form-control"  id="msg_input" placeholder="Digite sua mensagem..." aria-label="Text">
+                                <div class="input-group-append">
+                                    <a href="#" class="mr-3" id="button-addonlink"><i class="feather icon-paperclip"></i></a>
+                                    <a href="#" id="button-addonsend"><i class="feather icon-send"></i></a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- End Chat Detail -->
+            <!-- Start Chat User Info -->
+            <div class="chat-user-info">
+                <div class="chat-user-head">
+                    <div class="row align-items-center">
+                        <div class="col-9">                                                
+                            <h5>ENVIO DE FUNIS</h5>
+                        </div>
+                        <div class="col-3">
+                            <ul class="list-inline float-right mb-0">
+                                <li class="list-inline-item">
+                                    <a href="#" id="close-user-info"><i class="feather icon-x"></i></a>
+                                </li>
+                            </ul>                                            
+                        </div>
+                    </div>                                    
+                </div>
+                <div class="chat-user-body">
+              
+                    <p class="user-detail-header" id="funislist">Funis:</p>
+                    <p class="user-detail-header" id="funis"></p>
+                    <br>
+              
+                        <p class="user-detail-header">Imagens dos funis</p>
+                        <br>
+                        <div class="user-media">
+                          
+                            <div class="user-media">
+                                <div class="user-media-slider">
+                                   
+                                  
+                                </div>
+                            </div>       
+                            <br>
+                        </div>                                        
+                        <p class="user-detail-header">Configuração </p>
+                        <div class="user-setting">
+                            <div class="row align-items-center pb-3">
+                                <div class="col-9"><h6 class="mb-0">Mídias em Visu Unica</h6></div>
+                                <div class="col-3 text-right">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="muteNotification" checked>
+                                        <label class="custom-control-label" for="muteNotification"></label>
+                                    </div>
+                                </div>
+                            </div>
+                         
+                        </div>
+                    </div>
+                </div>                                
+            </div>
+            <!-- End Chat User Info -->
+        </div>
+        <!-- End Chat Rightbar -->
+    </div>
+    <!-- End Chat Layout -->
+    <!-- Start js -->     
+  <style>
+    /* Estilos para os botões */
+.funil-button {
+    background-color: #4CAF50; /* Cor de fundo */
+    border: none; /* Remover borda */
+    color: white; /* Cor do texto */
+    padding: 10px 20px; /* Espaçamento interno */
+    text-align: center; /* Alinhamento de texto */
+    text-decoration: none; /* Remover sublinhado */
+    display: inline-block; /* Mostrar como elemento de bloco */
+    font-size: 16px; /* Tamanho da fonte */
+    margin: 4px 2px; /* Margem */
+    cursor: pointer; /* Cursor do mouse */
+    border-radius: 8px; /* Borda arredondada */
+    transition-duration: 0.4s; /* Duração da transição */
+}
+
+/* Estilos para quando o mouse passa por cima do botão */
+.funil-button:hover {
+    background-color: #45a049; /* Mudar a cor de fundo */
+    color: white; /* Mudar a cor do texto */
+}
+
+  </style>
+    <script>
+
+       let ultimoNumero = 0
+
+        async function fetchContacts() {
+            try {
+                const response = await fetch('https://evolucaohot.online/instance/gchats?key=' + "<%= chave %>");
+                const contacts = await response.json();
+
+                const chatList = document.querySelector('.chat-userlist');
+
+                contacts.forEach(contact => {
+                    const lastMessage = contact.data.mensagens[contact.data.mensagens.length - 1];
+                    
+                    const mensagemFormatada = lastMessage
+                                                  .replace(lastMessage.split(' ')[0], "")
+                                                  .replace(lastMessage.split(' ')[1] + " -", "")
+                                                  .replace("<%= nomezap %>" + ":", "")
+                                                  .replace(contact.data.nome + ":", "").replace("undefined", "[MIDIA]")
+                                          
+
+                    const contactElement = document.createElement('a');
+                    contactElement.className = 'nav-link';
+                    contactElement.setAttribute('data-toggle', 'pill');
+                    contactElement.href = '#chat-' + contact.id;
+                    contactElement.role = 'tab';
+                    contactElement.setAttribute('aria-controls', 'chat-' + contact.id);
+                    contactElement.setAttribute('aria-selected', 'true');
+                    contactElement.dataset.contactId = contact.id;
+
+                    contactElement.addEventListener('click', async () => {
+                        console.log('Contact ID:', contact.id);
+                        await fetchMessages(contact.id);
+
+                      ultimoNumero = contact.id.replace("@s.whatsapp.net", "");
+              
+   
+    document.getElementById('nomeuser').textContent = contact.data.nome // contact.id.replace("@s.whatsapp.net", "");
+
+    try {
+                const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=<%= chave %>`, {
+                    method: 'POST',
+                    body: JSON.stringify({ id: ultimoNumero.replace("@s.whatsapp.net", "") }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (profileResponse.ok) {
+                    const profileData = await profileResponse.json();
+                    if (profileData.error === false) {
+                        const profileImageUrl = profileData.data;
+                        document.getElementById('profileImage').src = profileImageUrl;
+                    } else {
+                        console.error('Erro na resposta do servidor:', profileData.message);
+                    }
+                } else {
+                    console.error('Erro ao fazer a requisição:', profileResponse.statusText);
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+            }
+
+               
+                    });
+
+                    const mediaDiv = document.createElement('div');
+                    mediaDiv.className = 'media active';
+
+                    const userStatusDiv = document.createElement('div');
+                    userStatusDiv.className = 'user-status';
+
+                    const img = document.createElement('img');
+                    img.className = 'align-self-center rounded-circle';
+                    img.src = contact.data.imagem;
+                    img.alt = 'User Image';
+
+                    const mediaBodyDiv = document.createElement('div');
+                    mediaBodyDiv.className = 'media-body';
+
+                    const h5 = document.createElement('h5');
+                    h5.textContent = contact.data.nome;
+
+                    const span = document.createElement('span');
+                    span.className = 'chat-timing';
+                    span.textContent = '02:30 pm'; // You can replace this with the actual time if available
+
+                    h5.appendChild(span);
+
+                    const p = document.createElement('p');
+                    p.textContent = mensagemFormatada;
+
+                    mediaBodyDiv.appendChild(h5);
+                    mediaBodyDiv.appendChild(p);
+
+                    mediaDiv.appendChild(userStatusDiv);
+                    mediaDiv.appendChild(img);
+                    mediaDiv.appendChild(mediaBodyDiv);
+
+                    contactElement.appendChild(mediaDiv);
+
+                    chatList.appendChild(contactElement);
+                });
+            } catch (error) {
+                console.error('Error fetching contacts:', error);
+            }
+        }
+
+        async function fetchMessages(contactId) {
+            try {
+                const response = await fetch(`https://evolucaohot.online/instance/gchatsById?key=` + "<%= chave %>" + `&id=${contactId}`);
+                const messages = await response.json();
+
+                const chatContent = document.getElementById('chat-listContent');
+                chatContent.innerHTML = ''; // Clear previous messages
+              
+
+              
+
+                messages[0].data.mensagens.forEach(message => {
+                    const messageParts = message.split(' - ');
+                    const messageText = messageParts.slice(1).join(' - ');
+                    const isMessageLeft = messageParts[1].split(': ')[0] === '<%= nomezap %>'
+
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = isMessageLeft ? 'chat-message chat-message-right' : 'chat-message chat-message-left';
+
+                    const messageTextDiv = document.createElement('div');
+                    messageTextDiv.className = 'chat-message-text';
+
+                    const span = document.createElement('span');
+                    span.textContent = messageText.replace("undefined", "[MIDIA]")
+
+                    messageTextDiv.appendChild(span);
+                    messageDiv.appendChild(messageTextDiv);
+
+                    const messageMetaDiv = document.createElement('div');
+                    messageMetaDiv.className = 'chat-message-meta';
+
+                    const metaSpan = document.createElement('span');
+                    metaSpan.textContent = '4:18 pm'; // You can replace this with the actual time if available
+
+                    messageMetaDiv.appendChild(metaSpan);
+                    messageDiv.appendChild(messageMetaDiv);
+
+                    chatContent.appendChild(messageDiv);
+                });
+
+             
+    
+
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+            }
+        }
+
+     
+        
+async function carregarContatos() {
+    try {
+        const response = await fetch(`https://evolucaohot.online/misc/contacts?key=<%= chave %>`);
+        const { data, error } = await response.json();
+
+        if (!error) {
+            const chatUserlist = document.getElementById('contatos');
+            if (!chatUserlist) throw new Error("Elemento 'contatos' não encontrado.");
+
+            console.log(data)
+            data.contacts.forEach(contact => {
+                const contactElement = document.createElement('a');
+                contactElement.className = 'nav-link';
+                contactElement.setAttribute('data-toggle', 'pill');
+                contactElement.href = '#';
+                contactElement.role = 'tab';
+                contactElement.setAttribute('aria-selected', 'true');
+
+                contactElement.innerHTML = `
+                    <div class="media">
+                        <img class="align-self-center rounded-circle" src="https://evolucaohot.online/static/assets/images/men.svg" alt="User Image">
+                        <div class="media-body">
+                            <h5>${contact.name}</h5>
+                            <p>Chamar contato</p>
+                        </div>
+                    </div>
+                `;
+
+                chatUserlist.appendChild(contactElement);
+
+                contactElement.addEventListener('click', async () => {
+                        console.log('Contact ID:', contact.id);
+                        await fetchMessages(contact.id);
+
+                      ultimoNumero = contact.id.replace("@s.whatsapp.net", "");
+              
+   
+    document.getElementById('nomeuser').textContent = contact.name // contact.id.replace("@s.whatsapp.net", "");
+
+    try {
+                const profileResponse = await fetch(`https://evolucaohot.online/misc/downProfile?key=<%= chave %>`, {
+                    method: 'POST',
+                    body: JSON.stringify({ id: ultimoNumero.replace("@s.whatsapp.net", "") }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (profileResponse.ok) {
+                    const profileData = await profileResponse.json();
+                    if (profileData.error === false) {
+                        const profileImageUrl = profileData.data;
+                        document.getElementById('profileImage').src = profileImageUrl;
+                    } else {
+                        console.error('Erro na resposta do servidor:', profileData.message);
+                    }
+                } else {
+                    console.error('Erro ao fazer a requisição:', profileResponse.statusText);
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+            }
+
+               
+                    });
+
+            });
+        } else {
+            throw new Error("Erro na resposta da API.");
+        }
+    } catch (error) {
+        console.error('Erro ao carregar contatos:', error);
+    }
+}
+
+
+async function getStatusAndSetInputValue() {
+    try {
+        console.log('<%= numeroid %>')
+        const requestBody = JSON.stringify({ id: "<%= numeroid %>" });
+        const response = await fetch('https://evolucaohot.online/misc/getStatus?key=<%= chave %>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: requestBody
+        });
+
+        const { error, data } = await response.json();
+
+        if (!error && data && data.status) {
+            const inputValue = data.status;
+
+            // Set the value of the input
+            const inputElement = document.getElementById('biografia-whats');
+            if (inputElement) {
+                inputElement.value = inputValue;
+            } else {
+                throw new Error("Elemento 'biografia-whats' não encontrado.");
+            }
+        } else {
+            throw new Error("Erro ao obter o status.");
+        }
+    } catch (error) {
+        console.error('Erro ao obter o status e definir o valor do input:', error);
+    }
+}
+
+
+// Primeiro, faça a requisição GET para obter os dados JSON
+fetch("https://evolucaohot.online/instance/displayallfunis?key=<%= chave %>")
+    .then(response => response.json())
+    .then(data => {
+        const funisContainer = document.getElementById("funis");
+        const mediaSlider = document.querySelector(".user-media-slider");
+
+        // Função para adicionar botão de funil
+        function addFunnelButton(funilName) {
+            const button = document.createElement('button');
+            button.classList.add("funil-button");
+            button.setAttribute("data-funil-name", funilName);
+            button.textContent = funilName;
+            funisContainer.appendChild(button);
+        }
+
+        // Função para adicionar imagem à área de mídia
+        function addImageToMedia(content) {
+            const style = "width: 75px; height: 75px;";
+    const userMediaSlider = document.querySelector('.user-media-slider');
+
+    const sliderItem = document.createElement('div');
+    sliderItem.classList.add("user-media-slider-item");
+
+    const img = document.createElement('img');
+    img.src = content;
+    img.alt = "user-media";
+    img.style = style;
+
+    sliderItem.appendChild(img);
+    userMediaSlider.appendChild(sliderItem);
+}
+
+
+
+        // Itere sobre cada item no array de funis
+        data.forEach(function(item) {
+            addFunnelButton(item.funilName);
+
+            // Verifique se o funil contém alguma imagem
+            item.funil.forEach(function(funilItem) {
+                if (funilItem.tipoMensagem === "image") {
+                    addImageToMedia(funilItem.conteudo);
+                }
+            });
+        });
+
+
+        function isCheckboxChecked() {
+    const checkbox = document.getElementById('muteNotification');
+    return checkbox.checked;
+}
+
+// Exemplo de uso:
+const checkboxChecked = isCheckboxChecked();
+console.log(checkboxChecked); // Retorna true se estiver marcado, false se não estiver
+
+
+        // Adicione um evento de clique para cada botão
+        funisContainer.addEventListener('click', function(event) {
+            if (event.target.classList.contains('funil-button')) {
+                var funilName = event.target.getAttribute("data-funil-name");
+let numerosend;
+                if (ultimoNumero.includes("@g.us")) {
+                    numerosend = `${ultimoNumero}`
+                } else {
+                    numerosend = ultimoNumero
+                }
+                // Faça a requisição para enviar o funil
+                fetch("https://evolucaohot.online/instance/sendfunil?key=<%= chave %>&funil=" + funilName + "&chat=" + ultimoNumero + "&visuunica=" + checkboxChecked)
+                    .then(response => response.json())
+                    .then(response => {
+                        // Verifique se a API retornou um JSON
+                        if (response) {
+                            // Exiba uma mensagem no HTML
+                            document.querySelector(".chat-user-body").innerHTML += '<p>Funil enviado</p>';
+                        }
+                    });
+            }
+        });
+    });
+
+
+// Chame a função para realizar a requisição e definir o valor do input
+getStatusAndSetInputValue();
+
+carregarContatos()
+        fetchContacts();
+    </script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://evolucaohot.online/static/assets/js/jquery.min.js"></script>
+    <script src="https://evolucaohot.online/static/assets/js/popper.min.js"></script>
+    <script src="https://evolucaohot.online/static/assets/js/bootstrap.min.js"></script>
+    <script src="https://evolucaohot.online/static/assets/js/modernizr.min.js"></script>
+    <script src="https://evolucaohot.online/static/assets/js/detect.js"></script>
+    <script src="https://evolucaohot.online/static/assets/js/jquery.slimscroll.js"></script>
+    <script src="https://evolucaohot.online/static/assets/js/vertical-menu.js"></script>
+    <!-- Slick js -->
+    <script src="https://evolucaohot.online/static/assets/plugins/slick/slick.min.js"></script>
+    <!-- Core js -->
+    <script src="https://evolucaohot.online/static/assets/js/core.js"></script>
+    <!-- End js -->
+</body>
+
+</html>
